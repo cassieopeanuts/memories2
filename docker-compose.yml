@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: memories_db
+    restart: always
+    environment:
+      POSTGRES_USER: cass
+      POSTGRES_PASSWORD: supersecurepassword123
+      POSTGRES_DB: memories
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cass -d memories"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: memories_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DB_USER=cass
+      - DB_PASSWORD=supersecurepassword123
+      - DB_HOST=db
+      - DB_NAME=memories
+      - DB_PORT=5432
+      - JWT_SECRET=ag_very_secret_token_12345!
+      - MOCK_S3=true # Set to false to use real Selectel S3 keys below
+      - S3_ENDPOINT=https://s3.ru-1.storage.selcloud.ru
+      - S3_REGION=ru-1
+      - S3_ACCESS_KEY_ID=your_selectel_access_key
+      - S3_SECRET_ACCESS_KEY=your_selectel_secret_key
+      - S3_BUCKET_NAME=memories-photos
+      - YANDEX_CLIENT_ID=mock_yandex_client_id
+      - YANDEX_CLIENT_SECRET=mock_yandex_client_secret
+      - REDIRECT_URI=http://localhost:5000/api/auth/yandex/callback
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: memories_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:

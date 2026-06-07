@@ -1,0 +1,177 @@
+{
+  "users": [
+    {
+      "id": "cf8a410d-f87c-4ef7-8f10-9949701c06df",
+      "yandex_id": "yd-12345",
+      "sber_id": null,
+      "name": "Екатерина Яндексова",
+      "email": "kate.yandex@example.ru",
+      "storage_limit": 1073741824,
+      "created_at": "2026-06-05T11:10:26.602Z"
+    },
+    {
+      "id": "b490a0c3-2796-4c7c-871a-d32adea5b8f4",
+      "yandex_id": null,
+      "sber_id": "sb-demo-unique-99",
+      "name": "Мария Сберова",
+      "email": "mariya.sber@example.ru",
+      "storage_limit": 1073741824,
+      "created_at": "2026-06-05T11:11:17.205Z"
+    },
+    {
+      "id": "77f47551-c6fe-48cb-9681-a63275e7e21e",
+      "yandex_id": "yd-demo-unique-99",
+      "sber_id": null,
+      "name": "Екатерина Яндексова",
+      "email": "kate.yandex@example.ru",
+      "storage_limit": 1073741824,
+      "created_at": "2026-06-05T11:30:28.184Z"
+    },
+    {
+      "id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "yandex_id": "yd-mock-user-456",
+      "sber_id": null,
+      "name": "Екатерина Яндексова",
+      "email": "kate.yandex@example.ru",
+      "storage_limit": 1073741824,
+      "created_at": "2026-06-07T02:06:55.800Z"
+    },
+    {
+      "id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "yandex_id": null,
+      "sber_id": "sb-mock-user-456",
+      "name": "Мария Сберова",
+      "email": "mariya.sber@example.ru",
+      "storage_limit": 1073741824,
+      "created_at": "2026-06-07T02:23:45.181Z"
+    }
+  ],
+  "photos": [
+    {
+      "id": "418816fb-ea19-4ead-8b3e-86a8b9d746fe",
+      "user_id": "cf8a410d-f87c-4ef7-8f10-9949701c06df",
+      "s3_key": "cf8a410d-f87c-4ef7-8f10-9949701c06df/497db2e3-b1d3-476d-9bc4-8f4163386c74.jpg",
+      "original_name": "media.jpg",
+      "size": 190469,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-05T11:10:51.403Z"
+    },
+    {
+      "id": "15ffd1b2-8800-4193-8636-966ca294f582",
+      "user_id": "cf8a410d-f87c-4ef7-8f10-9949701c06df",
+      "s3_key": "cf8a410d-f87c-4ef7-8f10-9949701c06df/65b44455-5232-4b89-9753-173801eb0514.jpg",
+      "original_name": "Untitled.jpg",
+      "size": 273469,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-05T11:10:51.455Z"
+    },
+    {
+      "id": "9504b698-2592-42a1-bb79-706e7a992eb7",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "s3_key": "fe593fb8-6a2f-4894-8d71-728ee39571a0/af8898ec-a727-47c6-a11c-02bb91850951.jpg",
+      "original_name": "media.jpg",
+      "size": 190469,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:07:12.421Z"
+    },
+    {
+      "id": "0c58a458-49c8-43e1-87fd-9d64761d4fad",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "s3_key": "fe593fb8-6a2f-4894-8d71-728ee39571a0/051f1b39-d8ab-48b1-9ab3-2d1cd607060e.jpg",
+      "original_name": "Untitled.jpg",
+      "size": 273469,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:07:12.423Z"
+    },
+    {
+      "id": "bb40dcf6-49f2-45b6-9892-04704754a57c",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "s3_key": "fe593fb8-6a2f-4894-8d71-728ee39571a0/def8ee15-d9be-4600-a469-64c0800bc0ee.png",
+      "original_name": "Gemini_Generated_Image_jdx7c0jdx7c0jdx7.png",
+      "size": 8235597,
+      "mime_type": "image/png",
+      "created_at": "2026-06-07T02:07:12.427Z"
+    },
+    {
+      "id": "d26c6060-cd9b-4d83-a0f2-094714a55090",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "s3_key": "fe593fb8-6a2f-4894-8d71-728ee39571a0/64684e60-cfc9-4eea-a6aa-5cf48ec3f4f4.jpeg",
+      "original_name": "IMG_5142.jpeg",
+      "size": 171668,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:22:15.615Z"
+    },
+    {
+      "id": "f37b29dc-d78b-4893-ada3-2e35393ec9cc",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "s3_key": "fe593fb8-6a2f-4894-8d71-728ee39571a0/c80132aa-2e89-4e79-b5e1-e142680ebab7.jpeg",
+      "original_name": "IMG_5141.jpeg",
+      "size": 107014,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:22:15.622Z"
+    },
+    {
+      "id": "c4befd72-d60e-4f34-90d5-3bf734a428d5",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "s3_key": "fe593fb8-6a2f-4894-8d71-728ee39571a0/63c106f5-2392-42fb-8736-1cc89603b9a1.jpeg",
+      "original_name": "IMG_5146.jpeg",
+      "size": 134174,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:22:15.624Z"
+    },
+    {
+      "id": "12386947-59e5-4a2f-85bd-24d07c81fe8a",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "s3_key": "a295784c-e624-4c47-becd-953d1b4f5bac/a15213c8-60e6-44fe-8040-8b261d3ed42c.jpeg",
+      "original_name": "IMG_5054.jpeg",
+      "size": 108145,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:24:09.504Z"
+    },
+    {
+      "id": "f0fc9476-d76e-4d20-adb7-4257b54819d9",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "s3_key": "a295784c-e624-4c47-becd-953d1b4f5bac/1370731e-1113-44cd-828d-cac22274d4ef.jpeg",
+      "original_name": "IMG_5093.jpeg",
+      "size": 87027,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:24:09.512Z"
+    },
+    {
+      "id": "acbdd3c3-8ac9-4da9-8e2a-67042c72c9ba",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "s3_key": "a295784c-e624-4c47-becd-953d1b4f5bac/21543539-6cb0-44b7-b2e9-0f9105a2e391.jpeg",
+      "original_name": "IMG_5046.jpeg",
+      "size": 84830,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:24:09.517Z"
+    },
+    {
+      "id": "c216af0c-7707-464f-9b57-8025016bdfcd",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "s3_key": "a295784c-e624-4c47-becd-953d1b4f5bac/0f4c6d65-bb18-4a5a-a7ed-60b5968f8d4e.jpeg",
+      "original_name": "IMG_5141.jpeg",
+      "size": 107014,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:55:54.306Z"
+    },
+    {
+      "id": "a3ec36d0-eff1-4fd5-8adb-932325c0f27b",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "s3_key": "a295784c-e624-4c47-becd-953d1b4f5bac/d42bb3e3-deb9-4c38-9a50-47b1e67d527c.jpeg",
+      "original_name": "IMG_5146.jpeg",
+      "size": 134174,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:55:54.308Z"
+    },
+    {
+      "id": "86c2b48e-66d0-4fcc-add6-33d50f62c49c",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "s3_key": "a295784c-e624-4c47-becd-953d1b4f5bac/f58f9b4c-4be5-4128-9336-e0e8550df91f.jpeg",
+      "original_name": "IMG_5142.jpeg",
+      "size": 171668,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T02:55:54.309Z"
+    }
+  ]
+}
