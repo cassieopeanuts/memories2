@@ -33,8 +33,9 @@
       "sber_id": null,
       "name": "Екатерина Яндексова",
       "email": "kate.yandex@example.ru",
-      "storage_limit": 1073741824,
-      "created_at": "2026-06-07T02:06:55.800Z"
+      "storage_limit": 21474836480,
+      "created_at": "2026-06-07T02:06:55.800Z",
+      "pin_code": "0000"
     },
     {
       "id": "a295784c-e624-4c47-becd-953d1b4f5bac",
@@ -43,7 +44,30 @@
       "name": "Мария Сберова",
       "email": "mariya.sber@example.ru",
       "storage_limit": 1073741824,
-      "created_at": "2026-06-07T02:23:45.181Z"
+      "created_at": "2026-06-07T02:23:45.181Z",
+      "pin_code": "0000"
+    },
+    {
+      "id": "5f5c9047-198b-4a00-a341-384a22df71a5",
+      "yandex_id": null,
+      "sber_id": null,
+      "tbank_id": "tb-mock-user-456",
+      "name": "Татьяна Т-Банкова",
+      "email": "tanya.tbank@example.ru",
+      "pin_code": "0000",
+      "storage_limit": 1073741824,
+      "created_at": "2026-06-08T11:36:55.858Z"
+    },
+    {
+      "id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "yandex_id": null,
+      "sber_id": null,
+      "tbank_id": "tb-demo-unique-99",
+      "name": "Татьяна Т-Банкова",
+      "email": "tanya.tbank@example.ru",
+      "pin_code": null,
+      "storage_limit": 1073741824,
+      "created_at": "2026-06-08T11:46:46.020Z"
     }
   ],
   "photos": [
@@ -108,7 +132,8 @@
       "original_name": "IMG_5141.jpeg",
       "size": 107014,
       "mime_type": "image/jpeg",
-      "created_at": "2026-06-07T02:22:15.622Z"
+      "created_at": "2026-06-07T02:22:15.622Z",
+      "is_favorite": true
     },
     {
       "id": "c4befd72-d60e-4f34-90d5-3bf734a428d5",
@@ -117,7 +142,8 @@
       "original_name": "IMG_5146.jpeg",
       "size": 134174,
       "mime_type": "image/jpeg",
-      "created_at": "2026-06-07T02:22:15.624Z"
+      "created_at": "2026-06-07T02:22:15.624Z",
+      "is_favorite": true
     },
     {
       "id": "12386947-59e5-4a2f-85bd-24d07c81fe8a",
@@ -162,7 +188,8 @@
       "original_name": "IMG_5146.jpeg",
       "size": 134174,
       "mime_type": "image/jpeg",
-      "created_at": "2026-06-07T02:55:54.308Z"
+      "created_at": "2026-06-07T02:55:54.308Z",
+      "is_favorite": true
     },
     {
       "id": "86c2b48e-66d0-4fcc-add6-33d50f62c49c",
@@ -172,6 +199,265 @@
       "size": 171668,
       "mime_type": "image/jpeg",
       "created_at": "2026-06-07T02:55:54.309Z"
+    },
+    {
+      "id": "5aa00f81-b9f6-469e-a82e-6f2ef8bc0a28",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "s3_key": "fe593fb8-6a2f-4894-8d71-728ee39571a0/01e456ca-f4be-4992-aa74-b142af8b4c90.jpeg",
+      "original_name": "IMG_5147.jpeg",
+      "size": 27167,
+      "mime_type": "image/jpeg",
+      "created_at": "2026-06-07T09:56:12.045Z"
+    },
+    {
+      "id": "5c514df3-b9a1-4c60-bc26-1d3f4094cd38",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "s3_key": "ec4088af-61a8-4b0a-9572-69c24b4d6fed/mock-photo-1.jpg",
+      "original_name": "sunset.jpg",
+      "size": 102400,
+      "mime_type": "image/jpeg",
+      "is_favorite": false,
+      "created_at": "2026-06-08T11:51:44.309Z",
+      "position": 0
+    },
+    {
+      "id": "38b91c30-5205-4bbf-957a-a57c72526ded",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "s3_key": "ec4088af-61a8-4b0a-9572-69c24b4d6fed/mock-photo-1.jpg",
+      "original_name": "sunset.jpg",
+      "size": 102400,
+      "mime_type": "image/jpeg",
+      "is_favorite": false,
+      "created_at": "2026-06-08T11:52:22.775Z",
+      "position": 1
+    },
+    {
+      "id": "54b13085-2521-4cb8-9685-4b92b3ef8ee6",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "s3_key": "ec4088af-61a8-4b0a-9572-69c24b4d6fed/mock-photo-1.jpg",
+      "original_name": "sunset.jpg",
+      "size": 102400,
+      "mime_type": "image/jpeg",
+      "is_favorite": false,
+      "created_at": "2026-06-08T11:52:33.638Z",
+      "position": 2
+    },
+    {
+      "id": "39e1f8fe-00f3-4076-bd66-75b79dbebe44",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "s3_key": "ec4088af-61a8-4b0a-9572-69c24b4d6fed/mock-photo-1.jpg",
+      "original_name": "sunset.jpg",
+      "size": 102400,
+      "mime_type": "image/jpeg",
+      "is_favorite": false,
+      "created_at": "2026-06-08T12:01:47.451Z",
+      "position": 3
+    },
+    {
+      "id": "304fe73d-c2e3-4b4d-92a0-f440042968d6",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "s3_key": "ec4088af-61a8-4b0a-9572-69c24b4d6fed/mock-photo-1.jpg",
+      "original_name": "sunset.jpg",
+      "size": 102400,
+      "mime_type": "image/jpeg",
+      "is_favorite": false,
+      "created_at": "2026-06-08T12:11:17.544Z",
+      "position": 4
+    },
+    {
+      "id": "32d16477-7497-4a22-b804-77543ddb77e2",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "s3_key": "ec4088af-61a8-4b0a-9572-69c24b4d6fed/mock-photo-1.jpg",
+      "original_name": "sunset.jpg",
+      "size": 102400,
+      "mime_type": "image/jpeg",
+      "is_favorite": false,
+      "position": 5,
+      "created_at": "2026-06-08T12:16:37.543Z"
+    }
+  ],
+  "albums": [
+    {
+      "id": "7138b926-65cb-4e05-8b3b-31a6448193c4",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "name": "Общий",
+      "position": 0,
+      "created_at": "2026-06-08T11:34:55.257Z"
+    },
+    {
+      "id": "42cc2653-79fc-432e-8095-05fc156f1f29",
+      "user_id": "5f5c9047-198b-4a00-a341-384a22df71a5",
+      "name": "Общий",
+      "position": 0,
+      "created_at": "2026-06-08T11:36:55.859Z"
+    },
+    {
+      "id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Общий",
+      "position": 0,
+      "created_at": "2026-06-08T11:46:46.021Z"
+    },
+    {
+      "id": "d81b16db-7a4f-4da0-a937-982002745c86",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 1,
+      "created_at": "2026-06-08T11:51:33.320Z"
+    },
+    {
+      "id": "961481ec-e6a5-4360-b966-6c646fb08d52",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 2,
+      "created_at": "2026-06-08T11:51:44.294Z"
+    },
+    {
+      "id": "27a1755c-d9d8-4ab9-859d-766f596d7111",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 3,
+      "created_at": "2026-06-08T11:52:22.770Z"
+    },
+    {
+      "id": "06411fdd-00e7-48bc-b0cc-0928e73c4226",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 4,
+      "created_at": "2026-06-08T11:52:33.629Z"
+    },
+    {
+      "id": "30b865f1-6a85-4dd1-9458-52329ffa5eb8",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "name": "котики",
+      "position": 1,
+      "created_at": "2026-06-08T12:00:37.972Z"
+    },
+    {
+      "id": "b1e62113-1da5-42f9-b2af-0d409302f7ce",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 5,
+      "created_at": "2026-06-08T12:01:47.446Z"
+    },
+    {
+      "id": "5b60432d-bd0e-4b7e-960b-451f22fd96e5",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Избранное",
+      "position": 6,
+      "created_at": "2026-06-08T12:01:47.468Z"
+    },
+    {
+      "id": "e2ba702a-a5c4-4c76-92ae-c9c7c8cda636",
+      "user_id": "fe593fb8-6a2f-4894-8d71-728ee39571a0",
+      "name": "Избранное",
+      "position": 2,
+      "created_at": "2026-06-08T12:06:20.492Z"
+    },
+    {
+      "id": "b23c4c44-476a-4a9c-80f6-5dca3d86dee3",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 7,
+      "created_at": "2026-06-08T12:11:17.538Z"
+    },
+    {
+      "id": "adcdc602-7258-4dc7-8545-e8daf83a8002",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 8,
+      "created_at": "2026-06-08T12:16:37.539Z"
+    },
+    {
+      "id": "5cd36e1f-6708-4536-8823-06e6503cacc7",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "name": "Общий",
+      "position": 0,
+      "created_at": "2026-06-08T12:18:58.273Z"
+    },
+    {
+      "id": "d76590b9-6ae4-4baa-a2cd-2efff887f7e2",
+      "user_id": "a295784c-e624-4c47-becd-953d1b4f5bac",
+      "name": "Избранное",
+      "position": 1,
+      "created_at": "2026-06-08T12:21:26.197Z"
+    }
+  ],
+  "album_photos": [
+    {
+      "album_id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "photo_id": "5c514df3-b9a1-4c60-bc26-1d3f4094cd38",
+      "position": 0
+    },
+    {
+      "album_id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "photo_id": "38b91c30-5205-4bbf-957a-a57c72526ded",
+      "position": 0
+    },
+    {
+      "album_id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "photo_id": "54b13085-2521-4cb8-9685-4b92b3ef8ee6",
+      "position": 0
+    },
+    {
+      "album_id": "06411fdd-00e7-48bc-b0cc-0928e73c4226",
+      "photo_id": "54b13085-2521-4cb8-9685-4b92b3ef8ee6",
+      "position": 0
+    },
+    {
+      "album_id": "30b865f1-6a85-4dd1-9458-52329ffa5eb8",
+      "photo_id": "c4befd72-d60e-4f34-90d5-3bf734a428d5",
+      "position": 1
+    },
+    {
+      "album_id": "30b865f1-6a85-4dd1-9458-52329ffa5eb8",
+      "photo_id": "f37b29dc-d78b-4893-ada3-2e35393ec9cc",
+      "position": 0
+    },
+    {
+      "album_id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "photo_id": "39e1f8fe-00f3-4076-bd66-75b79dbebe44",
+      "position": 0
+    },
+    {
+      "album_id": "b1e62113-1da5-42f9-b2af-0d409302f7ce",
+      "photo_id": "39e1f8fe-00f3-4076-bd66-75b79dbebe44",
+      "position": 0
+    },
+    {
+      "album_id": "e2ba702a-a5c4-4c76-92ae-c9c7c8cda636",
+      "photo_id": "f37b29dc-d78b-4893-ada3-2e35393ec9cc",
+      "position": 1
+    },
+    {
+      "album_id": "e2ba702a-a5c4-4c76-92ae-c9c7c8cda636",
+      "photo_id": "c4befd72-d60e-4f34-90d5-3bf734a428d5",
+      "position": 0
+    },
+    {
+      "album_id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "photo_id": "304fe73d-c2e3-4b4d-92a0-f440042968d6",
+      "position": 0
+    },
+    {
+      "album_id": "b23c4c44-476a-4a9c-80f6-5dca3d86dee3",
+      "photo_id": "304fe73d-c2e3-4b4d-92a0-f440042968d6",
+      "position": 0
+    },
+    {
+      "album_id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "photo_id": "32d16477-7497-4a22-b804-77543ddb77e2",
+      "position": 0
+    },
+    {
+      "album_id": "adcdc602-7258-4dc7-8545-e8daf83a8002",
+      "photo_id": "32d16477-7497-4a22-b804-77543ddb77e2",
+      "position": 0
+    },
+    {
+      "album_id": "d76590b9-6ae4-4baa-a2cd-2efff887f7e2",
+      "photo_id": "a3ec36d0-eff1-4fd5-8adb-932325c0f27b",
+      "position": 0
     }
   ]
 }

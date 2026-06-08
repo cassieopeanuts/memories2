@@ -11,9 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Легко Сохранить',
-        short_name: 'Сохранить',
-        description: 'Самое простое облако для ваших фотографий. Забудьте о нехватке памяти.',
+        name: 'ЛегкоСохранить.рф',
+        short_name: 'Сохранить.рф',
+        description: 'Самое просто хранилище для ваших воспоминаний. Сохраняйте то, что дорого, в один клик.',
         theme_color: '#fcf9f8',
         background_color: '#fcf9f8',
         display: 'standalone',

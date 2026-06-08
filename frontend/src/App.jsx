@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import Hero from './components/Hero.jsx';
-import UploadZone from './components/UploadZone.jsx';
 import Gallery from './components/Gallery.jsx';
-import { Camera, LogOut, ShieldCheck, RefreshCw, User, X } from 'lucide-react';
+import PinLock from './components/PinLock.jsx';
+import Subscription from './components/Subscription.jsx';
+import { Camera, LogOut, ShieldCheck, RefreshCw, User, X, CreditCard } from 'lucide-react';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(null);
-  const [photos, setPhotos] = useState([]);
+  const [hasPin, setHasPin] = useState(false);
+  const [pinVerified, setPinVerified] = useState(false);
   const [storage, setStorage] = useState({ used: 0, limit: 1073741824 });
   const [loading, setLoading] = useState(true);
+  const [isCheckingProfile, setIsCheckingProfile] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' or 'subscription'
   
   // PWA installation states
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -71,86 +75,90 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get('token');
     
-    // Check if path is callback
     if (window.location.pathname === '/auth-callback' && urlToken) {
       localStorage.setItem('token', urlToken);
       setToken(urlToken);
-      
-      // Clean up the URL query string and pathname immediately
       window.history.replaceState({}, document.title, '/');
     }
   }, []);
 
-  // 2. Fetch User & Photo Data if Token changes/exists
-  const fetchData = async () => {
+  // 2. Load user profile on token boot
+  const checkProfile = async () => {
     if (!token) {
       setLoading(false);
       return;
     }
 
-    setLoading(true);
+    setIsCheckingProfile(true);
     setErrorMsg('');
     try {
-      const response = await fetch(`${backendUrl}/api/photos`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch(`${backendUrl}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
       const data = await response.json();
 
-      if (response.status === 401 || response.status === 403) {
-        // Expired/Invalid token
-        handleLogout();
-        return;
-      }
-
       if (!response.ok) {
-        throw new Error(data.error || 'Не удалось получить фотографии.');
+        if (response.status === 401 || response.status === 403) {
+          handleLogout();
+          return;
+        }
+        throw new Error(data.error || 'Ошибка загрузки профиля');
       }
 
-      setPhotos(data.photos || []);
-      setStorage(data.storage || { used: 0, limit: 1073741824 });
-      
-      // Decode user info from JWT manually to avoid extra API call
-      try {
-        const payloadBase64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        const pad = payloadBase64.length % 4;
-        const padded = pad ? payloadBase64 + '='.repeat(4 - pad) : payloadBase64;
-        const decodedClaims = JSON.parse(decodeURIComponent(atob(padded).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join('')));
-        setUser({
-          name: decodedClaims.name,
-          email: decodedClaims.email
-        });
-      } catch (e) {
-        console.error('Error decoding JWT payload:', e);
-        setUser({ name: 'Дорогой пользователь' });
-      }
-
+      setUser({
+        id: data.id,
+        name: data.name,
+        email: data.email
+      });
+      setStorage(prev => ({ ...prev, limit: data.storageLimit }));
+      setHasPin(data.hasPin);
     } catch (err) {
-      console.error('Fetch data error:', err);
-      setErrorMsg('Не удалось обновить альбом. Проверьте соединение с интернетом.');
+      console.error(err);
+      setErrorMsg('Не удалось загрузить данные пользователя. Проверьте интернет-соединение.');
     } finally {
+      setIsCheckingProfile(false);
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    checkProfile();
   }, [token]);
+
+  // 3. Fetch storage details after PIN code is unlocked
+  const fetchStorageStats = async () => {
+    if (!token || !pinVerified) return;
+    try {
+      const response = await fetch(`${backendUrl}/api/photos`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setStorage(data.storage || { used: 0, limit: 1073741824 });
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (pinVerified) {
+      fetchStorageStats();
+    }
+  }, [pinVerified]);
 
   // Logout action
   const handleLogout = () => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
-    setPhotos([]);
+    setHasPin(false);
+    setPinVerified(false);
     setStorage({ used: 0, limit: 1073741824 });
+    setActiveTab('gallery');
   };
 
-  // One-click demo login for local tests
+  // Demo login callback
   const handleDemoLogin = async (provider) => {
     setLoading(true);
     try {
@@ -169,35 +177,112 @@ export default function App() {
 
       localStorage.setItem('token', data.token);
       setToken(data.token);
+      setUser(data.user);
+      setHasPin(data.user.hasPin);
+      setPinVerified(false); // Require entering PIN
     } catch (e) {
       alert(e.message);
+    } finally {
       setLoading(false);
     }
   };
 
-  // If not logged in, show Hero screen
-  if (!token) {
-    return <Hero onDemoLogin={handleDemoLogin} />;
+  // Email login callback
+  const handleEmailLoginSuccess = (data) => {
+    localStorage.setItem('token', data.token);
+    setToken(data.token);
+    setUser(data.user);
+    setHasPin(data.status === 'verify_pin');
+    setPinVerified(false); // Require entering/setting PIN
+  };
+
+  // Plan upgrade success
+  const handleUpgradeSuccess = (newLimit) => {
+    setStorage(prev => ({ ...prev, limit: newLimit }));
+  };
+
+  // LOADING STATE
+  if (loading || (token && isCheckingProfile)) {
+    return (
+      <div className="min-h-screen bg-brand-50 flex flex-col items-center justify-center text-brand-600">
+        <RefreshCw className="w-8 h-8 animate-spin mb-3 text-brand-400" />
+        <span className="text-sm font-medium">Открываем сейф воспоминаний...</span>
+      </div>
+    );
   }
 
+  // NOT LOGGED IN
+  if (!token) {
+    return (
+      <Hero 
+        onDemoLogin={handleDemoLogin} 
+        onEmailLoginSuccess={handleEmailLoginSuccess} 
+      />
+    );
+  }
+
+  // LOCK SCREEN (PIN REQUIRED)
+  if (!pinVerified) {
+    return (
+      <PinLock
+        token={token}
+        mode={hasPin ? 'verify' : 'setup'}
+        onSuccess={() => {
+          setHasPin(true);
+          setPinVerified(true);
+        }}
+        onLogout={handleLogout}
+        backendUrl={backendUrl}
+      />
+    );
+  }
+
+  // MAIN SYSTEM (LOGGED IN & UNLOCKED)
   return (
     <div className="min-h-screen bg-brand-50 flex flex-col selection:bg-brand-200">
       {/* Authenticated Sticky Glass Header */}
       <header className="sticky top-0 z-40 w-full glass-header py-4 px-6">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+          <div 
+            onClick={() => setActiveTab('gallery')}
+            className="flex items-center gap-2 cursor-pointer"
+          >
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 flex items-center justify-center text-brand-50 shadow-sm">
               <Camera className="w-4.5 h-4.5" />
             </div>
-            <span className="font-serif font-bold text-lg tracking-tight text-brand-900 hidden sm:inline">
-              Легко Сохранить
+            <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-900 hidden sm:inline">
+              ЛегкоСохранить.рф
             </span>
           </div>
 
-          {/* User profile & logout controls */}
+          {/* Navigation tabs */}
+          <div className="flex bg-brand-100/60 p-1 rounded-full border border-brand-200/20 text-xs font-semibold">
+            <button
+              onClick={() => setActiveTab('gallery')}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                activeTab === 'gallery' 
+                  ? 'bg-white text-brand-900 shadow-sm' 
+                  : 'text-brand-600 hover:text-brand-900'
+              }`}
+            >
+              Альбомы
+            </button>
+            <button
+              onClick={() => setActiveTab('subscription')}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                activeTab === 'subscription' 
+                  ? 'bg-white text-brand-900 shadow-sm' 
+                  : 'text-brand-600 hover:text-brand-900'
+              }`}
+            >
+              Подписка
+            </button>
+          </div>
+
+          {/* User profile & logout */}
           {user && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-brand-100/60 px-3 py-1.5 rounded-full border border-brand-200/20">
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-2 bg-brand-100/60 px-3 py-1.5 rounded-full border border-brand-200/20">
                 <div className="w-6 h-6 rounded-full bg-brand-300 flex items-center justify-center text-brand-800">
                   <User className="w-3.5 h-3.5" />
                 </div>
@@ -229,70 +314,65 @@ export default function App() {
           </div>
         )}
 
-        {loading && photos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-brand-600">
-            <RefreshCw className="w-8 h-8 animate-spin mb-3 text-brand-400" />
-            <span className="text-sm font-medium">Открываем ваш фотоальбом...</span>
+        {/* PWA Install Banner for Android/Chrome */}
+        {showInstallBanner && (
+          <div className="mb-6 max-w-2xl mx-auto p-5 bg-gradient-to-r from-brand-100/60 to-brand-200/60 border border-brand-300/30 rounded-3xl flex items-center justify-between gap-4 shadow-sm">
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-brand-900 mb-0.5">Установите фотоальбом на главный экран</h4>
+              <p className="text-xs text-brand-700 font-light leading-relaxed">
+                Сохраняйте дорогие сердцу фотографии в одно нажатие, без открытия браузера.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleInstallClick}
+                className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl transition-all duration-200 shadow-sm cursor-pointer"
+              >
+                Установить
+              </button>
+              <button 
+                onClick={dismissInstallBanner}
+                className="text-brand-500 hover:bg-brand-200/40 p-2 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
+        )}
+
+        {/* PWA Install Helper Tip for iOS/Safari */}
+        {showIOSTip && (
+          <div className="mb-6 max-w-2xl mx-auto p-5 bg-gradient-to-r from-brand-100/60 to-brand-200/60 border border-brand-300/30 rounded-3xl flex items-start gap-4 shadow-sm">
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-brand-900 mb-1">Как установить на iPhone 📱</h4>
+              <p className="text-xs text-brand-700 font-light leading-relaxed">
+                Нажмите кнопку <span className="font-semibold">«Поделиться» 📤</span> внизу экрана Safari, затем выберите <span className="font-semibold">«На экран Домой» ➕</span>. Иконка появится на рабочем столе телефона!
+              </p>
+            </div>
+            <button 
+              onClick={dismissIOSTip}
+              className="text-brand-500 hover:bg-brand-200/40 p-2 rounded-full transition-colors cursor-pointer animate-fade-in"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Active Tab render */}
+        {activeTab === 'gallery' ? (
+          <Gallery 
+            token={token} 
+            storage={storage} 
+            onUploadComplete={fetchStorageStats} 
+            activeTab={activeTab}
+          />
         ) : (
-          <>
-            {/* PWA Install Banner for Android/Chrome */}
-            {showInstallBanner && (
-              <div className="mb-6 max-w-2xl mx-auto p-5 bg-gradient-to-r from-brand-100/60 to-brand-200/60 border border-brand-300/30 rounded-3xl flex items-center justify-between gap-4 shadow-sm">
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-brand-900 mb-0.5">Установите фотоальбом на главный экран</h4>
-                  <p className="text-xs text-brand-700 font-light leading-relaxed">
-                    Сохраняйте дорогие сердцу фотографии в одно нажатие, без открытия браузера.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={handleInstallClick}
-                    className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl transition-all duration-200 shadow-sm cursor-pointer"
-                  >
-                    Установить
-                  </button>
-                  <button 
-                    onClick={dismissInstallBanner}
-                    className="text-brand-500 hover:bg-brand-200/40 p-2 rounded-full transition-colors cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* PWA Install Helper Tip for iOS/Safari */}
-            {showIOSTip && (
-              <div className="mb-6 max-w-2xl mx-auto p-5 bg-gradient-to-r from-brand-100/60 to-brand-200/60 border border-brand-300/30 rounded-3xl flex items-start gap-4 shadow-sm">
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-brand-900 mb-1">Как установить на iPhone 📱</h4>
-                  <p className="text-xs text-brand-700 font-light leading-relaxed">
-                    Нажмите кнопку <span className="font-semibold">«Поделиться» 📤</span> внизу экрана Safari, затем выберите <span className="font-semibold">«На экран Домой» ➕</span>. Иконка появится на рабочем столе телефона!
-                  </p>
-                </div>
-                <button 
-                  onClick={dismissIOSTip}
-                  className="text-brand-500 hover:bg-brand-200/40 p-2 rounded-full transition-colors cursor-pointer animate-fade-in"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* 1. Drag & drop upload box */}
-            <UploadZone token={token} onUploadComplete={fetchData} />
-
-            {/* 2. Divider line */}
-            <div className="w-full h-[1px] bg-brand-200/50 my-10 max-w-2xl mx-auto"></div>
-
-            {/* 3. Photo gallery list */}
-            <Gallery 
-              photos={photos} 
-              storage={storage} 
-              token={token} 
-            />
-          </>
+          <Subscription 
+            token={token} 
+            storage={storage} 
+            onUpgradeSuccess={handleUpgradeSuccess} 
+            onRedirectToGallery={() => setActiveTab('gallery')}
+          />
         )}
       </main>
       

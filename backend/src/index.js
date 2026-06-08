@@ -19,6 +19,11 @@ import {
 
 dotenv.config();
 
+// Run database migrations on start
+query('ALTER TABLE photos ADD COLUMN IF NOT EXISTS position INT NOT NULL DEFAULT 0', [])
+  .then(() => console.log('Migration: checked photos table position column'))
+  .catch(err => console.error('Migration error:', err));
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5180';
@@ -162,6 +167,14 @@ app.get('/api/auth/sber', async (req, res) => {
   return res.send(getMockOauthHtml('sber', mockProfile, targetOrigin));
 });
 
+// 2b. T-Bank ID OIDC Simulation
+app.get('/api/auth/tbank', async (req, res) => {
+  const { origin } = req.query;
+  const targetOrigin = origin || FRONTEND_URL;
+  const mockProfile = getMockProfile('tbank');
+  return res.send(getMockOauthHtml('tbank', mockProfile, targetOrigin));
+});
+
 // 3. Confirm Mock SSO Authorization (Redirects back to frontend callback with valid JWT)
 app.get('/api/auth/mock-login-confirm', async (req, res) => {
   const { provider, origin } = req.query;
@@ -172,6 +185,7 @@ app.get('/api/auth/mock-login-confirm', async (req, res) => {
     const user = await findOrCreateUser({
       yandexId: provider === 'yandex' ? mockProfile.id : null,
       sberId: provider === 'sber' ? mockProfile.id : null,
+      tbankId: provider === 'tbank' ? mockProfile.id : null,
       name: mockProfile.name,
       email: mockProfile.email
     });
@@ -187,12 +201,16 @@ app.get('/api/auth/mock-login-confirm', async (req, res) => {
 // Helper to generate a realistic mock OAuth screen
 function getMockOauthHtml(provider, profile, targetOrigin) {
   const isYandex = provider === 'yandex';
-  const logo = isYandex ? 'Я' : '✔';
-  const logoBg = isYandex ? '#FC3F1D' : '#128024';
-  const providerName = isYandex ? 'Яндекс ID' : 'Сбер ID';
+  const isSber = provider === 'sber';
+  const logo = isYandex ? 'Я' : (isSber ? '✔' : 'Т');
+  const logoBg = isYandex ? '#FC3F1D' : (isSber ? '#128024' : '#FFDD2D');
+  const logoColor = isYandex || isSber ? 'white' : 'black';
+  const providerName = isYandex ? 'Яндекс ID' : (isSber ? 'Сбер ID' : 'Т-Банк ID');
   const btnClass = isYandex 
     ? 'background-color: #FFCC00; color: #000; font-weight: 600;' 
-    : 'background-image: linear-gradient(to right, #21A038, #128024); color: #fff; font-weight: 600;';
+    : (isSber 
+      ? 'background-image: linear-gradient(to right, #21A038, #128024); color: #fff; font-weight: 600;'
+      : 'background-color: #000000; color: #fff; font-weight: 600;');
   
   return `
     <!DOCTYPE html>
@@ -230,7 +248,7 @@ function getMockOauthHtml(provider, profile, targetOrigin) {
           height: 60px;
           border-radius: 16px;
           background-color: ${logoBg};
-          color: white;
+          color: ${logoColor};
           font-size: 32px;
           font-weight: bold;
           margin-bottom: 24px;
@@ -356,15 +374,467 @@ app.post('/api/auth/demo', async (req, res) => {
     const user = await findOrCreateUser({
       yandexId: provider === 'yandex' ? mockProfile.id : null,
       sberId: provider === 'sber' ? mockProfile.id : null,
+      tbankId: provider === 'tbank' ? mockProfile.id : null,
       name: mockProfile.name,
       email: mockProfile.email
     });
     
     const token = generateToken(user);
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, hasPin: !!user.pin_code } });
   } catch (error) {
     console.error('Demo auth failed:', error);
     res.status(500).json({ error: 'Не удалось выполнить быстрый вход.' });
+  }
+});
+
+// Email Authentication / Registration
+app.post('/api/auth/email', async (req, res) => {
+  const { email, name } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Пожалуйста, укажите адрес электронной почты.' });
+  }
+
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    const result = await query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
+    
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      const token = generateToken(user);
+      return res.json({
+        status: user.pin_code ? 'verify_pin' : 'create_pin',
+        token,
+        user: { id: user.id, name: user.name, email: user.email }
+      });
+    }
+
+    // Registration: Create new user
+    const finalName = name || email.split('@')[0];
+    const user = await findOrCreateUser({
+      name: finalName,
+      email: normalizedEmail
+    });
+
+    const token = generateToken(user);
+    res.json({
+      status: 'create_pin',
+      token,
+      user: { id: user.id, name: user.name, email: user.email }
+    });
+  } catch (error) {
+    console.error('Email auth error:', error);
+    res.status(500).json({ error: 'Ошибка авторизации по электронной почте.' });
+  }
+});
+
+// Set PIN code for authenticated user
+app.post('/api/auth/set-pin', authenticateJWT, async (req, res) => {
+  const { pinCode } = req.body;
+  if (!pinCode || pinCode.length !== 4 || !/^\d+$/.test(pinCode)) {
+    return res.status(400).json({ error: 'Некорректный формат пин-кода. Требуется 4 цифры.' });
+  }
+
+  try {
+    await query('UPDATE users SET pin_code = $1 WHERE id = $2', [pinCode, req.user.id]);
+    res.json({ success: true, message: 'Пин-код успешно установлен.' });
+  } catch (error) {
+    console.error('Error setting PIN code:', error);
+    res.status(500).json({ error: 'Не удалось сохранить пин-код.' });
+  }
+});
+
+// Verify PIN code for authenticated user
+app.post('/api/auth/verify-pin', authenticateJWT, async (req, res) => {
+  const { pinCode } = req.body;
+  if (!pinCode) {
+    return res.status(400).json({ error: 'Введите пин-код.' });
+  }
+  
+  try {
+    const result = await query('SELECT pin_code FROM users WHERE id = $1', [req.user.id]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Пользователь не найден.' });
+    }
+
+    const dbPin = result.rows[0].pin_code;
+    if (!dbPin) {
+      return res.status(400).json({ error: 'Пин-код не настроен для этого пользователя.' });
+    }
+
+    if (dbPin === pinCode) {
+      res.json({ success: true, message: 'Пин-код подтвержден.' });
+    } else {
+      res.status(400).json({ error: 'Неверный пин-код. Пожалуйста, попробуйте еще раз.' });
+    }
+  } catch (error) {
+    console.error('PIN verification error:', error);
+    res.status(500).json({ error: 'Ошибка проверки пин-кода.' });
+  }
+});
+
+// Get profile details
+app.get('/api/auth/me', authenticateJWT, async (req, res) => {
+  try {
+    const result = await query('SELECT id, name, email, pin_code, storage_limit FROM users WHERE id = $1', [req.user.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден.' });
+    }
+    const user = result.rows[0];
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      hasPin: !!user.pin_code,
+      storageLimit: parseInt(user.storage_limit, 10)
+    });
+  } catch (error) {
+    console.error('Error in /api/auth/me:', error);
+    res.status(500).json({ error: 'Ошибка получения профиля.' });
+  }
+});
+
+// ==========================================
+// ALBUM MANAGEMENT ENDPOINTS (PROTECTED)
+// ==========================================
+
+// Get user's albums list
+app.get('/api/albums', authenticateJWT, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    let result = await query('SELECT * FROM albums WHERE user_id = $1 ORDER BY position ASC', [userId]);
+    
+    // Fallback: If no albums exist, create default "Общий"
+    const hasGeneral = result.rows.some(a => a.name === 'Общий');
+    if (result.rows.length === 0 || !hasGeneral) {
+      await query('INSERT INTO albums (user_id, name, position) VALUES ($1, $2, $3)', [userId, 'Общий', 0]);
+      result = await query('SELECT * FROM albums WHERE user_id = $1 ORDER BY position ASC', [userId]);
+    }
+    
+    // Retrieve photo count for each album in database-agnostic code
+    const albumsWithCounts = await Promise.all(
+      result.rows.map(async (album) => {
+        let count = 0;
+        if (album.name === 'Общий') {
+          const countRes = await query('SELECT COUNT(*) as cnt FROM photos WHERE user_id = $1', [userId]);
+          count = parseInt(countRes.rows[0].cnt || '0', 10);
+        } else {
+          const countRes = await query('SELECT COUNT(*) as cnt FROM album_photos WHERE album_id = $1', [album.id]);
+          count = parseInt(countRes.rows[0].cnt || '0', 10);
+        }
+        return { ...album, photoCount: count };
+      })
+    );
+    
+    res.json({ albums: albumsWithCounts });
+  } catch (error) {
+    console.error('Error fetching albums:', error);
+    res.status(500).json({ error: 'Не удалось загрузить альбомы.' });
+  }
+});
+
+// Create new custom album
+app.post('/api/albums', authenticateJWT, async (req, res) => {
+  const { name } = req.body;
+  const userId = req.user.id;
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ error: 'Имя альбома не может быть пустым.' });
+  }
+
+  try {
+    const posResult = await query('SELECT COALESCE(MAX(position)+1, 1) as next_pos FROM albums WHERE user_id = $1', [userId]);
+    const nextPos = posResult.rows[0].next_pos || 1;
+
+    const result = await query(
+      'INSERT INTO albums (user_id, name, position) VALUES ($1, $2, $3) RETURNING *',
+      [userId, name.trim(), nextPos]
+    );
+
+    res.json({ success: true, album: result.rows[0] });
+  } catch (error) {
+    console.error('Error creating album:', error);
+    res.status(500).json({ error: 'Не удалось создать альбом.' });
+  }
+});
+
+// Update album positions (Drag & Drop sorting)
+app.put('/api/albums/positions', authenticateJWT, async (req, res) => {
+  const { positions } = req.body;
+  const userId = req.user.id;
+
+  if (!positions || !Array.isArray(positions)) {
+    return res.status(400).json({ error: 'Неверный формат позиций.' });
+  }
+
+  try {
+    for (const item of positions) {
+      await query(
+        'UPDATE albums SET position = $1 WHERE id = $2 AND user_id = $3',
+        [parseInt(item.position, 10), item.albumId, userId]
+      );
+    }
+    res.json({ success: true, message: 'Позиции альбомов обновлены.' });
+  } catch (error) {
+    console.error('Error updating album positions:', error);
+    res.status(500).json({ error: 'Не удалось сохранить порядок альбомов.' });
+  }
+});
+
+// Delete custom album
+app.delete('/api/albums/:id', authenticateJWT, async (req, res) => {
+  const albumId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const checkResult = await query('SELECT name FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Альбом не найден.' });
+    }
+
+    if (checkResult.rows[0].name === 'Общий') {
+      return res.status(400).json({ error: 'Нельзя удалить основной альбом "Общий".' });
+    }
+
+    await query('DELETE FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    res.json({ success: true, message: 'Альбом успешно удален.' });
+  } catch (error) {
+    console.error('Error deleting album:', error);
+    res.status(500).json({ error: 'Не удалось удалить альбом.' });
+  }
+});
+
+// Get photos in an album
+app.get('/api/albums/:id/photos', authenticateJWT, async (req, res) => {
+  const albumId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const albumResult = await query('SELECT name FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    if (albumResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Альбом не найден.' });
+    }
+
+    const isGeneral = albumResult.rows[0].name === 'Общий';
+
+    let photosResult;
+    if (isGeneral) {
+      photosResult = await query(
+        'SELECT id, s3_key, original_name, size, mime_type, is_favorite, position, created_at FROM photos WHERE user_id = $1 ORDER BY position ASC, created_at DESC',
+        [userId]
+      );
+    } else {
+      photosResult = await query(
+        `SELECT p.id, p.s3_key, p.original_name, p.size, p.mime_type, p.is_favorite, p.created_at, ap.position 
+         FROM photos p 
+         JOIN album_photos ap ON p.id = ap.photo_id 
+         WHERE ap.album_id = $1 
+         ORDER BY ap.position ASC`,
+        [albumId]
+      );
+    }
+
+    // Generate secure presigned GET URL for each photo
+    const photosWithUrls = await Promise.all(
+      photosResult.rows.map(async (photo) => {
+        try {
+          const url = await generatePresignedDownloadUrl(photo.s3_key);
+          return { ...photo, url };
+        } catch (e) {
+          console.error(`Error generating download URL for key ${photo.s3_key}:`, e);
+          return { ...photo, url: null };
+        }
+      })
+    );
+
+    res.json({ photos: photosWithUrls });
+  } catch (error) {
+    console.error('Error fetching album photos:', error);
+    res.status(500).json({ error: 'Не удалось загрузить фотографии альбома.' });
+  }
+});
+
+// Add photos to an album
+app.post('/api/albums/:id/photos', authenticateJWT, async (req, res) => {
+  const albumId = req.params.id;
+  const { photoIds } = req.body;
+  const userId = req.user.id;
+
+  if (!photoIds || !Array.isArray(photoIds)) {
+    return res.status(400).json({ error: 'Неверный список фотографий.' });
+  }
+
+  try {
+    const albumResult = await query('SELECT name FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    if (albumResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Альбом не найден.' });
+    }
+
+    if (albumResult.rows[0].name === 'Общий') {
+      return res.status(400).json({ error: 'Фотографии уже находятся в альбоме "Общий" по умолчанию.' });
+    }
+
+    for (const photoId of photoIds) {
+      const posResult = await query('SELECT COALESCE(MAX(position)+1, 0) as next_pos FROM album_photos WHERE album_id = $1', [albumId]);
+      const nextPos = posResult.rows[0].next_pos || 0;
+
+      await query(
+        'INSERT INTO album_photos (album_id, photo_id, position) VALUES ($1, $2, $3)',
+        [albumId, photoId, nextPos]
+      );
+    }
+
+    res.json({ success: true, message: 'Фотографии успешно добавлены в альбом.' });
+  } catch (error) {
+    console.error('Error adding photos to album:', error);
+    res.status(500).json({ error: 'Не удалось добавить фотографии в альбом.' });
+  }
+});
+
+// Update photos order inside custom album (Drag & Drop sorting)
+app.put('/api/albums/:id/photos/positions', authenticateJWT, async (req, res) => {
+  const albumId = req.params.id;
+  const { photoPositions } = req.body;
+  const userId = req.user.id;
+
+  if (!photoPositions || !Array.isArray(photoPositions)) {
+    return res.status(400).json({ error: 'Неверный формат позиций.' });
+  }
+
+  try {
+    const albumResult = await query('SELECT name FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    if (albumResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Альбом не найден.' });
+    }
+
+    const isGeneral = albumResult.rows[0].name === 'Общий';
+
+    for (const item of photoPositions) {
+      if (isGeneral) {
+        await query(
+          'UPDATE photos SET position = $1 WHERE id = $2 AND user_id = $3',
+          [parseInt(item.position, 10), item.photoId, userId]
+        );
+      } else {
+        await query(
+          'UPDATE album_photos SET position = $1 WHERE album_id = $2 AND photo_id = $3',
+          [parseInt(item.position, 10), albumId, item.photoId]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Порядок фотографий обновлен.' });
+  } catch (error) {
+    console.error('Error sorting album photos:', error);
+    res.status(500).json({ error: 'Не удалось сохранить порядок фотографий.' });
+  }
+});
+
+// Remove photo from custom album
+app.delete('/api/albums/:albumId/photos/:photoId', authenticateJWT, async (req, res) => {
+  const { albumId, photoId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const albumResult = await query('SELECT name FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    if (albumResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Альбом не найден.' });
+    }
+
+    if (albumResult.rows[0].name === 'Общий') {
+      return res.status(400).json({ error: 'Нельзя удалить фотографию из основного альбома "Общий" без её удаления из облака.' });
+    }
+
+    await query('DELETE FROM album_photos WHERE album_id = $1 AND photo_id = $2', [albumId, photoId]);
+    res.json({ success: true, message: 'Фотография убрана из альбома.' });
+  } catch (error) {
+    console.error('Error removing photo from album:', error);
+    res.status(500).json({ error: 'Не удалось убрать фотографию из альбома.' });
+  }
+});
+
+// Toggle photo favorite state
+app.put('/api/photos/:id/favorite', authenticateJWT, async (req, res) => {
+  const photoId = req.params.id;
+  const { isFavorite } = req.body;
+  const userId = req.user.id;
+
+  try {
+    // 1. Update photos table
+    await query(
+      'UPDATE photos SET is_favorite = $1 WHERE id = $2 AND user_id = $3',
+      [isFavorite === true, photoId, userId]
+    );
+
+    if (isFavorite === true) {
+      // 2. Find or create "Избранное" album
+      let albumRes = await query("SELECT id FROM albums WHERE user_id = $1 AND name = $2", [userId, 'Избранное']);
+      let favAlbumId;
+      
+      if (albumRes.rows.length === 0) {
+        // Create the "Избранное" album
+        const posResult = await query('SELECT COALESCE(MAX(position)+1, 1) as next_pos FROM albums WHERE user_id = $1', [userId]);
+        const nextPos = posResult.rows[0].next_pos || 1;
+        
+        const insertAlbumRes = await query(
+          'INSERT INTO albums (user_id, name, position) VALUES ($1, $2, $3) RETURNING id',
+          [userId, 'Избранное', nextPos]
+        );
+        favAlbumId = insertAlbumRes.rows[0].id;
+      } else {
+        favAlbumId = albumRes.rows[0].id;
+      }
+
+      // 3. Map photo to "Избранное" album if not already mapped
+      const mapCheck = await query(
+        'SELECT 1 FROM album_photos WHERE album_id = $1 AND photo_id = $2',
+        [favAlbumId, photoId]
+      );
+      
+      if (mapCheck.rows.length === 0) {
+        const posResult = await query(
+          'SELECT COALESCE(MAX(position)+1, 0) as next_pos FROM album_photos WHERE album_id = $1',
+          [favAlbumId]
+        );
+        const nextPos = posResult.rows[0].next_pos || 0;
+        
+        await query(
+          'INSERT INTO album_photos (album_id, photo_id, position) VALUES ($1, $2, $3)',
+          [favAlbumId, photoId, nextPos]
+        );
+      }
+    } else {
+      // 4. If un-favorited, remove from "Избранное" album if mapping exists
+      const albumRes = await query("SELECT id FROM albums WHERE user_id = $1 AND name = $2", [userId, 'Избранное']);
+      if (albumRes.rows.length > 0) {
+        const favAlbumId = albumRes.rows[0].id;
+        await query(
+          'DELETE FROM album_photos WHERE album_id = $1 AND photo_id = $2',
+          [favAlbumId, photoId]
+        );
+      }
+    }
+
+    res.json({ success: true, isFavorite: isFavorite === true });
+  } catch (error) {
+    console.error('Error toggling favorite:', error);
+    res.status(500).json({ error: 'Не удалось обновить статус Избранного.' });
+  }
+});
+
+// Upgrade storage plan / subscription
+app.post('/api/subscription/upgrade', authenticateJWT, async (req, res) => {
+  const { limitBytes } = req.body;
+  const userId = req.user.id;
+
+  if (!limitBytes || typeof limitBytes !== 'number') {
+    return res.status(400).json({ error: 'Некорректный размер хранилища.' });
+  }
+
+  try {
+    await query('UPDATE users SET storage_limit = $1 WHERE id = $2', [limitBytes, userId]);
+    res.json({ success: true, storageLimit: limitBytes });
+  } catch (error) {
+    console.error('Error upgrading subscription:', error);
+    res.status(500).json({ error: 'Не удалось активировать подписку.' });
   }
 });
 
@@ -415,7 +885,7 @@ app.post('/api/photos/upload-url', authenticateJWT, async (req, res) => {
 
 // Confirm successful upload to S3
 app.post('/api/photos/confirm', authenticateJWT, async (req, res) => {
-  const { s3Key, originalName, size, mimeType } = req.body;
+  const { s3Key, originalName, size, mimeType, albumId } = req.body;
   const userId = req.user.id;
 
   if (!s3Key || !originalName || !size || !mimeType) {
@@ -432,6 +902,29 @@ app.post('/api/photos/confirm', authenticateJWT, async (req, res) => {
     );
 
     const newPhoto = insertResult.rows[0];
+    
+    // Automatically map to "Общий" album
+    const albumRes = await query("SELECT id FROM albums WHERE user_id = $1 AND name = 'Общий'", [userId]);
+    if (albumRes.rows.length > 0) {
+      const generalAlbumId = albumRes.rows[0].id;
+      await query(
+        'INSERT INTO album_photos (album_id, photo_id, position) VALUES ($1, $2, $3)',
+        [generalAlbumId, newPhoto.id, 0]
+      );
+    }
+
+    // Also map to target custom album if provided and valid (and not "Общий")
+    if (albumId) {
+      const targetAlbumRes = await query("SELECT id, name FROM albums WHERE user_id = $1 AND id = $2", [userId, albumId]);
+      if (targetAlbumRes.rows.length > 0 && targetAlbumRes.rows[0].name !== 'Общий') {
+        const posResult = await query('SELECT COALESCE(MAX(position)+1, 0) as next_pos FROM album_photos WHERE album_id = $1', [albumId]);
+        const nextPos = posResult.rows[0].next_pos || 0;
+        await query(
+          'INSERT INTO album_photos (album_id, photo_id, position) VALUES ($1, $2, $3)',
+          [albumId, newPhoto.id, nextPos]
+        );
+      }
+    }
     
     // Generate fresh download URL for this photo
     newPhoto.url = await generatePresignedDownloadUrl(s3Key);
