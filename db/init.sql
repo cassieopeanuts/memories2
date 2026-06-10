@@ -51,3 +51,16 @@ CREATE INDEX IF NOT EXISTS idx_users_sber_id ON users(sber_id);
 CREATE INDEX IF NOT EXISTS idx_users_tbank_id ON users(tbank_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_albums_user_id ON albums(user_id);
+
+-- Tester feedback table
+CREATE TABLE IF NOT EXISTS tester_feedback (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    user_name VARCHAR(255),
+    user_email VARCHAR(255),
+    message TEXT NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON tester_feedback(created_at);

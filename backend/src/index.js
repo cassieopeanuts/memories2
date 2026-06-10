@@ -5,11 +5,14 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { query } from './db.js';
+import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import { 
   findOrCreateUser, 
   generateToken, 
   authenticateJWT, 
-  getMockProfile 
+  getMockProfile,
+  JWT_SECRET
 } from './auth.js';
 import { 
   generatePresignedUploadUrl, 
@@ -22,7 +25,25 @@ dotenv.config();
 // Run database migrations on start
 query('ALTER TABLE photos ADD COLUMN IF NOT EXISTS position INT NOT NULL DEFAULT 0', [])
   .then(() => console.log('Migration: checked photos table position column'))
-  .catch(err => console.error('Migration error:', err));
+  .catch(err => console.error('Migration error (photos position):', err));
+
+query(`
+  CREATE TABLE IF NOT EXISTS tester_feedback (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    user_name VARCHAR(255),
+    user_email VARCHAR(255),
+    message TEXT NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  )
+`, [])
+  .then(() => console.log('Migration: checked tester_feedback table existence'))
+  .catch(err => console.error('Migration error (tester_feedback table):', err));
+
+query('ALTER TABLE albums ADD COLUMN IF NOT EXISTS share_token VARCHAR(255) UNIQUE', [])
+  .then(() => console.log('Migration: checked albums table share_token column'))
+  .catch(err => console.error('Migration error (albums share_token):', err));
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -52,7 +73,33 @@ app.use(cors({
 app.use(express.json());
 
 // Create mock upload folder path
-const MOCK_UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+const MOCK_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads');
+
+// Validate redirection origin to prevent Open Redirect vulnerabilities
+function isValidOrigin(originUrl) {
+  if (!originUrl) return true;
+  try {
+    const parsed = new URL(originUrl);
+    // Allow FRONTEND_URL host
+    const frontendHost = new URL(FRONTEND_URL).host;
+    if (parsed.host === frontendHost) return true;
+    
+    // Allow localhost / 127.0.0.1
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+      return true;
+    }
+    
+    // Allow local subnet IPs in development
+    if (process.env.NODE_ENV === 'development') {
+      if (/^192\.168\./.test(parsed.hostname) || /^10\./.test(parsed.hostname) || /^172\./.test(parsed.hostname)) {
+        return true;
+      }
+    }
+  } catch (e) {
+    return false;
+  }
+  return false;
+}
 
 // ==========================================
 // MOCK S3 ENDPOINTS (FOR OFFLINE / DEV MODE)
@@ -60,7 +107,12 @@ const MOCK_UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 // Handles direct PUT upload from client in mock mode
 app.put('/api/mock-s3/*', (req, res) => {
   const fileKey = req.params[0];
-  const filePath = path.join(MOCK_UPLOAD_DIR, fileKey);
+  const filePath = path.resolve(MOCK_UPLOAD_DIR, fileKey);
+  
+  // Prevent Path Traversal
+  if (!filePath.startsWith(MOCK_UPLOAD_DIR)) {
+    return res.status(403).json({ error: 'Доступ запрещен (обход путей).' });
+  }
   
   // Ensure the subdirectory for the user exists before saving
   const dirName = path.dirname(filePath);
@@ -86,7 +138,12 @@ app.put('/api/mock-s3/*', (req, res) => {
 // Serves the file locally in mock mode
 app.get('/api/mock-s3/*', (req, res) => {
   const fileKey = req.params[0];
-  const filePath = path.join(MOCK_UPLOAD_DIR, fileKey);
+  const filePath = path.resolve(MOCK_UPLOAD_DIR, fileKey);
+  
+  // Prevent Path Traversal
+  if (!filePath.startsWith(MOCK_UPLOAD_DIR)) {
+    return res.status(403).json({ error: 'Доступ запрещен (обход путей).' });
+  }
   
   if (!fs.existsSync(filePath)) {
     return res.status(404).send('File not found');
@@ -98,7 +155,7 @@ app.get('/api/mock-s3/*', (req, res) => {
 // 1. Yandex SSO Initiation
 app.get('/api/auth/yandex', async (req, res) => {
   const { origin } = req.query;
-  const targetOrigin = origin || FRONTEND_URL;
+  const targetOrigin = isValidOrigin(origin) ? (origin || FRONTEND_URL) : FRONTEND_URL;
   const clientId = process.env.YANDEX_CLIENT_ID;
   const redirectUri = encodeURIComponent(process.env.REDIRECT_URI);
   
@@ -162,7 +219,7 @@ app.get('/api/auth/yandex/callback', async (req, res) => {
 // 2. Sber ID OIDC Simulation (OIDC Mock Flow)
 app.get('/api/auth/sber', async (req, res) => {
   const { origin } = req.query;
-  const targetOrigin = origin || FRONTEND_URL;
+  const targetOrigin = isValidOrigin(origin) ? (origin || FRONTEND_URL) : FRONTEND_URL;
   const mockProfile = getMockProfile('sber');
   return res.send(getMockOauthHtml('sber', mockProfile, targetOrigin));
 });
@@ -170,7 +227,7 @@ app.get('/api/auth/sber', async (req, res) => {
 // 2b. T-Bank ID OIDC Simulation
 app.get('/api/auth/tbank', async (req, res) => {
   const { origin } = req.query;
-  const targetOrigin = origin || FRONTEND_URL;
+  const targetOrigin = isValidOrigin(origin) ? (origin || FRONTEND_URL) : FRONTEND_URL;
   const mockProfile = getMockProfile('tbank');
   return res.send(getMockOauthHtml('tbank', mockProfile, targetOrigin));
 });
@@ -178,7 +235,7 @@ app.get('/api/auth/tbank', async (req, res) => {
 // 3. Confirm Mock SSO Authorization (Redirects back to frontend callback with valid JWT)
 app.get('/api/auth/mock-login-confirm', async (req, res) => {
   const { provider, origin } = req.query;
-  const targetOrigin = origin || FRONTEND_URL;
+  const targetOrigin = isValidOrigin(origin) ? (origin || FRONTEND_URL) : FRONTEND_URL;
   const mockProfile = getMockProfile(provider || 'yandex', 'mock-user-456');
   
   try {
@@ -751,6 +808,107 @@ app.delete('/api/albums/:albumId/photos/:photoId', authenticateJWT, async (req, 
   }
 });
 
+// Enable album sharing (generates share_token)
+app.post('/api/albums/:id/share', authenticateJWT, async (req, res) => {
+  const albumId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const albumResult = await query('SELECT name, share_token FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    if (albumResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Альбом не найден.' });
+    }
+
+    if (albumResult.rows[0].name === 'Общий') {
+      return res.status(400).json({ error: 'Нельзя поделиться альбомом «Общий».' });
+    }
+
+    let shareToken = albumResult.rows[0].share_token;
+    if (!shareToken) {
+      shareToken = crypto.randomUUID();
+      await query('UPDATE albums SET share_token = $1 WHERE id = $2 AND user_id = $3', [shareToken, albumId, userId]);
+    }
+
+    res.json({ success: true, shareToken });
+  } catch (error) {
+    console.error('Error sharing album:', error);
+    res.status(500).json({ error: 'Не удалось включить общий доступ к альбому.' });
+  }
+});
+
+// Disable album sharing (sets share_token to NULL)
+app.delete('/api/albums/:id/share', authenticateJWT, async (req, res) => {
+  const albumId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const albumResult = await query('SELECT name FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
+    if (albumResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Альбом не найден.' });
+    }
+
+    await query('UPDATE albums SET share_token = NULL WHERE id = $1 AND user_id = $2', [null, albumId, userId]);
+    res.json({ success: true, message: 'Доступ по ссылке отключен.' });
+  } catch (error) {
+    console.error('Error disabling album sharing:', error);
+    res.status(500).json({ error: 'Не удалось отключить общий доступ.' });
+  }
+});
+
+// GET /api/shared/album/:share_token - Public route to fetch shared album photos
+app.get('/api/shared/album/:share_token', async (req, res) => {
+  const { share_token } = req.params;
+
+  try {
+    const albumResult = await query(
+      'SELECT id, name, user_id FROM albums WHERE share_token = $1',
+      [share_token]
+    );
+
+    if (albumResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Ссылка недействительна или владелец отключил доступ.' });
+    }
+
+    const album = albumResult.rows[0];
+
+    // Get owner's name
+    const ownerResult = await query('SELECT name FROM users WHERE id = $1', [album.user_id]);
+    const ownerName = ownerResult.rows.length > 0 ? ownerResult.rows[0].name : 'Пользователь';
+
+    // Get photos in the shared album
+    const photosResult = await query(
+      `SELECT p.id, p.s3_key, p.original_name, p.size, p.mime_type, p.is_favorite, p.created_at, ap.position 
+       FROM photos p 
+       JOIN album_photos ap ON p.id = ap.photo_id 
+       WHERE ap.album_id = $1 
+       ORDER BY ap.position ASC`,
+      [album.id]
+    );
+
+    // Generate secure presigned GET URL for each photo
+    const photosWithUrls = await Promise.all(
+      photosResult.rows.map(async (photo) => {
+        try {
+          const url = await generatePresignedDownloadUrl(photo.s3_key);
+          return { ...photo, url };
+        } catch (e) {
+          console.error(`Error generating download URL for key ${photo.s3_key}:`, e);
+          return { ...photo, url: null };
+        }
+      })
+    );
+
+    res.json({
+      albumName: album.name,
+      ownerName,
+      photos: photosWithUrls
+    });
+  } catch (error) {
+    console.error('Error fetching shared album:', error);
+    res.status(500).json({ error: 'Не удалось загрузить фотографии альбома.' });
+  }
+});
+
 // Toggle photo favorite state
 app.put('/api/photos/:id/favorite', authenticateJWT, async (req, res) => {
   const photoId = req.params.id;
@@ -1006,6 +1164,124 @@ app.delete('/api/photos/:id', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error('Error deleting photo:', error);
     res.status(500).json({ error: 'Не удалось удалить фотографию.' });
+  }
+});
+
+
+// POST /api/feedback - Collect tester feedback (saves to DB and sends email if SMTP configured)
+app.post('/api/feedback', async (req, res) => {
+  const { name, email, message, metadata } = req.body;
+  
+  if (!message || message.trim() === '') {
+    return res.status(400).json({ error: 'Пожалуйста, введите описание проблемы.' });
+  }
+
+  // 1. Try to extract userId from JWT token optionally
+  let userId = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      userId = decoded.userId;
+    } catch (e) {
+      // Ignore token decode errors for feedback
+    }
+  }
+
+  try {
+    // 2. Save to Database
+    const dbResult = await query(
+      'INSERT INTO tester_feedback (user_id, user_name, user_email, message, metadata) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [
+        userId,
+        name ? name.trim() : null,
+        email ? email.trim() : null,
+        message.trim(),
+        JSON.stringify(metadata || {})
+      ]
+    );
+    const feedback = dbResult.rows[0];
+
+    // 3. Send via Mail Server if SMTP is configured
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
+    const smtpSecure = process.env.SMTP_SECURE === 'true' || smtpPort === 465;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    const feedbackReceiver = process.env.FEEDBACK_RECEIVER || smtpUser;
+
+    const emailSubject = `[ОБРАТНАЯ СВЯЗЬ] ЛегкоСохранить.рф — Отзыв от тестировщика`;
+    const emailBodyText = `
+Новый отзыв от тестировщика:
+----------------------------------------
+Имя: ${name || 'Аноним'}
+Email: ${email || 'Не указан'}
+Пользователь ID: ${userId || 'Не авторизован'}
+Сообщение: ${message}
+
+Метаданные устройства:
+${JSON.stringify(metadata || {}, null, 2)}
+----------------------------------------
+    `;
+
+    const emailBodyHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #fcf9f8;">
+        <h2 style="color: #1c2b2a; border-bottom: 2px solid #a45a44; padding-bottom: 10px;">Новый отзыв тестировщика</h2>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; width: 150px; color: #555;">Имя:</td>
+            <td style="padding: 6px 0; color: #1c2b2a;">${name || '<em>Аноним</em>'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; color: #555;">Email:</td>
+            <td style="padding: 6px 0; color: #1c2b2a;">${email || '<em>Не указан</em>'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; color: #555;">User ID:</td>
+            <td style="padding: 6px 0; color: #1c2b2a; font-family: monospace; font-size: 12px;">${userId || '<em>Не авторизован</em>'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; color: #555; vertical-align: top;">Сообщение:</td>
+            <td style="padding: 6px 0; color: #1c2b2a; white-space: pre-wrap; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #eee;">${message}</td>
+          </tr>
+        </table>
+
+        <h3 style="color: #333; margin-top: 25px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Метаданные окружения</h3>
+        <pre style="background: #f4f4f4; padding: 10px; border-radius: 8px; font-size: 11px; color: #666; overflow-x: auto;">${JSON.stringify(metadata || {}, null, 2)}</pre>
+        
+        <p style="font-size: 10px; color: #999; margin-top: 30px; text-align: center;">Письмо сгенерировано автоматически системой ЛегкоСохранить.рф</p>
+      </div>
+    `;
+
+    if (smtpHost && smtpUser && smtpPass) {
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass
+        }
+      });
+
+      await transporter.sendMail({
+        from: `"ЛегкоСохранить.рф Тестирование" <${smtpUser}>`,
+        to: feedbackReceiver,
+        subject: emailSubject,
+        text: emailBodyText,
+        html: emailBodyHtml
+      });
+      console.log(`[Feedback] Feedback successfully saved to DB and sent via SMTP to ${feedbackReceiver}`);
+    } else {
+      console.log(`[Feedback Simulation] SMTP not configured. Printing feedback email to console:\n`, emailBodyText);
+    }
+
+    res.json({ success: true, message: 'Отзыв успешно сохранен и отправлен разработчикам. Спасибо!' });
+  } catch (error) {
+    console.error('Feedback error:', error);
+    res.status(500).json({ error: 'Не удалось отправить отзыв. Пожалуйста, попробуйте позже.' });
   }
 });
 

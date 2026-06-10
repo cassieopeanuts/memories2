@@ -218,7 +218,7 @@
       "mime_type": "image/jpeg",
       "is_favorite": false,
       "created_at": "2026-06-08T11:51:44.309Z",
-      "position": 0
+      "position": 5
     },
     {
       "id": "38b91c30-5205-4bbf-957a-a57c72526ded",
@@ -229,7 +229,7 @@
       "mime_type": "image/jpeg",
       "is_favorite": false,
       "created_at": "2026-06-08T11:52:22.775Z",
-      "position": 1
+      "position": 4
     },
     {
       "id": "54b13085-2521-4cb8-9685-4b92b3ef8ee6",
@@ -240,7 +240,7 @@
       "mime_type": "image/jpeg",
       "is_favorite": false,
       "created_at": "2026-06-08T11:52:33.638Z",
-      "position": 2
+      "position": 3
     },
     {
       "id": "39e1f8fe-00f3-4076-bd66-75b79dbebe44",
@@ -251,7 +251,7 @@
       "mime_type": "image/jpeg",
       "is_favorite": false,
       "created_at": "2026-06-08T12:01:47.451Z",
-      "position": 3
+      "position": 2
     },
     {
       "id": "304fe73d-c2e3-4b4d-92a0-f440042968d6",
@@ -262,7 +262,7 @@
       "mime_type": "image/jpeg",
       "is_favorite": false,
       "created_at": "2026-06-08T12:11:17.544Z",
-      "position": 4
+      "position": 1
     },
     {
       "id": "32d16477-7497-4a22-b804-77543ddb77e2",
@@ -272,8 +272,19 @@
       "size": 102400,
       "mime_type": "image/jpeg",
       "is_favorite": false,
-      "position": 5,
+      "position": 0,
       "created_at": "2026-06-08T12:16:37.543Z"
+    },
+    {
+      "id": "70338b80-135c-4fca-be9a-d2915a52799d",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "s3_key": "ec4088af-61a8-4b0a-9572-69c24b4d6fed/mock-photo-1.jpg",
+      "original_name": "sunset.jpg",
+      "size": 102400,
+      "mime_type": "image/jpeg",
+      "is_favorite": false,
+      "position": 6,
+      "created_at": "2026-06-10T14:27:15.162Z"
     }
   ],
   "albums": [
@@ -381,6 +392,38 @@
       "name": "Избранное",
       "position": 1,
       "created_at": "2026-06-08T12:21:26.197Z"
+    },
+    {
+      "id": "dce569b8-34a2-4665-a8b2-165dd8c2a310",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Тестовый Альбом Шаринга",
+      "position": 9,
+      "share_token": null,
+      "created_at": "2026-06-10T14:15:10.930Z"
+    },
+    {
+      "id": "1b021157-37e2-4433-9910-66ecc53739db",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Тестовый Альбом Шаринга",
+      "position": 10,
+      "share_token": null,
+      "created_at": "2026-06-10T14:15:24.237Z"
+    },
+    {
+      "id": "d10ff206-d26a-48b8-8b71-8ae0e653f7e2",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Тестовый Альбом Шаринга",
+      "position": 11,
+      "share_token": null,
+      "created_at": "2026-06-10T14:27:10.037Z"
+    },
+    {
+      "id": "17794868-b915-4cbb-8634-9ed187034c50",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Мой Новый Альбом",
+      "position": 12,
+      "share_token": null,
+      "created_at": "2026-06-10T14:27:15.156Z"
     }
   ],
   "album_photos": [
@@ -458,6 +501,57 @@
       "album_id": "d76590b9-6ae4-4baa-a2cd-2efff887f7e2",
       "photo_id": "a3ec36d0-eff1-4fd5-8adb-932325c0f27b",
       "position": 0
+    },
+    {
+      "album_id": "00426e87-3b85-45c4-947a-1ed98a37b175",
+      "photo_id": "70338b80-135c-4fca-be9a-d2915a52799d",
+      "position": 0
+    },
+    {
+      "album_id": "17794868-b915-4cbb-8634-9ed187034c50",
+      "photo_id": "70338b80-135c-4fca-be9a-d2915a52799d",
+      "position": 0
+    }
+  ],
+  "tester_feedback": [
+    {
+      "id": "f84c73b5-75eb-4a40-ac99-3f25a19fb1c0",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "user_name": "Тестировщик Иван",
+      "user_email": "ivan.tester@example.ru",
+      "message": "Привет! Это тестовый баг-репорт. При перетаскивании фото в Общем альбоме всё сработало отлично!",
+      "metadata": {
+        "url": "http://localhost:5180/",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "screenSize": "1920x1080"
+      },
+      "created_at": "2026-06-10T14:00:28.452Z"
+    },
+    {
+      "id": "2b8caa8c-7736-4831-9f46-437046a074e4",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "user_name": "Тестировщик Иван",
+      "user_email": "ivan.tester@example.ru",
+      "message": "Привет! Это тестовый баг-репорт. При перетаскивании фото в Общем альбоме всё сработало отлично!",
+      "metadata": {
+        "url": "http://localhost:5180/",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "screenSize": "1920x1080"
+      },
+      "created_at": "2026-06-10T14:05:13.655Z"
+    },
+    {
+      "id": "846d02bf-2257-4abc-afb5-4245cefffa27",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "user_name": "Тестировщик Иван",
+      "user_email": "ivan.tester@example.ru",
+      "message": "Привет! Это тестовый баг-репорт. При перетаскивании фото в Общем альбоме всё сработало отлично!",
+      "metadata": {
+        "url": "http://localhost:5180/",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "screenSize": "1920x1080"
+      },
+      "created_at": "2026-06-10T14:27:20.392Z"
     }
   ]
 }

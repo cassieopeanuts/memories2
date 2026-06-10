@@ -42,7 +42,8 @@ const initialDb = {
   users: [],
   photos: [],
   albums: [],
-  album_photos: []
+  album_photos: [],
+  tester_feedback: []
 };
 
 function readMockDb() {
@@ -56,6 +57,7 @@ function readMockDb() {
     db.photos = db.photos || [];
     db.albums = db.albums || [];
     db.album_photos = db.album_photos || [];
+    db.tester_feedback = db.tester_feedback || [];
     return db;
   } catch (e) {
     return initialDb;
@@ -207,7 +209,7 @@ export async function mockQuery(text, params = []) {
   }
   
   // 1b. ALTER TABLE photos ADD COLUMN IF NOT EXISTS position
-  if (queryText.includes('ALTER TABLE photos ADD COLUMN')) {
+  if (queryText.includes('ALTER TABLE photos ADD COLUMN') || queryText.includes('ALTER TABLE albums ADD COLUMN')) {
     return { rows: [] };
   }
 
@@ -292,6 +294,13 @@ export async function mockQuery(text, params = []) {
     return { rows };
   }
 
+  // Fetch album by share_token
+  if (queryText.includes('FROM albums WHERE share_token =')) {
+    const shareToken = params[0];
+    const rows = db.albums.filter(a => a.share_token === shareToken);
+    return { rows };
+  }
+
   // 10c. Get next album position: SELECT COALESCE(MAX(position)+1, 1) as next_pos FROM albums WHERE user_id = $1
   if (queryText.includes('SELECT COALESCE(MAX(position)+1, 1) as next_pos FROM albums WHERE user_id =')) {
     const userId = params[0];
@@ -331,11 +340,26 @@ export async function mockQuery(text, params = []) {
       user_id,
       name,
       position: parseInt(position, 10) || 0,
+      share_token: null,
       created_at: new Date().toISOString()
     };
     db.albums.push(newAlbum);
     writeMockDb(db);
     return { rows: [newAlbum] };
+  }
+
+  // Update album share_token
+  if (queryText.includes('UPDATE albums SET share_token =')) {
+    const shareToken = params[0];
+    const id = params[1];
+    const userId = params[2];
+    const idx = db.albums.findIndex(a => a.id === id && a.user_id === userId);
+    if (idx !== -1) {
+      db.albums[idx].share_token = shareToken || null;
+      writeMockDb(db);
+      return { rows: [db.albums[idx]] };
+    }
+    return { rows: [] };
   }
 
   // 12. Update album: UPDATE albums SET name = $1, position = $2 WHERE id = $3
@@ -426,6 +450,29 @@ export async function mockQuery(text, params = []) {
     const [album_id, photo_id] = params;
     db.album_photos = db.album_photos.filter(ap => !(ap.album_id === album_id && ap.photo_id === photo_id));
     writeMockDb(db);
+    return { rows: [] };
+  }
+
+  // 18. INSERT INTO tester_feedback
+  if (queryText.includes('INSERT INTO tester_feedback')) {
+    const [user_id, user_name, user_email, message, metadata] = params;
+    const newFeedback = {
+      id: crypto.randomUUID(),
+      user_id: user_id || null,
+      user_name: user_name || null,
+      user_email: user_email || null,
+      message,
+      metadata: typeof metadata === 'string' ? JSON.parse(metadata) : (metadata || {}),
+      created_at: new Date().toISOString()
+    };
+    db.tester_feedback = db.tester_feedback || [];
+    db.tester_feedback.push(newFeedback);
+    writeMockDb(db);
+    return { rows: [newFeedback] };
+  }
+
+  // 18b. CREATE TABLE IF NOT EXISTS tester_feedback
+  if (queryText.includes('CREATE TABLE IF NOT EXISTS tester_feedback')) {
     return { rows: [] };
   }
   

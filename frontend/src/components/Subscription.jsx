@@ -6,6 +6,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
   const [paymentMethod, setPaymentMethod] = useState(null); // 'tbank' | 'sber' | 'yandex' | 'sbp'
   const [paymentStep, setPaymentStep] = useState('select_method'); // 'select_method', 'processing', 'success'
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
 
@@ -86,7 +87,8 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
         setPaymentStep('success');
         onUpgradeSuccess(data.storageLimit);
       } catch (err) {
-        alert(err.message);
+        setErrorMsg(err.message);
+        setTimeout(() => setErrorMsg(''), 5000);
         setSelectedPlan(null);
       }
     }, 2500);
@@ -96,6 +98,11 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
 
   return (
     <div className="w-full max-w-5xl mx-auto px-2 animate-photo-entry">
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-2xl text-center animate-photo-entry">
+          {errorMsg}
+        </div>
+      )}
       
       {/* Title block */}
       <div className="text-center max-w-lg mx-auto mb-10">
@@ -191,8 +198,8 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
 
       {/* Payment Overlay Modal */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/80 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-brand-200/50 shadow-2xl animate-photo-entry">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 backdrop-blur-md">
+          <div className="bg-white/90 rounded-[28px] p-6 max-w-sm w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry">
             
             {paymentStep === 'select_method' && (
               <>

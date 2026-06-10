@@ -23,7 +23,7 @@ if (!isMock) {
 }
 
 // Ensure local uploads directory exists if in Mock mode
-const MOCK_UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+const MOCK_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads');
 if (isMock && !fs.existsSync(MOCK_UPLOAD_DIR)) {
   fs.mkdirSync(MOCK_UPLOAD_DIR, { recursive: true });
 }
@@ -76,7 +76,11 @@ export async function deleteFromStorage(key) {
   const bucketName = process.env.S3_BUCKET_NAME || 'memories-photos';
 
   if (isMock) {
-    const filePath = path.join(MOCK_UPLOAD_DIR, key);
+    const filePath = path.resolve(MOCK_UPLOAD_DIR, key);
+    if (!filePath.startsWith(MOCK_UPLOAD_DIR)) {
+      console.warn(`Blocked traversal deletion attempt with key: ${key}`);
+      throw new Error('Access denied (path traversal)');
+    }
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
       console.log(`Mock S3: Deleted file locally at ${filePath}`);

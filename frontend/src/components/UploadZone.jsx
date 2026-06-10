@@ -4,6 +4,7 @@ import { UploadCloud, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
 export default function UploadZone({ token, onUploadComplete }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [uploads, setUploads] = useState({});
+  const [zoneError, setZoneError] = useState('');
   const fileInputRef = useRef(null);
   const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
 
@@ -42,7 +43,8 @@ export default function UploadZone({ token, onUploadComplete }) {
     // Only allow images
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
     if (imageFiles.length === 0) {
-      alert('Пожалуйста, выберите только фотографии (картинки).');
+      setZoneError('Пожалуйста, выберите только фотографии (картинки).');
+      setTimeout(() => setZoneError(''), 4000);
       return;
     }
     
@@ -188,6 +190,11 @@ export default function UploadZone({ token, onUploadComplete }) {
 
   return (
     <div className="w-full max-w-2xl mx-auto mb-10">
+      {zoneError && (
+        <div className="mb-4 p-3.5 bg-red-50/90 border border-red-200 text-red-800 text-xs font-semibold rounded-2xl text-center backdrop-blur-sm animate-photo-entry">
+          {zoneError}
+        </div>
+      )}
       {/* Upload Zone Border Area */}
       <div
         onDragEnter={handleDrag}

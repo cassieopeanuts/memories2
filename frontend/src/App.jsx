@@ -3,10 +3,15 @@ import Hero from './components/Hero.jsx';
 import Gallery from './components/Gallery.jsx';
 import PinLock from './components/PinLock.jsx';
 import Subscription from './components/Subscription.jsx';
+import BetaLock from './components/BetaLock.jsx';
+import TesterFeedback from './components/TesterFeedback.jsx';
+import SharedAlbum from './components/SharedAlbum.jsx';
+import Offer from './components/Offer.jsx';
 import { Camera, LogOut, ShieldCheck, RefreshCw, User, X, CreditCard } from 'lucide-react';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [betaUnlocked, setBetaUnlocked] = useState(() => localStorage.getItem('beta_unlocked') === 'true');
   const [user, setUser] = useState(null);
   const [hasPin, setHasPin] = useState(false);
   const [pinVerified, setPinVerified] = useState(false);
@@ -15,6 +20,15 @@ export default function App() {
   const [isCheckingProfile, setIsCheckingProfile] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' or 'subscription'
+  const [sharedAlbumToken, setSharedAlbumToken] = useState(() => {
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts[1] === 'shared' && pathParts[2]) {
+      return pathParts[2];
+    }
+    const params = new URLSearchParams(window.location.search);
+    return params.get('share') || null;
+  });
+  const [showOffer, setShowOffer] = useState(false);
   
   // PWA installation states
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -181,7 +195,8 @@ export default function App() {
       setHasPin(data.user.hasPin);
       setPinVerified(false); // Require entering PIN
     } catch (e) {
-      alert(e.message);
+      setErrorMsg(e.message);
+      setTimeout(() => setErrorMsg(''), 5000);
     } finally {
       setLoading(false);
     }
@@ -201,6 +216,41 @@ export default function App() {
     setStorage(prev => ({ ...prev, limit: newLimit }));
   };
 
+  // BETA LOCK SITE GATE (PIN 6969 REQUIRED FOR ACCESS)
+  if (!betaUnlocked) {
+    return (
+      <BetaLock 
+        onSuccess={() => setBetaUnlocked(true)} 
+      />
+    );
+  }
+
+  // PUBLIC OFFER PAGE
+  if (showOffer) {
+    return (
+      <>
+        <Offer onBack={() => setShowOffer(false)} />
+        <TesterFeedback token={token} user={user} />
+      </>
+    );
+  }
+
+  // PUBLIC SHARED ALBUM PAGE
+  if (sharedAlbumToken) {
+    return (
+      <>
+        <SharedAlbum 
+          shareToken={sharedAlbumToken} 
+          onBackToApp={() => {
+            setSharedAlbumToken(null);
+            window.history.replaceState({}, document.title, '/');
+          }} 
+        />
+        <TesterFeedback token={token} user={user} />
+      </>
+    );
+  }
+
   // LOADING STATE
   if (loading || (token && isCheckingProfile)) {
     return (
@@ -214,26 +264,38 @@ export default function App() {
   // NOT LOGGED IN
   if (!token) {
     return (
-      <Hero 
-        onDemoLogin={handleDemoLogin} 
-        onEmailLoginSuccess={handleEmailLoginSuccess} 
-      />
+      <>
+        {errorMsg && (
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-red-50/90 border border-red-200 text-red-700 text-xs font-semibold rounded-2xl text-center shadow-lg backdrop-blur-sm animate-photo-entry">
+            {errorMsg}
+          </div>
+        )}
+        <Hero 
+          onDemoLogin={handleDemoLogin} 
+          onEmailLoginSuccess={handleEmailLoginSuccess} 
+          onViewOffer={() => setShowOffer(true)}
+        />
+        <TesterFeedback token={token} user={user} />
+      </>
     );
   }
 
   // LOCK SCREEN (PIN REQUIRED)
   if (!pinVerified) {
     return (
-      <PinLock
-        token={token}
-        mode={hasPin ? 'verify' : 'setup'}
-        onSuccess={() => {
-          setHasPin(true);
-          setPinVerified(true);
-        }}
-        onLogout={handleLogout}
-        backendUrl={backendUrl}
-      />
+      <>
+        <PinLock
+          token={token}
+          mode={hasPin ? 'verify' : 'setup'}
+          onSuccess={() => {
+            setHasPin(true);
+            setPinVerified(true);
+          }}
+          onLogout={handleLogout}
+          backendUrl={backendUrl}
+        />
+        <TesterFeedback token={token} user={user} />
+      </>
     );
   }
 
@@ -380,6 +442,7 @@ export default function App() {
       <footer className="w-full py-8 text-center text-[10px] text-brand-400 font-semibold tracking-wider uppercase bg-brand-100/20 mt-12 border-t border-brand-200/20">
         © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНАЯ ГАЛЕРЕЯ
       </footer>
+      <TesterFeedback token={token} user={user} />
     </div>
   );
 }

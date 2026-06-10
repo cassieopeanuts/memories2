@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function Hero({ onDemoLogin, onEmailLoginSuccess }) {
+export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -203,6 +203,22 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess }) {
               Т-Банк 🧔
             </button>
           </div>
+        </div>
+
+        {/* Public Offer Link */}
+        <div className="mt-8 text-center text-[11px] text-brand-400 font-light max-w-xs leading-relaxed">
+          Авторизуясь на сайте, вы принимаете условия{' '}
+          <a
+            href="/offer"
+            onClick={(e) => {
+              e.preventDefault();
+              onViewOffer();
+            }}
+            className="text-brand-500 hover:text-brand-700 underline font-medium cursor-pointer"
+          >
+            Публичной оферты
+          </a>{' '}
+          и даете согласие на обработку персональных данных.
         </div>
       </main>
 

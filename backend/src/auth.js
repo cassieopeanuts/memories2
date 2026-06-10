@@ -1,10 +1,18 @@
+import crypto from 'crypto';
+import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { query } from './db.js';
-import dotenv from 'dotenv';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ag_very_secret_token_12345!';
+let fallbackSecret = 'ag_very_secret_token_12345!';
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.warn('🚨 SECURITY WARNING: process.env.JWT_SECRET is not configured in production environment!');
+  console.warn('🚨 Generating a random secure fallback key. Sessions will be invalidated upon server restart!');
+  fallbackSecret = crypto.randomBytes(32).toString('hex');
+}
+
+export const JWT_SECRET = process.env.JWT_SECRET || fallbackSecret;
 
 /**
  * Find or create user in PostgreSQL

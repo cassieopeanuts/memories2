@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Eye, Image as ImageIcon, Heart, ChevronLeft, ChevronRight, 
   Folder, FolderPlus, Plus, MoreVertical, Check, Trash2, ArrowLeft, Move,
-  AlertCircle, CheckCircle, Info
+  AlertCircle, CheckCircle, Info, Share2, Copy, Globe, ExternalLink
 } from 'lucide-react';
 import UploadZone from './UploadZone.jsx';
 
@@ -39,6 +39,61 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
+  };
+
+  // Album Sharing States
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [sharingLoading, setSharingLoading] = useState(false);
+
+  const handleEnableSharing = async () => {
+    if (!activeAlbum) return;
+    setSharingLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`}/api/albums/${activeAlbum.id}/share`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const updatedAlbum = { ...activeAlbum, share_token: data.shareToken };
+        setActiveAlbum(updatedAlbum);
+        setAlbums(prev => prev.map(a => a.id === activeAlbum.id ? { ...a, share_token: data.shareToken } : a));
+        showToast('Доступ по ссылке включен!');
+      } else {
+        showToast(data.error || 'Не удалось включить доступ', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Ошибка сети', 'error');
+    } finally {
+      setSharingLoading(false);
+    }
+  };
+
+  const handleDisableSharing = async () => {
+    if (!activeAlbum) return;
+    setSharingLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`}/api/albums/${activeAlbum.id}/share`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const updatedAlbum = { ...activeAlbum, share_token: null };
+        setActiveAlbum(updatedAlbum);
+        setAlbums(prev => prev.map(a => a.id === activeAlbum.id ? { ...a, share_token: null } : a));
+        showToast('Доступ по ссылке отключен.');
+      } else {
+        showToast(data.error || 'Не удалось отключить доступ', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Ошибка сети', 'error');
+    } finally {
+      setSharingLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -289,6 +344,35 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     } catch (err) {
       showToast(err.message, 'error');
     }
+  };
+
+  // Delete photo permanently from cloud storage
+  const handleDeletePhoto = async (photoId) => {
+    setConfirmConfig({
+      isOpen: true,
+      message: 'Вы уверены, что хотите удалить это фото? Оно будет удалено навсегда! Восстановить его будет невозможно, это сотрет снимок из облака бесповоротно.',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`${backendUrl}/api/photos/${photoId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (!response.ok) throw new Error('Не удалось удалить фотографию');
+          
+          setSelectedIndex(null);
+          setShowOptionsDropdown(false);
+          if (activeAlbum) {
+            fetchAlbumPhotos(activeAlbum.id);
+          }
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
+          showToast('Фотография удалена из облака.');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      }
+    });
   };
 
   // Multiple Selection logic
@@ -636,6 +720,16 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
             </div>
 
             <div className="flex items-center gap-2">
+              {activeAlbum.name !== 'Общий' && (
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="flex items-center gap-1.5 text-xs font-semibold border border-brand-200 hover:bg-brand-100/30 text-brand-800 px-3.5 py-2 rounded-2xl cursor-pointer transition-colors shadow-sm"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-brand-500" />
+                  Поделиться
+                </button>
+              )}
+
               {!isSelectMode ? (
                 <button
                   onClick={() => setIsSelectMode(true)}
@@ -780,8 +874,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
       {/* Popup Dialog: Add selected photos to album */}
       {showAddToAlbum && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/80 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-brand-200/50 shadow-2xl animate-photo-entry">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-brand-950/50 p-4 backdrop-blur-md">
+          <div className="bg-white/90 rounded-[28px] p-6 max-w-sm w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-serif text-lg font-semibold text-brand-900">Выберите альбом</h3>
               <button 
@@ -836,10 +930,10 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
       {/* Modal: Create Album */}
       {showCreateAlbum && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/80 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 backdrop-blur-md">
           <form 
             onSubmit={handleCreateAlbum}
-            className="bg-white rounded-3xl p-6 max-w-sm w-full border border-brand-200/50 shadow-2xl animate-photo-entry"
+            className="bg-white/90 rounded-[28px] p-6 max-w-sm w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry"
           >
             <h3 className="font-serif text-lg font-semibold text-brand-900 mb-4">Новый фотоальбом</h3>
             <input
@@ -869,6 +963,123 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
         </div>
       )}
 
+      {/* Modal: Share Album */}
+      {showShareModal && activeAlbum && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 backdrop-blur-md">
+          <div className="bg-white/90 rounded-[28px] p-6 max-w-md w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-serif text-lg font-semibold text-brand-900 flex items-center gap-2">
+                <Globe className="w-5 h-5 text-brand-500" />
+                Общий доступ к альбому
+              </h3>
+              <button 
+                onClick={() => { setShowShareModal(false); setCopied(false); }}
+                className="text-brand-400 hover:text-brand-900 transition-colors p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-brand-600 font-light leading-relaxed mb-5">
+              Создайте публичную ссылку, чтобы поделиться этим альбомом с близкими. Все, у кого есть ссылка, смогут просматривать фотографии.
+            </p>
+
+            {sharingLoading ? (
+              <div className="text-center py-6 text-brand-500 text-xs font-semibold">
+                Загрузка...
+              </div>
+            ) : activeAlbum.share_token ? (
+              <div className="space-y-4">
+                <div className="p-3.5 bg-brand-50/60 border border-brand-200/40 rounded-2xl">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-brand-400 block mb-1">
+                    Публичная ссылка
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}/shared/${activeAlbum.share_token}`}
+                      className="flex-1 bg-transparent border-none focus:outline-none text-xs font-semibold text-brand-800 truncate"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/shared/${activeAlbum.share_token}`);
+                        setCopied(true);
+                        showToast('Ссылка скопирована в буфер обмена!');
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="p-2 bg-white hover:bg-brand-100/50 border border-brand-200 rounded-xl text-brand-600 hover:text-brand-900 transition-all flex items-center justify-center shrink-0 cursor-pointer"
+                      title="Копировать ссылку"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                    <a
+                      href={`/shared/${activeAlbum.share_token}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-white hover:bg-brand-100/50 border border-brand-200 rounded-xl text-brand-600 hover:text-brand-900 transition-all flex items-center justify-center shrink-0"
+                      title="Открыть ссылку"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-brand-400 block mb-1">
+                    Поделиться в соцсетях
+                  </span>
+                  <div className="flex gap-2">
+                    {/* Telegram */}
+                    <a
+                      href={`https://t.me/share/url?url=${encodeURIComponent(`${window.location.origin}/shared/${activeAlbum.share_token}`)}&text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»!`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2.5 bg-[#229ED9] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      Telegram
+                    </a>
+                    {/* WhatsApp */}
+                    <a
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»: ${window.location.origin}/shared/${activeAlbum.share_token}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2.5 bg-[#25D366] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      WhatsApp
+                    </a>
+                    {/* VK */}
+                    <a
+                      href={`https://vk.com/share.php?url=${encodeURIComponent(`${window.location.origin}/shared/${activeAlbum.share_token}`)}&title=${encodeURIComponent(`Фотоальбом «${activeAlbum.name}»`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2.5 bg-[#0077FF] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      ВКонтакте
+                    </a>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleDisableSharing}
+                  className="w-full py-3 mt-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl text-xs font-semibold hover:text-red-700 transition-colors border border-red-200/50 cursor-pointer"
+                >
+                  Отключить доступ по ссылке
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleEnableSharing}
+                className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl text-xs font-semibold cursor-pointer shadow-sm flex items-center justify-center gap-2"
+              >
+                <Globe className="w-4 h-4" />
+                Включить доступ по ссылке
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Fullscreen iPhone-style Lightbox */}
       {selectedPhoto && (
         <div 
@@ -895,31 +1106,76 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
             
             {/* Options Dropdown list (iPhone style) */}
             <div className="flex items-center gap-2 relative">
-              {activeAlbum && activeAlbum.name !== 'Общий' && (
-                <div>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowOptionsDropdown(!showOptionsDropdown);
-                    }}
-                    className="w-10 h-10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-full flex items-center justify-center transition-all cursor-pointer backdrop-blur-sm"
-                    title="Опции"
-                  >
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
-                  
-                  {showOptionsDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl z-60 overflow-hidden py-1 animate-photo-entry">
+              <div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowOptionsDropdown(!showOptionsDropdown);
+                  }}
+                  className="w-10 h-10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-full flex items-center justify-center transition-all cursor-pointer backdrop-blur-sm"
+                  title="Опции"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+                
+                {showOptionsDropdown && (
+                  <div className="absolute right-0 mt-2 w-56 bg-neutral-900/95 border border-neutral-800 rounded-2xl shadow-xl z-[60] overflow-hidden py-1.5 animate-photo-entry backdrop-blur-md">
+                    {/* В избранное / Из избранного */}
+                    <button
+                      onClick={(e) => {
+                        toggleFavorite(selectedPhoto, e);
+                        setShowOptionsDropdown(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between"
+                    >
+                      <span>{selectedPhoto.is_favorite ? 'Убрать из избранного' : 'Добавить в избранное'}</span>
+                      <Heart className={`w-4 h-4 ${selectedPhoto.is_favorite ? 'text-brand-500 fill-brand-500' : 'text-white/60'}`} />
+                    </button>
+
+                    {/* Добавить в альбом */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowOptionsDropdown(false);
+                        setSelectedPhotoIds([selectedPhoto.id]);
+                        setShowAddToAlbum(true);
+                      }}
+                      className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between"
+                    >
+                      <span>Добавить в альбом</span>
+                      <FolderPlus className="w-4 h-4 text-white/60" />
+                    </button>
+
+                    {/* Убрать из этого альбома */}
+                    {activeAlbum && activeAlbum.name !== 'Общий' && (
                       <button
-                        onClick={() => handleRemovePhotoFromAlbum(selectedPhoto.id)}
-                        className="w-full text-left px-4 py-3 text-xs text-red-400 hover:bg-white/5 transition-colors font-medium cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowOptionsDropdown(false);
+                          handleRemovePhotoFromAlbum(selectedPhoto.id);
+                        }}
+                        className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
                       >
-                        Убрать из этого альбома
+                        <span>Убрать из этого альбома</span>
+                        <X className="w-4 h-4 text-white/60" />
                       </button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+
+                    {/* Удалить навсегда */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowOptionsDropdown(false);
+                        handleDeletePhoto(selectedPhoto.id);
+                      }}
+                      className="w-full text-left px-4 py-3 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors font-semibold cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
+                    >
+                      <span>Удалить навсегда</span>
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <button 
                 onClick={() => {
@@ -1029,8 +1285,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
       {/* Custom Confirmation Modal */}
       {confirmConfig.isOpen && (
-        <div className="fixed inset-0 bg-brand-950/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white border border-brand-200/50 max-w-sm w-full rounded-3xl p-6 shadow-2xl animate-scale-in">
+        <div className="fixed inset-0 bg-brand-950/50 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white/90 border border-brand-200/40 max-w-sm w-full rounded-[28px] p-6 shadow-2xl backdrop-blur-lg animate-scale-in">
             <h4 className="font-serif text-base font-bold text-brand-900 mb-2">Подтверждение</h4>
             <p className="text-xs text-brand-700 font-light leading-relaxed mb-6">
               {confirmConfig.message}
