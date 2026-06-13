@@ -216,7 +216,7 @@ export default function App() {
     setStorage(prev => ({ ...prev, limit: newLimit }));
   };
 
-  // BETA LOCK SITE GATE (PIN 6969 REQUIRED FOR ACCESS)
+  // BETA LOCK SITE GATE (PIN 1306 REQUIRED FOR ACCESS)
   if (!betaUnlocked) {
     return (
       <BetaLock 

@@ -27,7 +27,7 @@ export default function BetaLock({ onSuccess }) {
   useEffect(() => {
     if (pin.length === 4) {
       const timer = setTimeout(() => {
-        if (pin === '6969') {
+        if (pin === '1306') {
           localStorage.setItem('beta_unlocked', 'true');
           onSuccess();
         } else {
