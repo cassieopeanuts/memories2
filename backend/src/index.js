@@ -1255,19 +1255,22 @@ ${JSON.stringify(metadata || {}, null, 2)}
       </div>
     `;
 
-    if (smtpHost && smtpUser && smtpPass) {
-      const transporter = nodemailer.createTransport({
+    if (smtpHost) {
+      const transportConfig = {
         host: smtpHost,
         port: smtpPort,
-        secure: smtpSecure,
-        auth: {
+        secure: smtpSecure
+      };
+      if (smtpUser && smtpPass) {
+        transportConfig.auth = {
           user: smtpUser,
           pass: smtpPass
-        }
-      });
+        };
+      }
+      const transporter = nodemailer.createTransport(transportConfig);
 
       await transporter.sendMail({
-        from: `"ЛегкоСохранить.рф Тестирование" <${smtpUser}>`,
+        from: `"ЛегкоСохранить.РФ Тестирование" <${smtpUser || 'no-reply@xn--e1aflcbbgbbec7c.xn--p1ai'}>`,
         to: feedbackReceiver,
         subject: emailSubject,
         text: emailBodyText,

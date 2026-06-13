@@ -424,6 +424,14 @@
       "position": 12,
       "share_token": null,
       "created_at": "2026-06-10T14:27:15.156Z"
+    },
+    {
+      "id": "9bc71027-1f1d-45b0-b369-4f26f9d18e22",
+      "user_id": "ec4088af-61a8-4b0a-9572-69c24b4d6fed",
+      "name": "Тестовый Альбом Шаринга",
+      "position": 13,
+      "share_token": null,
+      "created_at": "2026-06-13T05:58:56.786Z"
     }
   ],
   "album_photos": [

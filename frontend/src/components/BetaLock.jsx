@@ -114,7 +114,7 @@ export default function BetaLock({ onSuccess }) {
       {/* Footer stamp */}
       <div className="text-center pb-4 text-[10px] text-brand-400 font-bold uppercase tracking-widest flex items-center justify-center gap-1">
         <HelpCircle className="w-3.5 h-3.5" />
-        <span>ЛегкоСохранить.рф — Зона Тестирования</span>
+        <span>ЛегкоСохранить.РФ — Зона Тестирования</span>
       </div>
     </div>
   );

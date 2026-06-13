@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -56,11 +56,9 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
       {/* Header / Brand Logo */}
       <header className="max-w-4xl mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 flex items-center justify-center text-brand-50 shadow-md">
-            <Camera className="w-5 h-5" />
-          </div>
+          <img src="/logo.png" className="w-10 h-10 object-contain" alt="Логотип" />
           <span className="font-serif font-bold text-2xl md:text-3xl tracking-tight text-brand-900">
-            ЛегкоСохранить.рф
+            ЛегкоСохранить.РФ
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-brand-500 uppercase tracking-widest bg-brand-100/50 px-3 py-1.5 rounded-full">
@@ -80,7 +78,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
         {/* Title */}
         <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-brand-900 leading-tight font-medium mb-6">
           Память на телефоне <br className="hidden sm:inline"/>
-          <span className="italic font-normal text-brand-600">больше не закончится</span>
+          <span className="italic font-normal text-[#f1a7ba]">больше не закончится</span>
         </h1>
 
         {/* Reassuring Subtitle */}

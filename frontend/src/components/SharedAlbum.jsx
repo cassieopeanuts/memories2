@@ -130,7 +130,7 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
               <Globe className="w-4.5 h-4.5" />
             </div>
             <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-900">
-              ЛегкоСохранить.рф
+              ЛегкоСохранить.РФ
             </span>
           </div>
 

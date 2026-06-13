@@ -26,6 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: memories_backend
     restart: always
+    command: npm run dev
     ports:
       - "5000:5000"
     environment:
@@ -46,6 +47,12 @@ services:
       - YANDEX_CLIENT_ID=mock_yandex_client_id
       - YANDEX_CLIENT_SECRET=mock_yandex_client_secret
       - REDIRECT_URI=http://localhost:5000/api/auth/yandex/callback
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_SECURE=false
+      - SMTP_USER=
+      - SMTP_PASS=
+      - FEEDBACK_RECEIVER=admin@xn--e1aflcbbgbbec7c.xn--p1ai
     depends_on:
       db:
         condition: service_healthy
@@ -68,6 +75,14 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: memories_mailpit
+    restart: always
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
 volumes:
   postgres_data:

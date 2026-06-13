@@ -7,7 +7,7 @@ import BetaLock from './components/BetaLock.jsx';
 import TesterFeedback from './components/TesterFeedback.jsx';
 import SharedAlbum from './components/SharedAlbum.jsx';
 import Offer from './components/Offer.jsx';
-import { Camera, LogOut, ShieldCheck, RefreshCw, User, X, CreditCard } from 'lucide-react';
+import { LogOut, ShieldCheck, RefreshCw, User, X, CreditCard } from 'lucide-react';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -309,11 +309,9 @@ export default function App() {
             onClick={() => setActiveTab('gallery')}
             className="flex items-center gap-2 cursor-pointer"
           >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 flex items-center justify-center text-brand-50 shadow-sm">
-              <Camera className="w-4.5 h-4.5" />
-            </div>
+            <img src="/logo.png" className="w-9 h-9 object-contain" alt="Логотип" />
             <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-900 hidden sm:inline">
-              ЛегкоСохранить.рф
+              ЛегкоСохранить.РФ
             </span>
           </div>
 
