@@ -1075,6 +1075,33 @@ app.post('/api/photos/confirm', authenticateJWT, async (req, res) => {
       );
     }
 
+    // Automatically check/create "Видео" album if a video file is uploaded
+    if (mimeType && mimeType.startsWith('video/')) {
+      let videoAlbumId;
+      const videoAlbumRes = await query("SELECT id FROM albums WHERE user_id = $1 AND name = 'Видео'", [userId]);
+      
+      if (videoAlbumRes.rows.length === 0) {
+        const posRes = await query('SELECT COALESCE(MAX(position)+1, 1) as next_pos FROM albums WHERE user_id = $1', [userId]);
+        const nextPos = posRes.rows[0].next_pos || 1;
+        const createRes = await query(
+          'INSERT INTO albums (user_id, name, position) VALUES ($1, $2, $3) RETURNING id',
+          [userId, 'Видео', nextPos]
+        );
+        videoAlbumId = createRes.rows[0].id;
+        console.log(`Automatically created "Видео" album for user ${userId}`);
+      } else {
+        videoAlbumId = videoAlbumRes.rows[0].id;
+      }
+
+      // Map this video to the "Видео" album
+      const posResult = await query('SELECT COALESCE(MAX(position)+1, 0) as next_pos FROM album_photos WHERE album_id = $1', [videoAlbumId]);
+      const nextPhotoPos = posResult.rows[0].next_pos || 0;
+      await query(
+        'INSERT INTO album_photos (album_id, photo_id, position) VALUES ($1, $2, $3)',
+        [videoAlbumId, newPhoto.id, nextPhotoPos]
+      );
+    }
+
     // Also map to target custom album if provided and valid (and not "Общий")
     if (albumId) {
       const targetAlbumRes = await query("SELECT id, name FROM albums WHERE user_id = $1 AND id = $2", [userId, albumId]);

@@ -40,15 +40,15 @@ export default function UploadZone({ token, onUploadComplete }) {
   };
 
   const handleFiles = (files) => {
-    // Only allow images
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    if (imageFiles.length === 0) {
-      setZoneError('Пожалуйста, выберите только фотографии (картинки).');
+    // Allow images and videos
+    const allowedFiles = files.filter(file => file.type.startsWith('image/') || file.type.startsWith('video/'));
+    if (allowedFiles.length === 0) {
+      setZoneError('Пожалуйста, выберите только фотографии или видеоролики.');
       setTimeout(() => setZoneError(''), 4000);
       return;
     }
     
-    imageFiles.forEach(file => {
+    allowedFiles.forEach(file => {
       uploadFile(file);
     });
   };
@@ -214,7 +214,7 @@ export default function UploadZone({ token, onUploadComplete }) {
           type="file"
           className="hidden"
           multiple
-          accept="image/*"
+          accept="image/*,video/*"
           onChange={handleChange}
         />
 
@@ -223,15 +223,15 @@ export default function UploadZone({ token, onUploadComplete }) {
         </div>
 
         <h3 className="font-serif text-lg font-medium text-brand-900 mb-2">
-          Сохранить новые фотографии
+          Сохранить новые фото и видео
         </h3>
         
         <div className="mt-2 px-6 py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 hover:opacity-95 text-white font-semibold rounded-2xl text-sm transition-all duration-200 shadow-md inline-flex items-center gap-2 active:scale-[0.98]">
-          Выбрать фотографии с телефона
+          Выбрать фото и видео с телефона
         </div>
         
         <p className="text-xs text-brand-600 font-light max-w-xs mt-4 leading-relaxed">
-          Нажмите кнопку выше, чтобы сделать снимок на камеру или выбрать готовые кадры из галереи смартфона.
+          Нажмите кнопку выше, чтобы сделать снимок, записать видео или выбрать готовые кадры из галереи смартфона.
         </p>
       </div>
 

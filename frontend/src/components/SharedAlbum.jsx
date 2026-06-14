@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Eye, Image as ImageIcon, ChevronLeft, ChevronRight, 
-  ArrowLeft, RefreshCw, AlertCircle, Globe
+  ArrowLeft, RefreshCw, AlertCircle, Globe, Play
 } from 'lucide-react';
 
 export default function SharedAlbum({ shareToken, onBackToApp }) {
@@ -172,12 +172,28 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
                   onClick={() => setSelectedIndex(index)}
                   className="aspect-square bg-white border border-brand-200/40 rounded-2xl overflow-hidden cursor-pointer hover:border-brand-400 group relative shadow-sm hover:scale-[1.01] transition-all duration-300"
                 >
-                  <img
-                    src={photoUrl}
-                    alt={photo.original_name}
-                    loading="lazy"
-                    className="w-full h-full object-cover select-none"
-                  />
+                  {photo.mime_type && photo.mime_type.startsWith('video/') ? (
+                    <div className="relative w-full h-full">
+                      <video
+                        src={photoUrl}
+                        className="w-full h-full object-cover select-none pointer-events-none"
+                        preload="metadata"
+                        muted
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                        <div className="w-9 h-9 rounded-full bg-white/95 shadow-md flex items-center justify-center text-brand-600 transition-transform group-hover:scale-110">
+                          <Play className="w-3.5 h-3.5 fill-brand-600 ml-0.5" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={photoUrl}
+                      alt={photo.original_name}
+                      loading="lazy"
+                      className="w-full h-full object-cover select-none"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-brand-950/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="w-8 h-8 rounded-full bg-white/95 text-brand-800 flex items-center justify-center shadow-md">
                       <Eye className="w-4 h-4" />
@@ -226,14 +242,25 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
               </button>
             )}
 
-            <img
-              key={selectedIndex}
-              src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
-              alt={selectedPhoto.original_name}
-              draggable="false"
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry select-none cursor-default"
-            />
+            {selectedPhoto.mime_type && selectedPhoto.mime_type.startsWith('video/') ? (
+              <video
+                key={selectedIndex}
+                src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
+                controls
+                autoPlay
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry cursor-default"
+              />
+            ) : (
+              <img
+                key={selectedIndex}
+                src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
+                alt={selectedPhoto.original_name}
+                draggable="false"
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry select-none cursor-default"
+              />
+            )}
 
             {photos.length > 1 && (
               <button

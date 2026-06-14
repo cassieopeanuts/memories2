@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Eye, Image as ImageIcon, Heart, ChevronLeft, ChevronRight, 
   Folder, FolderPlus, Plus, MoreVertical, Check, Trash2, ArrowLeft, Move,
-  AlertCircle, CheckCircle, Info, Share2, Copy, Globe, ExternalLink
+  AlertCircle, CheckCircle, Info, Share2, Copy, Globe, ExternalLink, Play
 } from 'lucide-react';
 import UploadZone from './UploadZone.jsx';
 
@@ -802,13 +802,29 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     `}
                   >
                     {photo.url ? (
-                      <img
-                        src={photo.url.startsWith('http') ? photo.url : `${backendUrl}${photo.url}`}
-                        alt={photo.original_name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
-                        loading="lazy"
-                        draggable="false"
-                      />
+                      photo.mime_type && photo.mime_type.startsWith('video/') ? (
+                        <div className="relative w-full h-full">
+                          <video
+                            src={photo.url.startsWith('http') ? photo.url : `${backendUrl}${photo.url}`}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
+                            preload="metadata"
+                            muted
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                            <div className="w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-brand-600 transition-transform group-hover:scale-110">
+                              <Play className="w-4 h-4 fill-brand-600 ml-0.5" />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={photo.url.startsWith('http') ? photo.url : `${backendUrl}${photo.url}`}
+                          alt={photo.original_name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
+                          loading="lazy"
+                          draggable="false"
+                        />
+                      )
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-brand-400">
                         <ImageIcon className="w-8 h-8" />
@@ -1205,15 +1221,26 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               </button>
             )}
 
-            {/* The Photo */}
-            <img
-              key={selectedIndex}
-              src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
-              alt={selectedPhoto.original_name}
-              draggable="false"
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry select-none cursor-default"
-            />
+            {/* The Photo or Video */}
+            {selectedPhoto.mime_type && selectedPhoto.mime_type.startsWith('video/') ? (
+              <video
+                key={selectedIndex}
+                src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
+                controls
+                autoPlay
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry cursor-default"
+              />
+            ) : (
+              <img
+                key={selectedIndex}
+                src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
+                alt={selectedPhoto.original_name}
+                draggable="false"
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry select-none cursor-default"
+              />
+            )}
 
             {/* Right navigation arrow */}
             {photos.length > 1 && (
