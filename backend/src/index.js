@@ -1313,9 +1313,13 @@ ${JSON.stringify(metadata || {}, null, 2)}
         };
       }
       const transporter = nodemailer.createTransport(transportConfig);
+      
+      const fromEmail = (smtpUser && smtpUser.includes('@')) 
+        ? smtpUser 
+        : 'no-reply@xn--80affoidsgaujr8a0h.xn--p1ai';
 
       await transporter.sendMail({
-        from: `"ЛегкоСохранить.РФ Тестирование" <${smtpUser || 'no-reply@xn--80affoidsgaujr8a0h.xn--p1ai'}>`,
+        from: `"ЛегкоСохранить.РФ Тестирование" <${fromEmail}>`,
         to: feedbackReceiver,
         subject: emailSubject,
         text: emailBodyText,
