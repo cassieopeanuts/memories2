@@ -3,8 +3,6 @@ import { MessageSquare, X, Send, CheckCircle2, AlertCircle, RefreshCw } from 'lu
 
 export default function TesterFeedback({ token, user }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState({ type: null, message: '' });
@@ -40,8 +38,8 @@ export default function TesterFeedback({ token, user }) {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          name: name.trim() || (user ? user.name : ''),
-          email: email.trim() || (user ? user.email : ''),
+          name: user ? user.name : '',
+          email: user ? user.email : '',
           message: message.trim(),
           metadata
         })
@@ -137,46 +135,6 @@ export default function TesterFeedback({ token, user }) {
             {/* Form */}
             {status.type !== 'success' && (
               <form onSubmit={handleSubmit} className="space-y-4">
-                
-                {/* Implicit fields or fallback inputs */}
-                {!user ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-bold text-brand-500 uppercase tracking-wider mb-1">
-                        Ваше имя
-                      </label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Алексей"
-                        className="w-full px-3 py-2.5 bg-brand-50 border border-brand-200/60 rounded-xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-brand-500 uppercase tracking-wider mb-1">
-                        Ваш Email
-                      </label>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="alex@example.ru"
-                        className="w-full px-3 py-2.5 bg-brand-50 border border-brand-200/60 rounded-xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 font-medium"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-brand-50/50 border border-brand-200/40 p-3 rounded-xl flex items-center justify-between">
-                    <span className="text-[10px] text-brand-500 font-bold uppercase tracking-wider">
-                      Отправитель:
-                    </span>
-                    <span className="text-xs font-semibold text-brand-800">
-                      {user.name} ({user.email})
-                    </span>
-                  </div>
-                )}
-
                 <div>
                   <label className="block text-[10px] font-bold text-brand-500 uppercase tracking-wider mb-1">
                     Опишите проблему или пожелание <span className="text-red-500">*</span>
@@ -192,7 +150,7 @@ export default function TesterFeedback({ token, user }) {
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100">
-                  <p className="text-[9px] text-neutral-400 font-medium leading-relaxed">
+                  <p className="text-neutral-400 font-medium leading-relaxed" style={{ fontSize: '9px' }}>
                     * Мы автоматически прикрепим отладочную информацию (адрес текущей страницы, разрешение экрана, тип браузера), чтобы помочь быстрее воспроизвести и исправить баг.
                   </p>
                 </div>
