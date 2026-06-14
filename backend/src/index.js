@@ -17,7 +17,8 @@ import {
 import { 
   generatePresignedUploadUrl, 
   generatePresignedDownloadUrl, 
-  deleteFromStorage 
+  deleteFromStorage,
+  transcodeVideo
 } from './s3.js';
 
 dotenv.config();
@@ -1100,6 +1101,19 @@ app.post('/api/photos/confirm', authenticateJWT, async (req, res) => {
         'INSERT INTO album_photos (album_id, photo_id, position) VALUES ($1, $2, $3)',
         [videoAlbumId, newPhoto.id, nextPhotoPos]
       );
+
+      // Start transcoding in the background
+      transcodeVideo(s3Key)
+        .then(async ({ newSize, mimeType: newMimeType }) => {
+          await query(
+            `UPDATE photos SET size = $1, mime_type = $2 WHERE id = $3`,
+            [newSize, newMimeType, newPhoto.id]
+          );
+          console.log(`Async transcode complete for photo ID ${newPhoto.id}. Size: ${newSize}`);
+        })
+        .catch(err => {
+          console.error(`Async transcode failed for photo ID ${newPhoto.id}:`, err);
+        });
     }
 
     // Also map to target custom album if provided and valid (and not "Общий")
