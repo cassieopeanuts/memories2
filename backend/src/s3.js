@@ -18,7 +18,7 @@ if (!isMock) {
       accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
       secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
     },
-    forcePathStyle: true, // Needed for Selectel/S3-compatible custom endpoints
+    forcePathStyle: false, // Must be false for Selectel S3 virtual-hosted addressing to support CORS
   });
 }
 
