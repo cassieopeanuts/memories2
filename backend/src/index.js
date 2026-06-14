@@ -61,7 +61,11 @@ app.use(cors({
                     origin.startsWith('http://10.') || 
                     origin.startsWith('http://172.');
                     
-    if (isLocal || origin === FRONTEND_URL || process.env.NODE_ENV === 'development') {
+    const isDomainMatch = origin.includes('xn--80affoidsgaujr8a0h.xn--p1ai') || 
+                          origin.includes('легкосохранить.рф') ||
+                          origin.includes('87.228.90.84');
+                    
+    if (isLocal || isDomainMatch || origin === FRONTEND_URL || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
