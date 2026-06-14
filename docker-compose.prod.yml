@@ -62,7 +62,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        - VITE_API_URL=${VITE_API_URL:-https://xn--e1aflcbbgbbec7c.xn--p1ai}
+        - VITE_API_URL=${VITE_API_URL:-https://xn--80affoidsgaujr8a0h.xn--p1ai}
     container_name: memories_frontend_prod
     restart: always
     ports:

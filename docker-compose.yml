@@ -52,7 +52,7 @@ services:
       - SMTP_SECURE=false
       - SMTP_USER=
       - SMTP_PASS=
-      - FEEDBACK_RECEIVER=admin@xn--e1aflcbbgbbec7c.xn--p1ai
+      - FEEDBACK_RECEIVER=admin@xn--80affoidsgaujr8a0h.xn--p1ai
     depends_on:
       db:
         condition: service_healthy

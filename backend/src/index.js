@@ -1270,7 +1270,7 @@ ${JSON.stringify(metadata || {}, null, 2)}
       const transporter = nodemailer.createTransport(transportConfig);
 
       await transporter.sendMail({
-        from: `"ЛегкоСохранить.РФ Тестирование" <${smtpUser || 'no-reply@xn--e1aflcbbgbbec7c.xn--p1ai'}>`,
+        from: `"ЛегкоСохранить.РФ Тестирование" <${smtpUser || 'no-reply@xn--80affoidsgaujr8a0h.xn--p1ai'}>`,
         to: feedbackReceiver,
         subject: emailSubject,
         text: emailBodyText,
