@@ -167,7 +167,7 @@ app.get('/api/mock-s3/*', (req, res) => {
 app.get('/api/auth/yandex', async (req, res) => {
   const { origin } = req.query;
   const targetOrigin = isValidOrigin(origin) ? (origin || FRONTEND_URL) : FRONTEND_URL;
-  const clientId = process.env.YANDEX_CLIENT_ID;
+  const clientId = process.env.YANDEX_CLIENT_ID || process.env.Yandex_CLIENT_ID;
   const redirectUri = encodeURIComponent(process.env.REDIRECT_URI);
   
   if (clientId === 'mock_yandex_client_id' || !clientId) {
@@ -195,7 +195,7 @@ app.get('/api/auth/yandex/callback', async (req, res) => {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        client_id: process.env.YANDEX_CLIENT_ID,
+        client_id: process.env.YANDEX_CLIENT_ID || process.env.Yandex_CLIENT_ID,
         client_secret: process.env.YANDEX_CLIENT_SECRET,
       })
     });
