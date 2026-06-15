@@ -77,6 +77,12 @@ app.use(cors({
 
 app.use(express.json());
 
+// Request logging middleware for deployment debugging
+app.use((req, res, next) => {
+  console.log(`[Request] ${req.method} ${req.url}`);
+  next();
+});
+
 // Create mock upload folder path
 const MOCK_UPLOAD_DIR = path.resolve(process.cwd(), 'uploads');
 
