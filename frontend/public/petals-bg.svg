@@ -1,0 +1,19 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Symmetrical bright petal (top-centerish) -->
+  <path d="M100 20 C120 45 115 75 100 95 C85 75 80 45 100 20 Z" fill="#ca727f" opacity="0.05" transform="rotate(25 100 57.5) scale(0.9)"/>
+  
+  <!-- Slanted dim petal (middle-left) -->
+  <path d="M45 80 C65 105 60 135 45 155 C30 135 25 105 45 80 Z" fill="#d69fac" opacity="0.07" transform="rotate(-35 45 117.5) scale(1)"/>
+  
+  <!-- Small gray/neutral petal (bottom-right) -->
+  <path d="M155 125 C170 140 165 160 155 175 C145 160 140 140 155 125 Z" fill="#898999" opacity="0.05" transform="rotate(55 155 150) scale(0.7)"/>
+  
+  <!-- Tiny dim petal (top-right) -->
+  <path d="M165 35 C177 47 172 62 165 72 C158 62 153 47 165 35 Z" fill="#d69fac" opacity="0.05" transform="rotate(75 165 53.5) scale(0.6)"/>
+  
+  <!-- Tiny bright petal (middle-right-ish) -->
+  <path d="M110 140 C118 148 115 158 110 165 C105 158 102 148 110 140 Z" fill="#ca727f" opacity="0.06" transform="rotate(-15 110 152.5) scale(0.5)"/>
+
+  <!-- Small dim petal (bottom-left) -->
+  <path d="M95 90 C103 98 100 108 95 115 C90 108 87 98 95 90 Z" fill="#d69fac" opacity="0.05" transform="rotate(110 95 102.5) scale(0.65)"/>
+</svg>
