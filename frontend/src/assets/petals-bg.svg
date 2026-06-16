@@ -1,19 +1,26 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Symmetrical bright petal (top-centerish) -->
-  <path d="M100 20 C120 45 115 75 100 95 C85 75 80 45 100 20 Z" fill="#ca727f" opacity="0.15" transform="rotate(25 100 57.5) scale(0.9)"/>
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Large Top-Left Bright Petal -->
+  <path d="M-50 -50 C 200 0, 350 250, 250 500 C 100 400, -20 200, -50 -50 Z" fill="#ca727f" opacity="0.12" />
   
-  <!-- Slanted dim petal (middle-left) -->
-  <path d="M45 80 C65 105 60 135 45 155 C30 135 25 105 45 80 Z" fill="#d69fac" opacity="0.18" transform="rotate(-35 45 117.5) scale(1)"/>
+  <!-- Large Bottom-Right Dim Petal -->
+  <path d="M1250 1250 C 1000 1200, 850 950, 950 700 C 1100 800, 1200 1050, 1250 1250 Z" fill="#d69fac" opacity="0.15" />
   
-  <!-- Small gray/neutral petal (bottom-right) -->
-  <path d="M155 125 C170 140 165 160 155 175 C145 160 140 140 155 125 Z" fill="#898999" opacity="0.15" transform="rotate(55 155 150) scale(0.7)"/>
+  <!-- Middle-Left Soft Gray Petal -->
+  <path d="M-50 750 C 120 700, 220 850, 150 1000 C 0 900, -20 830, -50 750 Z" fill="#898999" opacity="0.10" />
   
-  <!-- Tiny dim petal (top-right) -->
-  <path d="M165 35 C177 47 172 62 165 72 C158 62 153 47 165 35 Z" fill="#d69fac" opacity="0.15" transform="rotate(75 165 53.5) scale(0.6)"/>
+  <!-- Top-Right Dim Petal -->
+  <path d="M1250 -50 C 1050 100, 900 350, 1100 400 C 1200 300, 1280 150, 1250 -50 Z" fill="#d69fac" opacity="0.12" />
   
-  <!-- Tiny bright petal (middle-right-ish) -->
-  <path d="M110 140 C118 148 115 158 110 165 C105 158 102 148 110 140 Z" fill="#ca727f" opacity="0.18" transform="rotate(-15 110 152.5) scale(0.5)"/>
-
-  <!-- Small dim petal (bottom-left) -->
-  <path d="M95 90 C103 98 100 108 95 115 C90 108 87 98 95 90 Z" fill="#d69fac" opacity="0.15" transform="rotate(110 95 102.5) scale(0.65)"/>
+  <!-- Floating Petals in Open Spaces -->
+  <!-- Top Center-Right (Bright) -->
+  <path d="M750 250 C 830 280, 800 380, 730 400 C 680 350, 700 280, 750 250 Z" fill="#ca727f" opacity="0.10" transform="rotate(15 750 325)"/>
+  
+  <!-- Bottom Center-Left (Dim) -->
+  <path d="M450 950 C 370 920, 400 820, 470 800 C 520 850, 500 920, 450 950 Z" fill="#d69fac" opacity="0.12" transform="rotate(-30 450 875)"/>
+  
+  <!-- Center-Left (Gray) -->
+  <path d="M280 550 C 230 480, 350 400, 380 480 C 350 550, 310 580, 280 550 Z" fill="#898999" opacity="0.08" />
+  
+  <!-- Center-Right (Bright) -->
+  <path d="M920 680 C 990 610, 870 530, 850 610 C 870 680, 900 710, 920 680 Z" fill="#ca727f" opacity="0.10" />
 </svg>
