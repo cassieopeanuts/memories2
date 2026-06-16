@@ -98,7 +98,7 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
 
   if (errorMsg) {
     return (
-      <div className="min-h-screen bg-brand-50 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8" />
         </div>
@@ -121,7 +121,7 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
   const selectedPhoto = selectedIndex !== null ? photos[selectedIndex] : null;
 
   return (
-    <div className="min-h-screen bg-brand-50 flex flex-col selection:bg-brand-200">
+    <div className="min-h-screen flex flex-col selection:bg-brand-200">
       {/* Sticky Header */}
       <header className="sticky top-0 z-40 w-full glass-header py-4 px-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">

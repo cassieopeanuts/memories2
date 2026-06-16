@@ -254,7 +254,7 @@ export default function App() {
   // LOADING STATE
   if (loading || (token && isCheckingProfile)) {
     return (
-      <div className="min-h-screen bg-brand-50 flex flex-col items-center justify-center text-brand-600">
+      <div className="min-h-screen flex flex-col items-center justify-center text-brand-600">
         <RefreshCw className="w-8 h-8 animate-spin mb-3 text-brand-400" />
         <span className="text-sm font-medium">Открываем сейф воспоминаний...</span>
       </div>
@@ -301,7 +301,7 @@ export default function App() {
 
   // MAIN SYSTEM (LOGGED IN & UNLOCKED)
   return (
-    <div className="min-h-screen bg-brand-50 flex flex-col selection:bg-brand-200">
+    <div className="min-h-screen flex flex-col selection:bg-brand-200">
       {/* Authenticated Sticky Glass Header */}
       <header className="sticky top-0 z-40 w-full glass-header py-4 px-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">

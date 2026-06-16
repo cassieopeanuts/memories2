@@ -1,32 +1,21 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 
-// Brand SVG Icons
+import yandexLogo from '../assets/yandex.svg';
+import sberLogo from '../assets/sber.svg';
+import tbankLogo from '../assets/tbank.svg';
+
+// Brand SVG Icons using official SVGs
 const YandexIcon = () => (
-  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="11" fill="#FC3F1D" />
-    <path d="M13.8 16V8.5H12.2C11.1 8.5 10.4 9.1 10.4 10C10.4 10.9 10.9 11.4 11.8 11.6L9.8 16H11.4L13 12.3V16H13.8ZM12.2 9.4C12.6 9.4 12.9 9.6 12.9 10C12.9 10.4 12.6 10.7 12.2 10.7H11.8C11.5 10.7 11.3 10.5 11.3 10C11.3 9.6 11.5 9.4 11.8 9.4H12.2Z" fill="white" />
-  </svg>
+  <img src={yandexLogo} className="h-4.5 w-auto object-contain shrink-0" alt="Yandex" />
 );
 
 const SberIcon = () => (
-  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="11" fill="url(#sberGrad)" />
-    <path d="M8.5 12.5L11 15L16 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    <defs>
-      <linearGradient id="sberGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#21A038" />
-        <stop offset="1" stopColor="#128024" />
-      </linearGradient>
-    </defs>
-  </svg>
+  <img src={sberLogo} className="h-4.5 w-auto object-contain shrink-0" alt="Sber" />
 );
 
 const TBankIcon = () => (
-  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L4 5V11C4 16.5 8 21 12 22C16 21 20 16.5 20 11V5L12 2Z" fill="#FFDD2D" />
-    <path d="M7 8H17V10H13V17H11V10H7V8Z" fill="black" />
-  </svg>
+  <img src={tbankLogo} className="h-4.5 w-auto object-contain shrink-0" alt="T-Bank" />
 );
 
 export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
@@ -80,7 +69,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between px-6 py-12 md:py-20 bg-brand-50 selection:bg-brand-200">
+    <div className="min-h-screen flex flex-col justify-between px-6 py-12 md:py-20 selection:bg-brand-200">
       {/* Header / Brand Logo */}
       <header className="max-w-4xl mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-2">

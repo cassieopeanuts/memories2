@@ -19,7 +19,7 @@ body {
   background-color: var(--color-brand-50);
   background-image: url('./assets/petals-bg.svg');
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: 2000px 2000px;
   background-position: center;
   background-attachment: fixed;
   color: var(--color-brand-900);
