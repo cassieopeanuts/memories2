@@ -7,15 +7,15 @@ import tbankLogo from '../assets/tbank.svg';
 
 // Brand SVG Icons using official SVGs
 const YandexIcon = () => (
-  <img src={yandexLogo} className="h-4.5 w-auto object-contain shrink-0" alt="Yandex" />
+  <img src={yandexLogo} className="h-5.5 w-auto object-contain shrink-0" alt="Yandex" />
 );
 
 const SberIcon = () => (
-  <img src={sberLogo} className="h-4.5 w-auto object-contain shrink-0" alt="Sber" />
+  <img src={sberLogo} className="h-5 w-auto object-contain shrink-0" alt="Sber" />
 );
 
 const TBankIcon = () => (
-  <img src={tbankLogo} className="h-4.5 w-auto object-contain shrink-0" alt="T-Bank" />
+  <img src={tbankLogo} className="h-5.5 w-auto object-contain shrink-0" alt="T-Bank" />
 );
 
 export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
@@ -106,35 +106,35 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
         {/* SSO Buttons & Email */}
         <div className="w-full flex flex-col items-center mb-12 max-w-sm">
           <span className="text-xs font-bold text-brand-900 uppercase tracking-widest mb-4">Войти с помощью</span>
-          <div className="w-full flex gap-3 mb-4">
+          <div className="w-full flex flex-col gap-3.5 mb-4">
             {/* Yandex ID */}
             <button
               onClick={handleYandexLogin}
-              className="flex-1 h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
               title="Войти с Яндекс ID"
             >
               <YandexIcon />
-              <span className="text-sm font-semibold text-[#232334]">ID</span>
+              <span className="text-base font-bold text-[#232334]">ID</span>
             </button>
 
             {/* Sber ID */}
             <button
               onClick={handleSberLogin}
-              className="flex-1 h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
               title="Войти через Сбер ID"
             >
               <SberIcon />
-              <span className="text-sm font-semibold text-[#232334]">ID</span>
+              <span className="text-base font-bold text-[#232334]">ID</span>
             </button>
 
             {/* T-Bank ID */}
             <button
               onClick={handleTBankLogin}
-              className="flex-1 h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
               title="Войти с Т-Банк ID"
             >
               <TBankIcon />
-              <span className="text-sm font-semibold text-[#232334]">ID</span>
+              <span className="text-base font-bold text-[#232334]">ID</span>
             </button>
           </div>
 
