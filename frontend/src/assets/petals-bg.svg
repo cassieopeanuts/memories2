@@ -1,26 +1,26 @@
 <svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Large Top-Left Bright Petal -->
-  <path d="M-50 -50 C 200 0, 350 250, 250 500 C 100 400, -20 200, -50 -50 Z" fill="#ca727f" opacity="0.12" />
+  <!-- Large Top-Left Bright Petal (Bright Red-Pink) -->
+  <path d="M-50 -50 C 200 0, 350 250, 250 500 C 100 400, -20 200, -50 -50 Z" fill="#ca727f" opacity="0.30" />
   
-  <!-- Large Bottom-Right Dim Petal -->
-  <path d="M1250 1250 C 1000 1200, 850 950, 950 700 C 1100 800, 1200 1050, 1250 1250 Z" fill="#d69fac" opacity="0.15" />
+  <!-- Large Bottom-Right Dim Petal (Dim Purple-Pink) -->
+  <path d="M1250 1250 C 1000 1200, 850 950, 950 700 C 1100 800, 1200 1050, 1250 1250 Z" fill="#d69fac" opacity="0.32" />
   
-  <!-- Middle-Left Soft Gray Petal -->
-  <path d="M-50 750 C 120 700, 220 850, 150 1000 C 0 900, -20 830, -50 750 Z" fill="#898999" opacity="0.10" />
+  <!-- Middle-Left Soft Gray Petal (Slate Gray) -->
+  <path d="M-50 750 C 120 700, 220 850, 150 1000 C 0 900, -20 830, -50 750 Z" fill="#898999" opacity="0.25" />
   
-  <!-- Top-Right Dim Petal -->
-  <path d="M1250 -50 C 1050 100, 900 350, 1100 400 C 1200 300, 1280 150, 1250 -50 Z" fill="#d69fac" opacity="0.12" />
+  <!-- Top-Right Dim Petal (Dim Purple-Pink) -->
+  <path d="M1250 -50 C 1050 100, 900 350, 1100 400 C 1200 300, 1280 150, 1250 -50 Z" fill="#d69fac" opacity="0.28" />
   
   <!-- Floating Petals in Open Spaces -->
-  <!-- Top Center-Right (Bright) -->
-  <path d="M750 250 C 830 280, 800 380, 730 400 C 680 350, 700 280, 750 250 Z" fill="#ca727f" opacity="0.10" transform="rotate(15 750 325)"/>
+  <!-- Top Center-Right (Bright Red-Pink) -->
+  <path d="M750 250 C 830 280, 800 380, 730 400 C 680 350, 700 280, 750 250 Z" fill="#ca727f" opacity="0.24" transform="rotate(15 750 325)"/>
   
-  <!-- Bottom Center-Left (Dim) -->
-  <path d="M450 950 C 370 920, 400 820, 470 800 C 520 850, 500 920, 450 950 Z" fill="#d69fac" opacity="0.12" transform="rotate(-30 450 875)"/>
+  <!-- Bottom Center-Left (Dim Purple-Pink) -->
+  <path d="M450 950 C 370 920, 400 820, 470 800 C 520 850, 500 920, 450 950 Z" fill="#d69fac" opacity="0.26" transform="rotate(-30 450 875)"/>
   
-  <!-- Center-Left (Gray) -->
-  <path d="M280 550 C 230 480, 350 400, 380 480 C 350 550, 310 580, 280 550 Z" fill="#898999" opacity="0.08" />
+  <!-- Center-Left (Slate Gray) -->
+  <path d="M280 550 C 230 480, 350 400, 380 480 C 350 550, 310 580, 280 550 Z" fill="#898999" opacity="0.20" />
   
-  <!-- Center-Right (Bright) -->
-  <path d="M920 680 C 990 610, 870 530, 850 610 C 870 680, 900 710, 920 680 Z" fill="#ca727f" opacity="0.10" />
+  <!-- Center-Right (Bright Red-Pink) -->
+  <path d="M920 680 C 990 610, 870 530, 850 610 C 870 680, 900 710, 920 680 Z" fill="#ca727f" opacity="0.24" />
 </svg>
