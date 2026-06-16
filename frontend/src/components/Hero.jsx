@@ -1,6 +1,34 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 
+// Brand SVG Icons
+const YandexIcon = () => (
+  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="11" fill="#FC3F1D" />
+    <path d="M13.8 16V8.5H12.2C11.1 8.5 10.4 9.1 10.4 10C10.4 10.9 10.9 11.4 11.8 11.6L9.8 16H11.4L13 12.3V16H13.8ZM12.2 9.4C12.6 9.4 12.9 9.6 12.9 10C12.9 10.4 12.6 10.7 12.2 10.7H11.8C11.5 10.7 11.3 10.5 11.3 10C11.3 9.6 11.5 9.4 11.8 9.4H12.2Z" fill="white" />
+  </svg>
+);
+
+const SberIcon = () => (
+  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="11" fill="url(#sberGrad)" />
+    <path d="M8.5 12.5L11 15L16 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <defs>
+      <linearGradient id="sberGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#21A038" />
+        <stop offset="1" stopColor="#128024" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+const TBankIcon = () => (
+  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L4 5V11C4 16.5 8 21 12 22C16 21 20 16.5 20 11V5L12 2Z" fill="#FFDD2D" />
+    <path d="M7 8H17V10H13V17H11V10H7V8Z" fill="black" />
+  </svg>
+);
+
 export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
@@ -72,54 +100,54 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
         {/* Soft Badge */}
         <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-100 text-brand-800 text-sm font-medium mb-8 animate-pulse">
           <Sparkles className="w-4 h-4 text-brand-500" />
-          Новый способ хранить дорогие сердцу фото
+          Легкий способ хранить дорогие сердцу фото
         </div>
 
         {/* Title */}
         <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-brand-900 leading-tight font-medium mb-6">
           Память на телефоне <br className="hidden sm:inline"/>
-          <span className="italic font-normal text-[#f1a7ba]">больше не закончится</span>
+          <span className="italic font-normal text-brand-500">больше не закончится</span>
         </h1>
 
         {/* Reassuring Subtitle */}
-        <p className="text-base md:text-lg text-brand-700 font-light leading-relaxed mb-10 max-w-lg">
-          Самое просто хранилище для ваших воспоминаний. Сохраняйте то, что дорого, в один клик.
+        <p className="text-base md:text-lg text-brand-900 font-light leading-relaxed mb-10 max-w-lg">
+          Простое хранилище для ваших воспоминаний. Сохраняйте то, что дорого, легко.
         </p>
 
         {/* SSO Buttons & Email */}
-        <div className="w-full flex flex-col gap-4 max-w-sm mb-12">
-          {/* Yandex ID Button */}
-          <button
-            onClick={handleYandexLogin}
-            className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 font-medium rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
-          >
-            <div className="w-7 h-7 bg-[#FC3F1D] rounded-lg flex items-center justify-center text-white font-bold text-lg font-sans">
-              Я
-            </div>
-            <span className="text-base">Войти с Яндекс ID</span>
-          </button>
+        <div className="w-full flex flex-col items-center mb-12 max-w-sm">
+          <span className="text-xs font-bold text-brand-900 uppercase tracking-widest mb-4">Войти с помощью</span>
+          <div className="w-full flex gap-3 mb-4">
+            {/* Yandex ID */}
+            <button
+              onClick={handleYandexLogin}
+              className="flex-1 h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              title="Войти с Яндекс ID"
+            >
+              <YandexIcon />
+              <span className="text-sm font-semibold text-[#232334]">ID</span>
+            </button>
 
-          {/* Sber ID Button */}
-          <button
-            onClick={handleSberLogin}
-            className="w-full h-14 bg-gradient-to-r from-[#21A038] to-[#128024] hover:opacity-95 text-white font-medium rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-md cursor-pointer"
-          >
-            <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-[#21A038]">
-              <span className="text-xs font-black">✔</span>
-            </div>
-            <span className="text-base">Войти через Сбер ID</span>
-          </button>
+            {/* Sber ID */}
+            <button
+              onClick={handleSberLogin}
+              className="flex-1 h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              title="Войти через Сбер ID"
+            >
+              <SberIcon />
+              <span className="text-sm font-semibold text-[#232334]">ID</span>
+            </button>
 
-          {/* T-Bank ID Button */}
-          <button
-            onClick={handleTBankLogin}
-            className="w-full h-14 bg-[#FFDD2D] hover:bg-[#F5D11D] text-black font-semibold rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
-          >
-            <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center text-[#FFDD2D] font-bold text-lg font-sans">
-              Т
-            </div>
-            <span className="text-base">Войти с Т-Банк ID</span>
-          </button>
+            {/* T-Bank ID */}
+            <button
+              onClick={handleTBankLogin}
+              className="flex-1 h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              title="Войти с Т-Банк ID"
+            >
+              <TBankIcon />
+              <span className="text-sm font-semibold text-[#232334]">ID</span>
+            </button>
+          </div>
 
           {/* Email collapsible trigger */}
           <button
