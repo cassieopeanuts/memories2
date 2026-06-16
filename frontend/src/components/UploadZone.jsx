@@ -230,7 +230,7 @@ export default function UploadZone({ token, onUploadComplete }) {
           Выбрать фото и видео с телефона
         </div>
         
-        <p className="text-xs text-brand-600 font-light max-w-xs mt-4 leading-relaxed">
+        <p className="text-xs text-brand-900 font-light max-w-xs mt-4 leading-relaxed">
           Нажмите кнопку выше, чтобы сделать снимок, записать видео или выбрать готовые кадры из галереи смартфона.
         </p>
       </div>

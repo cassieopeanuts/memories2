@@ -588,13 +588,13 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
             <span className="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
             <h4 className="text-sm font-semibold text-brand-900">Ваше уютное хранилище</h4>
           </div>
-          <p className="text-xs text-brand-600 font-light leading-relaxed">
+          <p className="text-xs text-brand-900 font-light leading-relaxed">
             Вы бережно сохранили воспоминания. Свободно еще {percentFree}% пространства.
           </p>
         </div>
         
         <div className="w-full md:w-64">
-          <div className="flex justify-between text-[10px] text-brand-500 font-semibold mb-1 uppercase tracking-wider">
+          <div className="flex justify-between text-[10px] text-brand-900 font-semibold mb-1 uppercase tracking-wider">
             <span>Заполнено</span>
             <span>{percentUsed}%</span>
           </div>
@@ -668,7 +668,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                       <h4 className="font-serif font-bold text-sm text-brand-900 truncate">
                         {album.name}
                       </h4>
-                      <p className="text-[10px] text-brand-500 font-medium mt-0.5">
+                      <p className="text-[10px] text-brand-900 font-medium mt-0.5">
                         {photoCount} {getPhotoWord(photoCount)}
                       </p>
                     </div>
@@ -714,7 +714,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               <h3 className="font-serif text-lg md:text-xl text-brand-900 font-semibold">
                 Фотографии: {activeAlbum.name}
               </h3>
-              <p className="text-[11px] text-brand-500 font-light mt-0.5">
+              <p className="text-[11px] text-brand-900 font-light mt-0.5">
                 {totalPhotos} {getPhotoWord(totalPhotos)}
               </p>
             </div>

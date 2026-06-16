@@ -107,7 +107,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
       {/* Title block */}
       <div className="text-center max-w-lg mx-auto mb-10">
         <h3 className="font-serif text-2xl md:text-3xl text-brand-900 font-semibold mb-3">Увеличьте облако воспоминаний</h3>
-        <p className="text-xs text-brand-600 font-light leading-relaxed">
+        <p className="text-xs text-brand-900 font-light leading-relaxed">
           Сохраняйте дорогие сердцу фотографии в оригинальном качестве. Выберите объем, который подходит вашей семье. Локальная оплата российскими картами.
         </p>
       </div>
@@ -138,7 +138,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                 <div className="flex items-baseline gap-2 mb-4">
                   <span className="text-3xl font-serif font-bold text-brand-500">{plan.sizeText}</span>
                 </div>
-                <p className="text-xs text-brand-600 font-light leading-relaxed mb-6">
+                <p className="text-xs text-brand-900 font-light leading-relaxed mb-6">
                   {plan.desc}
                 </p>
               </div>
@@ -148,7 +148,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="text-xs font-bold text-brand-900 block">{plan.priceText}</span>
-                    <span className="text-[10px] text-brand-500 font-medium">{plan.priceTextSmall}</span>
+                    <span className="text-[10px] text-brand-900 font-medium">{plan.priceTextSmall}</span>
                   </div>
                   
                   {isCurrent ? (
@@ -177,7 +177,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
           </div>
           <div>
             <h4 className="text-xs font-bold text-brand-900 mb-0.5">Безопасно и надежно</h4>
-            <p className="text-[10px] text-brand-600 font-light">
+            <p className="text-[10px] text-brand-900 font-light">
               Сервера размещены в дата-центрах Selectel в РФ. Ваши данные защищены по закону ФЗ-152.
             </p>
           </div>
@@ -189,7 +189,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
           </div>
           <div>
             <h4 className="text-xs font-bold text-brand-900 mb-0.5">Без скрытых подписок</h4>
-            <p className="text-[10px] text-brand-600 font-light">
+            <p className="text-[10px] text-brand-900 font-light">
               Никаких скрытых списаний. Уведомление на почту за 3 дня до оплаты. Отмена в один клик.
             </p>
           </div>
@@ -225,7 +225,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                   </span>
                 </div>
 
-                <p className="text-xs text-brand-600 font-light mb-4 text-center">
+                <p className="text-xs text-brand-900 font-light mb-4 text-center">
                   Выберите удобный способ безопасной оплаты:
                 </p>
 
@@ -248,7 +248,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                     <span>Оплатить через Сбербанк</span>
                   </button>
 
-                  {/* Yandex Pay */}
+                  {/* Yandex Payment */}
                   <button
                     onClick={() => handlePay('yandex')}
                     className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 font-semibold rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-98 shadow-sm"
@@ -273,7 +273,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
               <div className="text-center py-12 flex flex-col items-center justify-center select-none">
                 <RefreshCw className="w-10 h-10 animate-spin text-brand-500 mb-6" />
                 <h4 className="font-serif text-lg font-semibold text-brand-900 mb-2">Безопасный платеж</h4>
-                <p className="text-xs text-brand-600 font-light max-w-xs leading-relaxed">
+                <p className="text-xs text-brand-900 font-light max-w-xs leading-relaxed">
                   Соединяемся со шлюзом {paymentMethod === 'tbank' ? 'Т-Банка' : paymentMethod === 'sber' ? 'Сбербанка' : paymentMethod === 'yandex' ? 'Яндекса' : 'СБП'}... Пожалуйста, не закрывайте это окно.
                 </p>
               </div>
@@ -285,7 +285,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                   <CheckCircle2 className="w-7 h-7" />
                 </div>
                 <h4 className="font-serif text-lg font-semibold text-brand-900 mb-2">Оплата прошла успешно!</h4>
-                <p className="text-xs text-brand-600 font-light max-w-xs leading-relaxed mb-6">
+                <p className="text-xs text-brand-900 font-light max-w-xs leading-relaxed mb-6">
                   Мы бережно расширили ваше облако воспоминаний до **{selectedPlan.sizeText}**. Приятного использования!
                 </p>
                 <button
