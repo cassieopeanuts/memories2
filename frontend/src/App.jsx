@@ -178,11 +178,39 @@ export default function App() {
       console.log('[Push SDK] Subscribing via Service Worker...');
       const registration = await navigator.serviceWorker.ready;
       console.log('[Push SDK] Service Worker registration ready:', registration);
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
-      });
-      console.log('[Push SDK] Created subscription:', subscription);
+      
+      let subscription = await registration.pushManager.getSubscription();
+      
+      if (subscription) {
+        // Compare the existing subscription key with the new VAPID public key
+        const currentKey = subscription.options.applicationServerKey;
+        const newKey = urlBase64ToUint8Array(publicKey);
+        let keyMatches = false;
+        
+        if (currentKey) {
+          const currentKeyArray = new Uint8Array(currentKey);
+          if (currentKeyArray.length === newKey.length) {
+            keyMatches = currentKeyArray.every((val, index) => val === newKey[index]);
+          }
+        }
+        
+        if (!keyMatches) {
+          console.log('[Push SDK] VAPID key changed/mismatched. Unsubscribing old subscription...');
+          await subscription.unsubscribe();
+          subscription = null;
+        } else {
+          console.log('[Push SDK] Existing subscription VAPID key matches current server key.');
+        }
+      }
+
+      if (!subscription) {
+        console.log('[Push SDK] Creating new subscription with VAPID key...');
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+      }
+      console.log('[Push SDK] Final subscription:', subscription);
 
       // 4. Save to backend
       console.log('[Push SDK] Sending subscription to backend...');
