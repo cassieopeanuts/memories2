@@ -459,6 +459,24 @@ app.post('/api/auth/demo', async (req, res) => {
   }
 });
 
+// Check if email is already registered
+app.get('/api/auth/check-email', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ error: 'Пожалуйста, укажите адрес электронной почты.' });
+  }
+
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    // Using SELECT * to ensure compatibility with both PostgreSQL and the local JSON mock DB's query parsing
+    const result = await query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
+    res.json({ exists: result.rows.length > 0 });
+  } catch (error) {
+    console.error('Check email error:', error);
+    res.status(500).json({ error: 'Ошибка проверки адреса электронной почты.' });
+  }
+});
+
 // In-memory store for verification codes (OTP)
 // email -> { code, name, expiresAt, attempts }
 const verificationCodes = new Map();

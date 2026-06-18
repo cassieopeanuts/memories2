@@ -27,6 +27,8 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   const [showCodeForm, setShowCodeForm] = useState(false);
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [isEmailChecked, setIsEmailChecked] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const timerRef = useRef(null);
   const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
 
@@ -58,19 +60,51 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
     setIsLoading(true);
     setErrorMsg('');
     try {
-      const response = await fetch(`${backendUrl}/api/auth/email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, name })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Ошибка отправки кода');
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // Step 1: If email is not checked yet, check registration status
+      if (!isEmailChecked) {
+        const checkRes = await fetch(`${backendUrl}/api/auth/check-email?email=${encodeURIComponent(normalizedEmail)}`);
+        const checkData = await checkRes.json();
+        if (!checkRes.ok) {
+          throw new Error(checkData.error || 'Ошибка проверки почты');
+        }
+
+        if (checkData.exists) {
+          // User exists! Immediately request code (no name needed)
+          const sendRes = await fetch(`${backendUrl}/api/auth/email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: normalizedEmail })
+          });
+          const sendData = await sendRes.json();
+          if (!sendRes.ok) {
+            throw new Error(sendData.error || 'Ошибка отправки кода');
+          }
+
+          setIsEmailChecked(true);
+          setShowCodeForm(true);
+          setCountdown(60);
+        } else {
+          // User does not exist. Prompt for name first
+          setIsEmailChecked(true);
+          setIsNewUser(true);
+        }
+      } else {
+        // Step 2: For new user, they have entered their name. Send request with email and name
+        const sendRes = await fetch(`${backendUrl}/api/auth/email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: normalizedEmail, name })
+        });
+        const sendData = await sendRes.json();
+        if (!sendRes.ok) {
+          throw new Error(sendData.error || 'Ошибка отправки кода');
+        }
+
+        setShowCodeForm(true);
+        setCountdown(60);
       }
-      setShowCodeForm(true);
-      setCountdown(60); // 60 seconds cooldown
     } catch (err) {
       console.error(err);
       setErrorMsg(err.message);
@@ -209,6 +243,9 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
             onClick={() => {
               setShowEmailForm(!showEmailForm);
               setErrorMsg('');
+              setIsEmailChecked(false);
+              setIsNewUser(false);
+              setName('');
             }}
             className="w-full py-3 text-brand-600 hover:text-brand-900 text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer mt-1"
           >
@@ -231,28 +268,53 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Ваш e-mail (например, anna@mail.ru)"
                         required
-                        className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
+                        disabled={isEmailChecked}
+                        className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium disabled:opacity-70"
                       />
                     </div>
-                    <div>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Ваше имя (для новых пользователей)"
-                        className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
-                      />
-                    </div>
+                    {isEmailChecked && isNewUser && (
+                      <div className="animate-photo-entry">
+                        <p className="text-[10px] text-brand-600 font-semibold mb-1.5 uppercase tracking-wide">
+                          Похоже, вы у нас впервые. Укажите ваше имя:
+                        </p>
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Ваше имя"
+                          required
+                          className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
+                        />
+                      </div>
+                    )}
                     {errorMsg && (
                       <p className="text-[11px] font-semibold text-red-500">{errorMsg}</p>
                     )}
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white rounded-2xl text-xs font-semibold transition-all shadow-sm cursor-pointer active:scale-98"
-                    >
-                      {isLoading ? 'Проверяем почту...' : 'Получить доступ к альбому'}
-                    </button>
+                    <div className="flex gap-2">
+                      {isEmailChecked && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEmailChecked(false);
+                            setIsNewUser(false);
+                            setName('');
+                            setErrorMsg('');
+                          }}
+                          className="px-4 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-2xl text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          Назад
+                        </button>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="flex-1 py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white rounded-2xl text-xs font-semibold transition-all shadow-sm cursor-pointer active:scale-98"
+                      >
+                        {isLoading 
+                          ? 'Проверяем...' 
+                          : (!isEmailChecked ? 'Далее' : 'Получить код')}
+                      </button>
+                    </div>
                   </div>
                 </form>
               ) : (
@@ -302,6 +364,9 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
                           setShowCodeForm(false);
                           setCode('');
                           setErrorMsg('');
+                          setIsEmailChecked(false);
+                          setIsNewUser(false);
+                          setName('');
                         }}
                         className="text-neutral-500 hover:text-neutral-800 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
                       >
