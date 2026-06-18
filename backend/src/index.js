@@ -662,9 +662,11 @@ export async function sendPushNotification(userId, title, body, url = '/') {
     await Promise.all(
       subscriptions.map(async (sub) => {
         try {
-          await webpush.sendNotification(sub, payload);
+          console.log(`[Push] Attempting to send push to device endpoint: ${sub.endpoint}`);
+          const pushResult = await webpush.sendNotification(sub, payload);
+          console.log(`[Push] Successfully sent push notification! Status code: ${pushResult.statusCode || 201}`);
         } catch (error) {
-          console.error(`[Push] Failed to send push to device endpoint ${sub.endpoint}:`, error.message);
+          console.error(`[Push] Failed to send push to device endpoint ${sub.endpoint}:`, error.message, error.stack);
           if (error.statusCode === 410 || error.statusCode === 404) {
             failedSubscriptions.push(sub.endpoint);
           }

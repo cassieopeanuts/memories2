@@ -156,28 +156,37 @@ export default function App() {
       return;
     }
 
+    console.log('[Push SDK] Checking service worker and push manager...');
+
     try {
       // 1. Fetch VAPID public key
       const res = await fetch(`${backendUrl}/api/auth/vapid-public-key`);
       const { publicKey } = await res.json();
+      console.log('[Push SDK] Public Key loaded:', publicKey);
       if (!publicKey) return;
 
       // 2. Request permission
+      console.log('[Push SDK] Requesting notification permission...');
       const permission = await Notification.requestPermission();
+      console.log('[Push SDK] Notification permission status:', permission);
       if (permission !== 'granted') {
         console.log('Push notification permission denied.');
         return;
       }
 
       // 3. Subscribe
+      console.log('[Push SDK] Subscribing via Service Worker...');
       const registration = await navigator.serviceWorker.ready;
+      console.log('[Push SDK] Service Worker registration ready:', registration);
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey)
       });
+      console.log('[Push SDK] Created subscription:', subscription);
 
       // 4. Save to backend
-      await fetch(`${backendUrl}/api/auth/push-subscription`, {
+      console.log('[Push SDK] Sending subscription to backend...');
+      const saveRes = await fetch(`${backendUrl}/api/auth/push-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,6 +194,8 @@ export default function App() {
         },
         body: JSON.stringify(subscription)
       });
+      const saveResult = await saveRes.json();
+      console.log('[Push SDK] Backend registration result:', saveResult);
 
       console.log('Web Push subscription successfully registered!');
     } catch (error) {
