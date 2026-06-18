@@ -270,8 +270,6 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
                         onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         placeholder="0 0 0 0 0 0"
                         required
-                        maxLength={6}
-                        pattern="\d{6}"
                         className="w-full px-4 py-3 text-center tracking-[12px] font-mono text-2xl bg-brand-50 border border-brand-200/60 rounded-2xl text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-bold"
                       />
                     </div>
