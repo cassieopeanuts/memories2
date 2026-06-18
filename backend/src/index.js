@@ -6,6 +6,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { query } from './db.js';
 import jwt from 'jsonwebtoken';
+import webpush from 'web-push';
 import { 
   findOrCreateUser, 
   generateToken, 
@@ -27,10 +28,39 @@ import {
 
 dotenv.config();
 
+// VAPID keys setup for Web Push
+let vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+let vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+if (!vapidPublicKey || !vapidPrivateKey) {
+  console.warn('⚠️  VAPID keys not configured in env. Generating temporary one-off keys for push notifications...');
+  const keys = webpush.generateVAPIDKeys();
+  vapidPublicKey = keys.publicKey;
+  vapidPrivateKey = keys.privateKey;
+  console.log(`
+============================================================
+GENERATED VAPID KEYS FOR PRODUCTION .env:
+Paste these into your Selectel .env:
+VAPID_PUBLIC_KEY=${vapidPublicKey}
+VAPID_PRIVATE_KEY=${vapidPrivateKey}
+============================================================
+`);
+}
+
+webpush.setVapidDetails(
+  'mailto:admin@xn--80affoidsgaujr8a0h.xn--p1ai',
+  vapidPublicKey,
+  vapidPrivateKey
+);
+
 // Run database migrations on start
 query('ALTER TABLE photos ADD COLUMN IF NOT EXISTS position INT NOT NULL DEFAULT 0', [])
   .then(() => console.log('Migration: checked photos table position column'))
   .catch(err => console.error('Migration error (photos position):', err));
+
+query("ALTER TABLE users ADD COLUMN IF NOT EXISTS push_subscriptions JSONB DEFAULT '[]'::jsonb", [])
+  .then(() => console.log('Migration: checked users table push_subscriptions column'))
+  .catch(err => console.error('Migration error (users push_subscriptions):', err));
 
 query(`
   CREATE TABLE IF NOT EXISTS tester_feedback (
@@ -224,6 +254,11 @@ app.get('/api/auth/yandex/callback', async (req, res) => {
     });
     
     const token = generateToken(user);
+    
+    // Trigger test welcome push in the background
+    sendPushNotification(user.id, 'Hey hello!', 'its a test push', '/')
+      .catch(err => console.error('Test login push failed:', err));
+
     res.redirect(`${FRONTEND_URL}/auth-callback?token=${token}`);
   } catch (error) {
     console.error('Yandex SSO error:', error);
@@ -263,6 +298,11 @@ app.get('/api/auth/mock-login-confirm', async (req, res) => {
     });
     
     const token = generateToken(user);
+    
+    // Trigger test welcome push in the background
+    sendPushNotification(user.id, 'Hey hello!', 'its a test push', '/')
+      .catch(err => console.error('Test login push failed:', err));
+
     res.redirect(`${targetOrigin}/auth-callback?token=${token}`);
   } catch (error) {
     console.error('Error confirming mock login:', error);
@@ -452,6 +492,11 @@ app.post('/api/auth/demo', async (req, res) => {
     });
     
     const token = generateToken(user);
+    
+    // Trigger test welcome push in the background
+    sendPushNotification(user.id, 'Hey hello!', 'its a test push', '/')
+      .catch(err => console.error('Test login push failed:', err));
+
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, hasPin: !!user.pin_code } });
   } catch (error) {
     console.error('Demo auth failed:', error);
@@ -568,6 +613,11 @@ app.post('/api/auth/email/verify', async (req, res) => {
     });
 
     const token = generateToken(user);
+    
+    // Trigger test welcome push in the background
+    sendPushNotification(user.id, 'Hey hello!', 'its a test push', '/')
+      .catch(err => console.error('Test login push failed:', err));
+
     res.json({
       token,
       status: user.pin_code ? 'verify_pin' : 'create_pin',
@@ -576,6 +626,107 @@ app.post('/api/auth/email/verify', async (req, res) => {
   } catch (error) {
     console.error('Email code verification error:', error);
     res.status(500).json({ error: 'Ошибка подтверждения кода. Пожалуйста, попробуйте позже.' });
+  }
+});
+
+// ==========================================
+// WEB PUSH UTILITY AND ENDPOINTS
+// ==========================================
+
+export async function sendPushNotification(userId, title, body, url = '/') {
+  try {
+    const result = await query('SELECT id, name, email, push_subscriptions FROM users WHERE id = $1', [userId]);
+    const user = result.rows[0];
+    if (!user) {
+      console.warn(`[Push] User ${userId} not found, skipping push.`);
+      return;
+    }
+
+    let subscriptions = [];
+    if (user.push_subscriptions) {
+      subscriptions = typeof user.push_subscriptions === 'string'
+        ? JSON.parse(user.push_subscriptions)
+        : user.push_subscriptions;
+    }
+
+    if (!Array.isArray(subscriptions) || subscriptions.length === 0) {
+      console.log(`[Push] User ${userId} has no registered push subscriptions.`);
+      return;
+    }
+
+    const payload = JSON.stringify({ title, body, url });
+    console.log(`[Push] Dispatched push notification payload to ${subscriptions.length} devices for user ${userId}`);
+
+    const failedSubscriptions = [];
+
+    await Promise.all(
+      subscriptions.map(async (sub) => {
+        try {
+          await webpush.sendNotification(sub, payload);
+        } catch (error) {
+          console.error(`[Push] Failed to send push to device endpoint ${sub.endpoint}:`, error.message);
+          if (error.statusCode === 410 || error.statusCode === 404) {
+            failedSubscriptions.push(sub.endpoint);
+          }
+        }
+      })
+    );
+
+    if (failedSubscriptions.length > 0) {
+      const remainingSubscriptions = subscriptions.filter(sub => !failedSubscriptions.includes(sub.endpoint));
+      await query('UPDATE users SET push_subscriptions = $1 WHERE id = $2', [JSON.stringify(remainingSubscriptions), userId]);
+      console.log(`[Push] Cleaned up ${failedSubscriptions.length} expired push subscriptions for user ${userId}`);
+    }
+  } catch (error) {
+    console.error(`[Push] Error sending push notification for user ${userId}:`, error);
+  }
+}
+
+// Serve VAPID public key
+app.get('/api/auth/vapid-public-key', (req, res) => {
+  res.json({ publicKey: vapidPublicKey });
+});
+
+// Save device push subscription
+app.post('/api/auth/push-subscription', authenticateJWT, async (req, res) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint || !subscription.keys) {
+    return res.status(400).json({ error: 'Некорректный формат подписки push-уведомлений.' });
+  }
+  const userId = req.user.id;
+
+  try {
+    const result = await query('SELECT id, name, email, push_subscriptions FROM users WHERE id = $1', [userId]);
+    const user = result.rows[0];
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден.' });
+    }
+
+    let subscriptions = [];
+    if (user.push_subscriptions) {
+      subscriptions = typeof user.push_subscriptions === 'string'
+        ? JSON.parse(user.push_subscriptions)
+        : user.push_subscriptions;
+    }
+    if (!Array.isArray(subscriptions)) {
+      subscriptions = [];
+    }
+
+    const exists = subscriptions.some(sub => sub.endpoint === subscription.endpoint);
+    if (!exists) {
+      subscriptions.push(subscription);
+      await query('UPDATE users SET push_subscriptions = $1 WHERE id = $2', [JSON.stringify(subscriptions), userId]);
+      console.log(`[Push] Registered new device push subscription for user ${userId}`);
+      
+      // Trigger an immediate confirmation push notification!
+      sendPushNotification(userId, 'Hey hello!', 'its a test push', '/')
+        .catch(err => console.error('[Push] Failed to send welcome confirmation push:', err));
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Push subscription save error:', error);
+    res.status(500).json({ error: 'Не удалось сохранить подписку на уведомления.' });
   }
 });
 

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE,
     pin_code VARCHAR(255),
     storage_limit BIGINT NOT NULL DEFAULT 1073741824, -- 1 GB default free storage
+    push_subscriptions JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

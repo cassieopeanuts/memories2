@@ -102,7 +102,7 @@ export async function mockQuery(text, params = []) {
     return { rows };
   }
   
-  // 3. SELECT id, name, email, pin_code, storage_limit FROM users WHERE id = $1
+  // 3. SELECT id, name, email, pin_code, storage_limit, push_subscriptions FROM users WHERE id = $1
   if (queryText.includes('SELECT') && queryText.includes('FROM users WHERE id =')) {
     const id = params[0];
     const rows = db.users.filter(u => u.id === id).map(u => ({
@@ -110,7 +110,8 @@ export async function mockQuery(text, params = []) {
       name: u.name,
       email: u.email,
       pin_code: u.pin_code,
-      storage_limit: u.storage_limit
+      storage_limit: u.storage_limit,
+      push_subscriptions: u.push_subscriptions || []
     }));
     return { rows };
   }
@@ -129,6 +130,7 @@ export async function mockQuery(text, params = []) {
       email: '',
       pin_code: null,
       storage_limit: 1073741824, // 1 GB in bytes
+      push_subscriptions: [],
       created_at: new Date().toISOString()
     };
     
@@ -161,6 +163,18 @@ export async function mockQuery(text, params = []) {
     const idx = db.users.findIndex(u => u.id === id);
     if (idx !== -1) {
       db.users[idx].storage_limit = parseInt(limit, 10);
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // 4d. UPDATE users SET push_subscriptions = $1 WHERE id = $2
+  if (queryText.includes('UPDATE users SET push_subscriptions =')) {
+    const [subs, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].push_subscriptions = typeof subs === 'string' ? JSON.parse(subs) : subs;
       writeMockDb(db);
       return { rows: [db.users[idx]] };
     }

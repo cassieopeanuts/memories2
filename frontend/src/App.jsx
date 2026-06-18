@@ -9,6 +9,21 @@ import SharedAlbum from './components/SharedAlbum.jsx';
 import Offer from './components/Offer.jsx';
 import { LogOut, ShieldCheck, RefreshCw, User, X, CreditCard } from 'lucide-react';
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [betaUnlocked, setBetaUnlocked] = useState(() => localStorage.getItem('beta_unlocked') === 'true');
@@ -135,8 +150,53 @@ export default function App() {
     }
   };
 
+  const registerPushNotifications = async (activeToken) => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.log('Web Push notifications are not supported in this browser.');
+      return;
+    }
+
+    try {
+      // 1. Fetch VAPID public key
+      const res = await fetch(`${backendUrl}/api/auth/vapid-public-key`);
+      const { publicKey } = await res.json();
+      if (!publicKey) return;
+
+      // 2. Request permission
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.log('Push notification permission denied.');
+        return;
+      }
+
+      // 3. Subscribe
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+
+      // 4. Save to backend
+      await fetch(`${backendUrl}/api/auth/push-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify(subscription)
+      });
+
+      console.log('Web Push subscription successfully registered!');
+    } catch (error) {
+      console.error('Error setting up Web Push:', error);
+    }
+  };
+
   useEffect(() => {
     checkProfile();
+    if (token) {
+      registerPushNotifications(token);
+    }
   }, [token]);
 
   // 3. Fetch storage details after PIN code is unlocked
