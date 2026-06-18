@@ -717,11 +717,11 @@ app.post('/api/auth/push-subscription', authenticateJWT, async (req, res) => {
       subscriptions.push(subscription);
       await query('UPDATE users SET push_subscriptions = $1 WHERE id = $2', [JSON.stringify(subscriptions), userId]);
       console.log(`[Push] Registered new device push subscription for user ${userId}`);
-      
-      // Trigger an immediate confirmation push notification!
-      sendPushNotification(userId, 'Hey hello!', 'its a test push', '/')
-        .catch(err => console.error('[Push] Failed to send welcome confirmation push:', err));
     }
+
+    // Trigger an immediate confirmation push notification!
+    sendPushNotification(userId, 'Hey hello!', 'its a test push', '/')
+      .catch(err => console.error('[Push] Failed to send welcome confirmation push:', err));
 
     res.json({ success: true });
   } catch (error) {
