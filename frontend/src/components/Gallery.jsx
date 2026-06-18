@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Eye, Image as ImageIcon, Heart, ChevronLeft, ChevronRight, 
   Folder, FolderPlus, Plus, MoreVertical, Check, Trash2, ArrowLeft, Move,
-  AlertCircle, CheckCircle, Info, Share2, Copy, Globe, ExternalLink, Play
+  AlertCircle, CheckCircle, Info, Share2, Copy, Globe, ExternalLink, Play, Search
 } from 'lucide-react';
 import UploadZone from './UploadZone.jsx';
 
@@ -17,6 +17,10 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   // Custom album creation modal
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
+
+  // Album selector modal & search query
+  const [showAlbumSelector, setShowAlbumSelector] = useState(false);
+  const [albumSearchQuery, setAlbumSearchQuery] = useState('');
 
   // Lightbox & Carousel
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -572,6 +576,91 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     return 'фотографий';
   };
 
+  const handleCycleAlbum = (direction) => {
+    if (albums.length <= 1 || !activeAlbum) return;
+    const currentIndex = albums.findIndex(a => a.id === activeAlbum.id);
+    if (currentIndex === -1) return;
+    let nextIndex = currentIndex + direction;
+    if (nextIndex < 0) nextIndex = albums.length - 1;
+    if (nextIndex >= albums.length) nextIndex = 0;
+    
+    const nextAlbum = albums[nextIndex];
+    setActiveAlbum(nextAlbum);
+    setIsSelectMode(false);
+    setSelectedPhotoIds([]);
+  };
+
+  const renderMobileDeck = () => {
+    if (!activeAlbum) return null;
+    const photoCount = activeAlbum.photoCount || 0;
+    
+    return (
+      <div className="relative w-full max-w-sm mx-auto h-28 my-6">
+        {/* Card 3 (Back) */}
+        {albums.length > 2 && (
+          <div className="absolute top-4 left-4 right-4 h-20 bg-white/40 border border-brand-200/10 rounded-2xl scale-[0.92] opacity-40 shadow-sm transition-all duration-300 pointer-events-none"></div>
+        )}
+        {/* Card 2 (Middle) */}
+        {albums.length > 1 && (
+          <div className="absolute top-2 left-2 right-2 h-20 bg-white/80 border border-brand-200/20 rounded-2xl scale-[0.96] opacity-80 shadow-sm transition-all duration-300 pointer-events-none"></div>
+        )}
+        
+        {/* Card 1 (Front - Active Album) */}
+        <div 
+          onClick={() => setShowAlbumSelector(true)}
+          className="absolute top-0 left-0 right-0 h-20 bg-white border border-brand-500 ring-2 ring-brand-500/10 rounded-2xl shadow-md p-3.5 flex items-center justify-between cursor-pointer transition-all duration-300 hover:border-brand-600"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-500 flex items-center justify-center shrink-0">
+              <Folder className="w-5 h-5 fill-brand-500/10" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[9px] uppercase tracking-wider text-brand-500 font-bold">Активный альбом</span>
+              <h4 className="font-serif font-bold text-sm text-brand-900 truncate">
+                {activeAlbum.name}
+              </h4>
+              <p className="text-[10px] text-brand-600 font-medium">
+                {photoCount} {getPhotoWord(photoCount)}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {/* Cycle Prev */}
+            {albums.length > 1 && (
+              <button 
+                onClick={() => handleCycleAlbum(-1)}
+                className="w-8 h-8 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-600 flex items-center justify-center transition-colors cursor-pointer"
+                title="Предыдущий альбом"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+            
+            {/* Show All */}
+            <button 
+              onClick={() => setShowAlbumSelector(true)}
+              className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-[10px] uppercase tracking-wider transition-colors cursor-pointer shadow-sm animate-pulse-subtle"
+            >
+              Все ({albums.length})
+            </button>
+            
+            {/* Cycle Next */}
+            {albums.length > 1 && (
+              <button 
+                onClick={() => handleCycleAlbum(1)}
+                className="w-8 h-8 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-600 flex items-center justify-center transition-colors cursor-pointer"
+                title="Следующий альбом"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const totalPhotos = photos.length;
   const usedBytes = storage.used || 0;
   const limitBytes = storage.limit || 1073741824;
@@ -582,40 +671,33 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   return (
     <div className="w-full max-w-5xl mx-auto px-2">
       {/* Storage Reassuring Banner */}
-      <div className="bg-white border border-brand-200/40 p-5 rounded-3xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
-            <h4 className="text-sm font-semibold text-brand-900">Ваше уютное хранилище</h4>
-          </div>
-          <p className="text-xs text-brand-900 font-light leading-relaxed">
-            Вы бережно сохранили воспоминания. Свободно еще {percentFree}% пространства.
-          </p>
+      <div className="bg-white border border-brand-200/30 px-4 py-3 rounded-2xl mb-6 flex flex-wrap items-center justify-between gap-3 shadow-sm text-xs">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+          <span className="font-semibold text-brand-900">Ваше уютное хранилище:</span>
+          <span className="text-brand-600 font-light">Свободно еще {percentFree}%</span>
         </div>
         
-        <div className="w-full md:w-64">
-          <div className="flex justify-between text-[10px] text-brand-900 font-semibold mb-1 uppercase tracking-wider">
-            <span>Заполнено</span>
-            <span>{percentUsed}%</span>
-          </div>
-          <div className="w-full bg-brand-100 h-2.5 rounded-full overflow-hidden">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="w-32 bg-brand-100 h-1.5 rounded-full overflow-hidden shrink-0">
             <div 
               className="bg-brand-50 h-full rounded-full transition-all duration-500"
               style={{ width: `${percentUsed}%` }}
             ></div>
           </div>
+          <span className="text-[10px] text-brand-900 font-bold uppercase tracking-wider shrink-0">{percentUsed}%</span>
         </div>
       </div>
 
-      {/* Horizontal Albums row */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-serif text-lg font-bold text-brand-900">Ваши Альбомы</h3>
+      {/* Album Selection Area */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-serif text-base font-bold text-brand-900">Ваши Альбомы</h3>
           <button
             onClick={() => setShowCreateAlbum(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3.5 py-2 rounded-2xl cursor-pointer transition-colors shadow-sm"
+            className="flex items-center gap-1 text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-sm"
           >
-            <FolderPlus className="w-4 h-4" />
+            <FolderPlus className="w-3.5 h-3.5" />
             Создать альбом
           </button>
         </div>
@@ -623,86 +705,76 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
         {loadingAlbums ? (
           <div className="text-center py-6 text-brand-500 text-xs font-semibold">Загрузка альбомов...</div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin snap-x">
-            {albums.map((album, index) => {
-              const isActive = activeAlbum && activeAlbum.id === album.id;
-              const photoCount = album.photoCount || 0;
-              return (
-                <div
-                  key={album.id}
-                  onClick={() => {
-                    console.log('Album clicked:', album.name, album.id);
-                    if (activeAlbum && activeAlbum.id === album.id) {
-                      fetchAlbumPhotos(album.id);
-                    } else {
-                      setActiveAlbum(album);
-                    }
-                    setIsSelectMode(false);
-                    setSelectedPhotoIds([]);
-                  }}
-                  draggable={!isTouchOnly && album.name !== 'Общий'}
-                  onDragStart={(e) => handleAlbumDragStart(e, index)}
-                  onDragEnd={handleAlbumDragEnd}
-                  onDragOver={(e) => handleAlbumDragOver(e, index)}
-                  onDrop={(e) => {
-                    const types = e.dataTransfer.types || [];
-                    const isPhotoDrag = types.includes('photoid') || types.includes('photoId') || draggedPhotoId !== null;
-                    if (isPhotoDrag) {
-                      handleDropPhotoOnAlbum(e, album.id);
-                    } else {
-                      handleAlbumDrop(e, index);
-                    }
-                  }}
-                  className={`snap-start shrink-0 w-48 bg-white border rounded-2xl p-4 cursor-pointer select-none flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300
-                    ${isActive 
-                      ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/40' 
-                      : 'border-brand-200/40 hover:border-brand-400 hover:scale-[1.01]'
-                    }
-                  `}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-500 flex items-center justify-center shrink-0">
-                      <Folder className="w-5 h-5 fill-brand-500/10" />
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-serif font-bold text-sm text-brand-900 truncate">
-                        {album.name}
-                      </h4>
-                      <p className="text-[10px] text-brand-900 font-medium mt-0.5">
-                        {photoCount} {getPhotoWord(photoCount)}
-                      </p>
-                    </div>
-                  </div>
+          <>
+            {/* Mobile Adaptive 3D Card Deck */}
+            <div className="md:hidden">
+              {renderMobileDeck()}
+            </div>
 
-                  {album.name !== 'Общий' && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <div className="text-brand-300 hover:text-brand-500 transition-colors" title="Перетащите для сортировки">
-                        <Move className="w-3.5 h-3.5" />
+            {/* Desktop Grid Layout with Limit */}
+            <div className="hidden md:grid md:grid-cols-4 gap-4">
+              {albums.slice(0, 3).map((album, index) => {
+                const isActive = activeAlbum && activeAlbum.id === album.id;
+                const photoCount = album.photoCount || 0;
+                return (
+                  <div
+                    key={album.id}
+                    onClick={() => {
+                      if (activeAlbum && activeAlbum.id === album.id) {
+                        fetchAlbumPhotos(album.id);
+                      } else {
+                        setActiveAlbum(album);
+                      }
+                      setIsSelectMode(false);
+                      setSelectedPhotoIds([]);
+                    }}
+                    className={`bg-white border rounded-2xl p-4 cursor-pointer select-none flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300
+                      ${isActive 
+                        ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/40' 
+                        : 'border-brand-200/40 hover:border-brand-400 hover:scale-[1.01]'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-500 flex items-center justify-center shrink-0">
+                        <Folder className="w-5 h-5 fill-brand-500/10" />
                       </div>
+                      <div className="min-w-0">
+                        <h4 className="font-serif font-bold text-sm text-brand-900 truncate">
+                          {album.name}
+                        </h4>
+                        <p className="text-[10px] text-brand-900 font-medium mt-0.5">
+                          {photoCount} {getPhotoWord(photoCount)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {album.name !== 'Общий' && (
                       <button
-                        onClick={(e) => handleDeleteAlbum(album.id, e)}
-                        className="w-6 h-6 rounded-full hover:bg-red-50 text-brand-400 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAlbum(album.id);
+                        }}
+                        className="w-6 h-6 rounded-full hover:bg-red-50 text-brand-400 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                         title="Удалить альбом"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            
-            {/* If no other custom albums, show create inline card */}
-            {albums.length === 1 && (
+                    )}
+                  </div>
+                );
+              })}
+              
+              {/* Show All Card */}
               <div
-                onClick={() => setShowCreateAlbum(true)}
-                className="snap-start shrink-0 w-48 border border-dashed border-brand-300 hover:border-brand-400 rounded-2xl p-4 cursor-pointer flex items-center justify-center gap-2 text-brand-500 hover:text-brand-800 transition-all font-semibold text-xs"
+                onClick={() => setShowAlbumSelector(true)}
+                className="border border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-2xl p-4 cursor-pointer flex items-center justify-center gap-2 text-brand-600 hover:text-brand-900 transition-all font-semibold text-xs shadow-sm"
               >
-                <Plus className="w-4 h-4" />
-                <span>Создать альбом</span>
+                <Folder className="w-4 h-4 text-brand-500" />
+                <span>Все альбомы ({albums.length})</span>
               </div>
-            )}
-          </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -1330,6 +1402,99 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                 className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-xs font-semibold text-white cursor-pointer transition-colors shadow-sm"
               >
                 Удалить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Searchable Album Selector Modal */}
+      {showAlbumSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden animate-scale-in flex flex-col max-h-[80vh]">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-brand-100 flex items-center justify-between">
+              <h3 className="font-serif text-base font-bold text-brand-900">Выбор альбома</h3>
+              <button 
+                onClick={() => {
+                  setShowAlbumSelector(false);
+                  setAlbumSearchQuery('');
+                }}
+                className="w-8 h-8 rounded-full hover:bg-brand-50 text-brand-400 hover:text-brand-900 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* Search input */}
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Поиск альбома..."
+                  value={albumSearchQuery}
+                  onChange={(e) => setAlbumSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-brand-50 border border-brand-200 rounded-xl text-xs focus:outline-none focus:border-brand-400 text-brand-900 font-light"
+                />
+                <Search className="w-4 h-4 text-brand-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
+              
+              {/* Albums list */}
+              <div className="space-y-2">
+                {albums
+                  .filter(a => a.name.toLowerCase().includes(albumSearchQuery.toLowerCase()))
+                  .map(album => {
+                    const isActive = activeAlbum && activeAlbum.id === album.id;
+                    const photoCount = album.photoCount || 0;
+                    return (
+                      <div
+                        key={album.id}
+                        onClick={() => {
+                          setActiveAlbum(album);
+                          setShowAlbumSelector(false);
+                          setAlbumSearchQuery('');
+                          setIsSelectMode(false);
+                          setSelectedPhotoIds([]);
+                        }}
+                        className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all duration-200
+                          ${isActive 
+                            ? 'border-brand-500 bg-brand-50/40 font-bold' 
+                            : 'border-brand-100 hover:border-brand-300 hover:bg-brand-50/10'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-500 flex items-center justify-center shrink-0">
+                            <Folder className="w-4 h-4 fill-brand-500/10" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-serif text-xs text-brand-900 truncate">{album.name}</h4>
+                            <p className="text-[10px] text-brand-500 font-medium">{photoCount} {getPhotoWord(photoCount)}</p>
+                          </div>
+                        </div>
+                        
+                        {isActive && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                      </div>
+                    );
+                  })}
+                {albums.filter(a => a.name.toLowerCase().includes(albumSearchQuery.toLowerCase())).length === 0 && (
+                  <div className="text-center py-8 text-brand-500 text-xs">Альбомы не найдены</div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer with inline quick-create */}
+            <div className="p-4 bg-brand-50/60 border-t border-brand-100">
+              <button
+                onClick={() => {
+                  setShowAlbumSelector(false);
+                  setShowCreateAlbum(true);
+                }}
+                className="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs rounded-xl cursor-pointer transition-colors text-center shadow-sm flex items-center justify-center gap-1.5"
+              >
+                <FolderPlus className="w-4 h-4" />
+                Создать новый альбом
               </button>
             </div>
           </div>

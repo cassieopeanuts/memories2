@@ -189,23 +189,23 @@ export default function UploadZone({ token, onUploadComplete }) {
   const activeUploads = Object.values(uploads);
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-10">
+    <div className="w-full max-w-2xl mx-auto mb-6">
       {zoneError && (
-        <div className="mb-4 p-3.5 bg-red-50/90 border border-red-200 text-red-800 text-xs font-semibold rounded-2xl text-center backdrop-blur-sm animate-photo-entry">
+        <div className="mb-3 p-3 bg-red-50/90 border border-red-200 text-red-800 text-xs font-semibold rounded-xl text-center backdrop-blur-sm animate-photo-entry">
           {zoneError}
         </div>
       )}
-      {/* Upload Zone Border Area */}
+      {/* Sleek, Compact Upload Zone */}
       <div
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={onButtonClick}
-        className={`w-full p-8 md:p-12 text-center transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[200px]
+        className={`w-full p-4 text-center transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-4 border border-dashed rounded-2xl
           ${isDragActive 
-            ? 'upload-border-active bg-brand-100/50 scale-[1.01]' 
-            : 'upload-border bg-white/40 hover:bg-white/60 hover:scale-[1.002]'
+            ? 'border-brand-500 bg-brand-100/40 scale-[1.005]' 
+            : 'border-brand-300 bg-white/40 hover:bg-white/60 hover:scale-[1.002]'
           }
         `}
       >
@@ -218,21 +218,23 @@ export default function UploadZone({ token, onUploadComplete }) {
           onChange={handleChange}
         />
 
-        <div className="w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 mb-4 shadow-inner">
-          <UploadCloud className="w-8 h-8" />
+        <div className="flex items-center gap-3 text-left">
+          <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 shrink-0 shadow-inner">
+            <UploadCloud className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="font-serif text-sm font-semibold text-brand-900">
+              Сохранить новые фото и видео
+            </h4>
+            <p className="text-[11px] text-brand-900/60 font-light hidden sm:block">
+              Перетащите файлы сюда или нажмите, чтобы выбрать
+            </p>
+          </div>
         </div>
-
-        <h3 className="font-serif text-lg font-medium text-brand-900 mb-2">
-          Сохранить новые фото и видео
-        </h3>
         
-        <div className="mt-2 px-6 py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 hover:opacity-95 text-white font-semibold rounded-2xl text-sm transition-all duration-200 shadow-md inline-flex items-center gap-2 active:scale-[0.98]">
-          Выбрать фото и видео с телефона
+        <div className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:opacity-95 text-white font-semibold rounded-xl text-xs transition-all duration-200 shadow-sm inline-flex items-center justify-center gap-1.5 active:scale-[0.98]">
+          Выбрать файлы
         </div>
-        
-        <p className="text-xs text-brand-900 font-light max-w-xs mt-4 leading-relaxed">
-          Нажмите кнопку выше, чтобы сделать снимок, записать видео или выбрать готовые кадры из галереи смартфона.
-        </p>
       </div>
 
       {/* Upload Status List */}
