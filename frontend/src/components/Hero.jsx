@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 
 import yandexLogo from '../assets/yandex.svg';
@@ -24,7 +24,18 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showCodeForm, setShowCodeForm] = useState(false);
+  const [code, setCode] = useState('');
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef(null);
   const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+
+  useEffect(() => {
+    if (countdown > 0) {
+      timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [countdown]);
 
   const handleYandexLogin = () => {
     window.location.href = `${backendUrl}/api/auth/yandex?origin=${encodeURIComponent(window.location.origin)}`;
@@ -56,10 +67,65 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Ошибка входа по почте');
+        throw new Error(data.error || 'Ошибка отправки кода');
+      }
+      setShowCodeForm(true);
+      setCountdown(60); // 60 seconds cooldown
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCodeSubmit = async (e) => {
+    e.preventDefault();
+    if (!code || code.length !== 6) {
+      setErrorMsg('Пожалуйста, введите 6-значный код подтверждения.');
+      return;
+    }
+    setIsLoading(true);
+    setErrorMsg('');
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/email/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, code })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка проверки кода');
       }
       // Pass authentication details up to App.jsx
       onEmailLoginSuccess(data);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (countdown > 0) return;
+    setIsLoading(true);
+    setErrorMsg('');
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, name })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка отправки кода');
+      }
+      setCountdown(60);
     } catch (err) {
       console.error(err);
       setErrorMsg(err.message);
@@ -153,43 +219,101 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
 
           {/* Email form container */}
           {showEmailForm && (
-            <form 
-              onSubmit={handleEmailSubmit}
-              className="w-full p-5 rounded-2xl bg-white border border-brand-200/50 shadow-sm text-left animate-photo-entry"
-            >
-              <h4 className="text-xs font-bold text-brand-900 uppercase tracking-wider mb-3">Вход по почте</h4>
-              <div className="space-y-3">
-                <div>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Ваш e-mail (например, anna@mail.ru)"
-                    required
-                    className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ваше имя (для новых пользователей)"
-                    className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
-                  />
-                </div>
-                {errorMsg && (
-                  <p className="text-[11px] font-semibold text-red-500">{errorMsg}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white rounded-2xl text-xs font-semibold transition-all shadow-sm cursor-pointer active:scale-98"
-                >
-                  {isLoading ? 'Проверяем почту...' : 'Получить доступ к альбому'}
-                </button>
-              </div>
-            </form>
+            <div className="w-full p-5 rounded-2xl bg-white border border-brand-200/50 shadow-sm text-left animate-photo-entry">
+              {!showCodeForm ? (
+                <form onSubmit={handleEmailSubmit}>
+                  <h4 className="text-xs font-bold text-brand-900 uppercase tracking-wider mb-3">Вход по почте</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Ваш e-mail (например, anna@mail.ru)"
+                        required
+                        className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Ваше имя (для новых пользователей)"
+                        className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
+                      />
+                    </div>
+                    {errorMsg && (
+                      <p className="text-[11px] font-semibold text-red-500">{errorMsg}</p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white rounded-2xl text-xs font-semibold transition-all shadow-sm cursor-pointer active:scale-98"
+                    >
+                      {isLoading ? 'Проверяем почту...' : 'Получить доступ к альбому'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleCodeSubmit}>
+                  <h4 className="text-xs font-bold text-brand-900 uppercase tracking-wider mb-1">Подтверждение входа</h4>
+                  <p className="text-[11px] text-brand-600 mb-4 font-medium">
+                    Код отправлен на <span className="text-brand-900 font-semibold">{email}</span>
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <input
+                        type="text"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="0 0 0 0 0 0"
+                        required
+                        maxLength={6}
+                        pattern="\d{6}"
+                        className="w-full px-4 py-3 text-center tracking-[12px] font-mono text-2xl bg-brand-50 border border-brand-200/60 rounded-2xl text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-bold"
+                      />
+                    </div>
+                    
+                    {errorMsg && (
+                      <p className="text-[11px] font-semibold text-red-500 text-center">{errorMsg}</p>
+                    )}
+                    
+                    <button
+                      type="submit"
+                      disabled={isLoading || code.length !== 6}
+                      className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white rounded-2xl text-xs font-semibold transition-all shadow-sm cursor-pointer active:scale-98"
+                    >
+                      {isLoading ? 'Проверяем код...' : 'Подтвердить и войти'}
+                    </button>
+
+                    <div className="flex flex-col gap-2.5 pt-1 text-center">
+                      <button
+                        type="button"
+                        onClick={handleResendCode}
+                        disabled={isLoading || countdown > 0}
+                        className="text-brand-600 hover:text-brand-900 disabled:text-brand-400 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                      >
+                        {countdown > 0 ? `Отправить повторно через ${countdown}с` : 'Отправить код повторно'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCodeForm(false);
+                          setCode('');
+                          setErrorMsg('');
+                        }}
+                        className="text-neutral-500 hover:text-neutral-800 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                      >
+                        Изменить e-mail
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
         </div>
 

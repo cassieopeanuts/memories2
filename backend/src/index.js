@@ -6,7 +6,6 @@ import path from 'path';
 import crypto from 'crypto';
 import { query } from './db.js';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
 import { 
   findOrCreateUser, 
   generateToken, 
@@ -14,6 +13,11 @@ import {
   getMockProfile,
   JWT_SECRET
 } from './auth.js';
+import { 
+  sendEmail, 
+  sendVerificationCode, 
+  sendStorageWarning 
+} from './mail.js';
 import { 
   generatePresignedUploadUrl, 
   generatePresignedDownloadUrl, 
@@ -455,43 +459,105 @@ app.post('/api/auth/demo', async (req, res) => {
   }
 });
 
-// Email Authentication / Registration
+// In-memory store for verification codes (OTP)
+// email -> { code, name, expiresAt, attempts }
+const verificationCodes = new Map();
+
+// Email Authentication / Request Code
 app.post('/api/auth/email', async (req, res) => {
   const { email, name } = req.body;
   if (!email) {
     return res.status(400).json({ error: 'Пожалуйста, укажите адрес электронной почты.' });
   }
 
+  // Simple email format verification
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Пожалуйста, введите корректный адрес электронной почты.' });
+  }
+
   try {
     const normalizedEmail = email.toLowerCase().trim();
-    const result = await query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
     
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      const token = generateToken(user);
-      return res.json({
-        status: user.pin_code ? 'verify_pin' : 'create_pin',
-        token,
-        user: { id: user.id, name: user.name, email: user.email }
-      });
+    // Look up if user already exists
+    const result = await query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
+    const existingUser = result.rows[0];
+    
+    // Default name: provided name, existing user's name, or part of email before @
+    const finalName = name?.trim() || (existingUser ? existingUser.name : normalizedEmail.split('@')[0]);
+
+    // Generate random 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store in-memory with 10 minutes expiration
+    verificationCodes.set(normalizedEmail, {
+      code,
+      name: finalName,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      attempts: 0
+    });
+
+    // Send code to recipient
+    await sendVerificationCode(normalizedEmail, finalName, code);
+
+    res.json({ success: true, message: 'Код подтверждения успешно отправлен на вашу почту.' });
+  } catch (error) {
+    console.error('Email auth code request error:', error);
+    res.status(500).json({ error: 'Не удалось отправить код подтверждения. Пожалуйста, попробуйте позже.' });
+  }
+});
+
+// Verify Code and Login/Register
+app.post('/api/auth/email/verify', async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Пожалуйста, укажите адрес электронной почты и код.' });
+  }
+
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    const record = verificationCodes.get(normalizedEmail);
+
+    if (!record) {
+      return res.status(400).json({ error: 'Код подтверждения не запрашивался или срок его действия истек.' });
     }
 
-    // Registration: Create new user
-    const finalName = name || email.split('@')[0];
+    // Check expiration
+    if (Date.now() > record.expiresAt) {
+      verificationCodes.delete(normalizedEmail);
+      return res.status(400).json({ error: 'Срок действия кода подтверждения истек. Пожалуйста, запросите код повторно.' });
+    }
+
+    // Check attempts to prevent brute force (limit to 3)
+    if (record.attempts >= 3) {
+      verificationCodes.delete(normalizedEmail);
+      return res.status(400).json({ error: 'Превышено число попыток ввода. Пожалуйста, запросите новый код.' });
+    }
+
+    // Validate code
+    if (record.code !== code.trim()) {
+      record.attempts += 1;
+      return res.status(400).json({ error: `Неверный код. Осталось попыток: ${3 - record.attempts}` });
+    }
+
+    // Code is correct! Clean up store
+    verificationCodes.delete(normalizedEmail);
+
+    // Find or create the user in the database
     const user = await findOrCreateUser({
-      name: finalName,
+      name: record.name,
       email: normalizedEmail
     });
 
     const token = generateToken(user);
     res.json({
-      status: 'create_pin',
       token,
+      status: user.pin_code ? 'verify_pin' : 'create_pin',
       user: { id: user.id, name: user.name, email: user.email }
     });
   } catch (error) {
-    console.error('Email auth error:', error);
-    res.status(500).json({ error: 'Ошибка авторизации по электронной почте.' });
+    console.error('Email code verification error:', error);
+    res.status(500).json({ error: 'Ошибка подтверждения кода. Пожалуйста, попробуйте позже.' });
   }
 });
 
@@ -1028,6 +1094,10 @@ app.post('/api/photos/upload-url', authenticateJWT, async (req, res) => {
     const currentSize = parseInt(sizeResult.rows[0].total_size || '0', 10);
 
     if (currentSize + parseInt(fileSize, 10) > parseInt(limit, 10)) {
+      // Send storage full notification (asynchronous in background, non-blocking)
+      sendStorageWarning(userId, req.user.email, req.user.name, currentSize, parseInt(limit, 10), true)
+        .catch(err => console.error('[Storage Alert Upload-Url Error]', err));
+
       return res.status(400).json({ 
         error: 'Ой, на вашем облаке не хватает памяти для этой фотографии. Вы можете удалить старые фото или перейти на расширенное хранилище.' 
       });
@@ -1137,6 +1207,18 @@ app.post('/api/photos/confirm', authenticateJWT, async (req, res) => {
     
     // Generate fresh download URL for this photo
     newPhoto.url = await generatePresignedDownloadUrl(s3Key);
+
+    // Check storage capacity and send warning if >= 90% full
+    // Run asynchronously in the background so it doesn't block the API response
+    query('SELECT SUM(size) as total_size FROM photos WHERE user_id = $1', [userId])
+      .then(async (sizeRes) => {
+        const currentSize = parseInt(sizeRes.rows[0].total_size || '0', 10);
+        const limitBytes = parseInt(req.user.storage_limit, 10);
+        if (currentSize >= limitBytes * 0.90) {
+          await sendStorageWarning(userId, req.user.email, req.user.name, currentSize, limitBytes, false);
+        }
+      })
+      .catch(err => console.error('[Storage Alert Confirm Error]', err));
 
     console.log(`User ${userId} uploaded photo: ${originalName}`);
     res.status(201).json(newPhoto);
@@ -1254,14 +1336,9 @@ app.post('/api/feedback', async (req, res) => {
     );
     const feedback = dbResult.rows[0];
 
-    // 3. Send via Mail Server if SMTP is configured
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
-    const smtpSecure = process.env.SMTP_SECURE === 'true' || smtpPort === 465;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-    const feedbackReceiver = process.env.FEEDBACK_RECEIVER || smtpUser;
-
+    // 3. Send via unified email service
+    const feedbackReceiver = process.env.FEEDBACK_RECEIVER || process.env.SMTP_USER || 'admin@xn--80affoidsgaujr8a0h.xn--p1ai';
+    
     const emailSubject = `[ОБРАТНАЯ СВЯЗЬ] ЛегкоСохранить.рф — Отзыв от тестировщика`;
     const emailBodyText = `
 Новый отзыв от тестировщика:
@@ -1306,35 +1383,12 @@ ${JSON.stringify(metadata || {}, null, 2)}
       </div>
     `;
 
-    if (smtpHost) {
-      const transportConfig = {
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpSecure
-      };
-      if (smtpUser && smtpPass) {
-        transportConfig.auth = {
-          user: smtpUser,
-          pass: smtpPass
-        };
-      }
-      const transporter = nodemailer.createTransport(transportConfig);
-      
-      const fromEmail = (smtpUser && smtpUser.includes('@')) 
-        ? smtpUser 
-        : 'no-reply@xn--80affoidsgaujr8a0h.xn--p1ai';
-
-      await transporter.sendMail({
-        from: `"ЛегкоСохранить.РФ Тестирование" <${fromEmail}>`,
-        to: feedbackReceiver,
-        subject: emailSubject,
-        text: emailBodyText,
-        html: emailBodyHtml
-      });
-      console.log(`[Feedback] Feedback successfully saved to DB and sent via SMTP to ${feedbackReceiver}`);
-    } else {
-      console.log(`[Feedback Simulation] SMTP not configured. Printing feedback email to console:\n`, emailBodyText);
-    }
+    await sendEmail({
+      to: feedbackReceiver,
+      subject: emailSubject,
+      text: emailBodyText,
+      html: emailBodyHtml
+    });
 
     res.json({ success: true, message: 'Отзыв успешно сохранен и отправлен разработчикам. Спасибо!' });
   } catch (error) {
