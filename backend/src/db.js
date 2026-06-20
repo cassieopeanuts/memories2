@@ -180,6 +180,42 @@ export async function mockQuery(text, params = []) {
     }
     return { rows: [] };
   }
+
+  // 4e. UPDATE users SET yandex_id = $1 WHERE id = $2
+  if (queryText.includes('UPDATE users SET yandex_id =')) {
+    const [yandexId, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].yandex_id = yandexId;
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // 4f. UPDATE users SET sber_id = $1 WHERE id = $2
+  if (queryText.includes('UPDATE users SET sber_id =')) {
+    const [sberId, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].sber_id = sberId;
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // 4g. UPDATE users SET tbank_id = $1 WHERE id = $2
+  if (queryText.includes('UPDATE users SET tbank_id =')) {
+    const [tbankId, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].tbank_id = tbankId;
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
   
   // 5. SELECT SUM(size) as total_size FROM photos WHERE user_id = $1
   if (queryText.includes('SELECT SUM(size) as total_size FROM photos WHERE user_id =')) {
