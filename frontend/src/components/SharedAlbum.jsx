@@ -175,9 +175,10 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
                   {photo.mime_type && photo.mime_type.startsWith('video/') ? (
                     <div className="relative w-full h-full">
                       <video
-                        src={photoUrl}
+                        src={`${photoUrl}#t=0.001`}
                         className="w-full h-full object-cover select-none pointer-events-none"
                         preload="metadata"
+                        playsInline
                         muted
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/10">

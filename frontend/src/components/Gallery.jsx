@@ -885,9 +885,10 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                       photo.mime_type && photo.mime_type.startsWith('video/') ? (
                         <div className="relative w-full h-full">
                           <video
-                            src={photo.url.startsWith('http') ? photo.url : `${backendUrl}${photo.url}`}
+                            src={`${photo.url.startsWith('http') ? photo.url : `${backendUrl}${photo.url}`}#t=0.001`}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
                             preload="metadata"
+                            playsInline
                             muted
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/10">
