@@ -12,6 +12,14 @@ CREATE TABLE IF NOT EXISTS users (
     pin_code VARCHAR(255),
     storage_limit BIGINT NOT NULL DEFAULT 1073741824, -- 1 GB default free storage
     push_subscriptions JSONB DEFAULT '[]'::jsonb,
+    accepted_offer BOOLEAN NOT NULL DEFAULT FALSE,
+    accepted_offer_at TIMESTAMP WITH TIME ZONE,
+    accepted_offer_version VARCHAR(50),
+    card_token VARCHAR(255),
+    card_mask VARCHAR(50),
+    card_brand VARCHAR(50),
+    last_active_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    warning_sent_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,6 +33,8 @@ CREATE TABLE IF NOT EXISTS photos (
     mime_type VARCHAR(100) NOT NULL,
     is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
     position INT NOT NULL DEFAULT 0,
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

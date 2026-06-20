@@ -202,3 +202,46 @@ export async function sendStorageWarning(userId, email, name, currentBytes, limi
     throw err;
   }
 }
+
+/**
+ * Sends a warning notification to users who have been inactive for 150 days
+ */
+export async function sendInactivityWarning(email, name, daysInactive = 150) {
+  const subject = `Ваш аккаунт неактивен ${daysInactive} дней — ЛегкоСохранить.рф`;
+  
+  const text = `Здравствуйте, ${name}!
+Ваш аккаунт в фотохранилище ЛегкоСохранить.рф неактивен уже ${daysInactive} дней.
+Чтобы сохранить ваши фотографии и видеоматериалы, пожалуйста, совершите вход в аккаунт в течение следующих 30 дней.
+Если вы не выполните вход, через 30 дней (по истечении 180 дней неактивности) все ваши данные и файлы будут автоматически удалены навсегда из нашего облака в соответствии с политикой хранения.`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #fcf9f8;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #a45a44; font-family: Georgia, serif; font-size: 24px; margin: 0;">ЛегкоСохранить.РФ</h1>
+      </div>
+      <h2 style="color: #d32f2f; text-align: center; margin-bottom: 15px;">Ваш аккаунт неактивен</h2>
+      <p style="color: #333; font-size: 14px; line-height: 1.6;">Здравствуйте, ${name}!</p>
+      
+      <p style="color: #333; font-size: 14px; line-height: 1.6;">
+        Мы заметили, что вы не пользовались вашим хранилищем ЛегкоСохранить.рф уже <strong>${daysInactive} дней</strong>.
+      </p>
+      <p style="color: #333; font-size: 14px; line-height: 1.6;">
+        Для защиты конфиденциальности и автоматической очистки ресурсов неиспользуемые аккаунты удаляются.
+        Чтобы сохранить все ваши снимки и видеозаписи, просто выполните вход в свой аккаунт:
+      </p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="https://легкосохранить.рф" style="background-color: #a45a44; color: white; padding: 12px 30px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block;">Войти в облако</a>
+      </div>
+      
+      <p style="color: #d32f2f; font-size: 13px; font-weight: bold; line-height: 1.6;">
+        Внимание: если вы не авторизуетесь на сайте, через 30 дней (по истечении 180 дней неактивности) все ваши альбомы, фотографии и видео файлы будут безвозвратно удалены из облака Selectel S3.
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">
+      <p style="font-size: 10px; color: #999; text-align: center; margin: 0;">Письмо сгенерировано автоматически системой ЛегкоСохранить.рф</p>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, text, html });
+}

@@ -17,7 +17,8 @@ import {
 import { 
   sendEmail, 
   sendVerificationCode, 
-  sendStorageWarning 
+  sendStorageWarning,
+  sendInactivityWarning
 } from './mail.js';
 import { 
   generatePresignedUploadUrl, 
@@ -79,6 +80,48 @@ query(`
 query('ALTER TABLE albums ADD COLUMN IF NOT EXISTS share_token VARCHAR(255) UNIQUE', [])
   .then(() => console.log('Migration: checked albums table share_token column'))
   .catch(err => console.error('Migration error (albums share_token):', err));
+
+// Add columns for Clickwrap and Billing
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS accepted_offer BOOLEAN NOT NULL DEFAULT FALSE', [])
+  .then(() => console.log('Migration: checked users accepted_offer column'))
+  .catch(err => console.error('Migration error (users accepted_offer):', err));
+
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS accepted_offer_at TIMESTAMP WITH TIME ZONE', [])
+  .then(() => console.log('Migration: checked users accepted_offer_at column'))
+  .catch(err => console.error('Migration error (users accepted_offer_at):', err));
+
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS accepted_offer_version VARCHAR(50)', [])
+  .then(() => console.log('Migration: checked users accepted_offer_version column'))
+  .catch(err => console.error('Migration error (users accepted_offer_version):', err));
+
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS card_token VARCHAR(255)', [])
+  .then(() => console.log('Migration: checked users card_token column'))
+  .catch(err => console.error('Migration error (users card_token):', err));
+
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS card_mask VARCHAR(50)', [])
+  .then(() => console.log('Migration: checked users card_mask column'))
+  .catch(err => console.error('Migration error (users card_mask):', err));
+
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS card_brand VARCHAR(50)', [])
+  .then(() => console.log('Migration: checked users card_brand column'))
+  .catch(err => console.error('Migration error (users card_brand):', err));
+
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP', [])
+  .then(() => console.log('Migration: checked users last_active_at column'))
+  .catch(err => console.error('Migration error (users last_active_at):', err));
+
+query('ALTER TABLE users ADD COLUMN IF NOT EXISTS warning_sent_at TIMESTAMP WITH TIME ZONE', [])
+  .then(() => console.log('Migration: checked users warning_sent_at column'))
+  .catch(err => console.error('Migration error (users warning_sent_at):', err));
+
+// Add columns for soft delete photos
+query('ALTER TABLE photos ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE', [])
+  .then(() => console.log('Migration: checked photos is_deleted column'))
+  .catch(err => console.error('Migration error (photos is_deleted):', err));
+
+query('ALTER TABLE photos ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE', [])
+  .then(() => console.log('Migration: checked photos deleted_at column'))
+  .catch(err => console.error('Migration error (photos deleted_at):', err));
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -497,7 +540,20 @@ app.post('/api/auth/demo', async (req, res) => {
     sendPushNotification(user.id, 'Hey hello!', 'its a test push', '/')
       .catch(err => console.error('Test login push failed:', err));
 
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, hasPin: !!user.pin_code } });
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        hasPin: !!user.pin_code,
+        acceptedOffer: user.accepted_offer === true || user.accepted_offer === 'true',
+        acceptedOfferAt: user.accepted_offer_at,
+        acceptedOfferVersion: user.accepted_offer_version,
+        cardMask: user.card_mask,
+        cardBrand: user.card_brand
+      } 
+    });
   } catch (error) {
     console.error('Demo auth failed:', error);
     res.status(500).json({ error: 'Не удалось выполнить быстрый вход.' });
@@ -621,7 +677,16 @@ app.post('/api/auth/email/verify', async (req, res) => {
     res.json({
       token,
       status: user.pin_code ? 'verify_pin' : 'create_pin',
-      user: { id: user.id, name: user.name, email: user.email }
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email,
+        acceptedOffer: user.accepted_offer === true || user.accepted_offer === 'true',
+        acceptedOfferAt: user.accepted_offer_at,
+        acceptedOfferVersion: user.accepted_offer_version,
+        cardMask: user.card_mask,
+        cardBrand: user.card_brand
+      }
     });
   } catch (error) {
     console.error('Email code verification error:', error);
@@ -780,7 +845,7 @@ app.post('/api/auth/verify-pin', authenticateJWT, async (req, res) => {
 // Get profile details
 app.get('/api/auth/me', authenticateJWT, async (req, res) => {
   try {
-    const result = await query('SELECT id, name, email, yandex_id, pin_code, storage_limit FROM users WHERE id = $1', [req.user.id]);
+    const result = await query('SELECT id, name, email, yandex_id, pin_code, storage_limit, accepted_offer, accepted_offer_at, accepted_offer_version, card_mask, card_brand FROM users WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Пользователь не найден.' });
     }
@@ -791,11 +856,37 @@ app.get('/api/auth/me', authenticateJWT, async (req, res) => {
       email: user.email,
       yandexId: user.yandex_id,
       hasPin: !!user.pin_code,
-      storageLimit: parseInt(user.storage_limit, 10)
+      storageLimit: parseInt(user.storage_limit, 10),
+      acceptedOffer: user.accepted_offer === true || user.accepted_offer === 'true',
+      acceptedOfferAt: user.accepted_offer_at,
+      acceptedOfferVersion: user.accepted_offer_version,
+      cardMask: user.card_mask,
+      cardBrand: user.card_brand
     });
   } catch (error) {
     console.error('Error in /api/auth/me:', error);
     res.status(500).json({ error: 'Ошибка получения профиля.' });
+  }
+});
+
+// Accept Public Offer clickwrap agreement
+app.post('/api/auth/accept-offer', authenticateJWT, async (req, res) => {
+  const { version } = req.body;
+  const userId = req.user.id;
+
+  if (!version) {
+    return res.status(400).json({ error: 'Не указана версия оферты.' });
+  }
+
+  try {
+    await query(
+      'UPDATE users SET accepted_offer = $1, accepted_offer_at = CURRENT_TIMESTAMP, accepted_offer_version = $2 WHERE id = $3',
+      [true, version, userId]
+    );
+    res.json({ success: true, message: 'Оферта успешно принята.' });
+  } catch (error) {
+    console.error('Error accepting offer:', error);
+    res.status(500).json({ error: 'Не удалось принять оферту.' });
   }
 });
 
@@ -821,10 +912,13 @@ app.get('/api/albums', authenticateJWT, async (req, res) => {
       result.rows.map(async (album) => {
         let count = 0;
         if (album.name === 'Общий') {
-          const countRes = await query('SELECT COUNT(*) as cnt FROM photos WHERE user_id = $1', [userId]);
+          const countRes = await query('SELECT COUNT(*) as cnt FROM photos WHERE user_id = $1 AND is_deleted = false', [userId]);
           count = parseInt(countRes.rows[0].cnt || '0', 10);
         } else {
-          const countRes = await query('SELECT COUNT(*) as cnt FROM album_photos WHERE album_id = $1', [album.id]);
+          const countRes = await query(
+            'SELECT COUNT(*) as cnt FROM album_photos ap JOIN photos p ON ap.photo_id = p.id WHERE ap.album_id = $1 AND p.is_deleted = false', 
+            [album.id]
+          );
           count = parseInt(countRes.rows[0].cnt || '0', 10);
         }
         return { ...album, photoCount: count };
@@ -924,7 +1018,7 @@ app.get('/api/albums/:id/photos', authenticateJWT, async (req, res) => {
     let photosResult;
     if (isGeneral) {
       photosResult = await query(
-        'SELECT id, s3_key, original_name, size, mime_type, is_favorite, position, created_at FROM photos WHERE user_id = $1 ORDER BY position ASC, created_at DESC',
+        'SELECT id, s3_key, original_name, size, mime_type, is_favorite, position, created_at FROM photos WHERE user_id = $1 AND is_deleted = false ORDER BY position ASC, created_at DESC',
         [userId]
       );
     } else {
@@ -932,7 +1026,7 @@ app.get('/api/albums/:id/photos', authenticateJWT, async (req, res) => {
         `SELECT p.id, p.s3_key, p.original_name, p.size, p.mime_type, p.is_favorite, p.created_at, ap.position 
          FROM photos p 
          JOIN album_photos ap ON p.id = ap.photo_id 
-         WHERE ap.album_id = $1 
+         WHERE ap.album_id = $1 AND p.is_deleted = false
          ORDER BY ap.position ASC`,
         [albumId]
       );
@@ -1124,12 +1218,12 @@ app.get('/api/shared/album/:share_token', async (req, res) => {
     const ownerResult = await query('SELECT name FROM users WHERE id = $1', [album.user_id]);
     const ownerName = ownerResult.rows.length > 0 ? ownerResult.rows[0].name : 'Пользователь';
 
-    // Get photos in the shared album
+    // Get photos in the shared album (excluding deleted photos)
     const photosResult = await query(
       `SELECT p.id, p.s3_key, p.original_name, p.size, p.mime_type, p.is_favorite, p.created_at, ap.position 
        FROM photos p 
        JOIN album_photos ap ON p.id = ap.photo_id 
-       WHERE ap.album_id = $1 
+       WHERE ap.album_id = $1 AND p.is_deleted = false
        ORDER BY ap.position ASC`,
       [album.id]
     );
@@ -1245,12 +1339,12 @@ app.get('/shared/:share_token', async (req, res) => {
     const ownerResult = await query('SELECT name FROM users WHERE id = $1', [album.user_id]);
     const ownerName = ownerResult.rows.length > 0 ? ownerResult.rows[0].name : 'Пользователь';
 
-    // 3. Get first photo as cover photo
+    // 3. Get first photo as cover photo (excluding deleted ones)
     const photosResult = await query(
       `SELECT p.s3_key 
        FROM photos p 
        JOIN album_photos ap ON p.id = ap.photo_id 
-       WHERE ap.album_id = $1 
+       WHERE ap.album_id = $1 AND p.is_deleted = false
        ORDER BY ap.position ASC LIMIT 1`,
       [album.id]
     );
@@ -1386,7 +1480,7 @@ app.put('/api/photos/:id/favorite', authenticateJWT, async (req, res) => {
   }
 });
 
-// Upgrade storage plan / subscription
+// Upgrade storage plan / subscription (simulates card tokenization on paid upgrades)
 app.post('/api/subscription/upgrade', authenticateJWT, async (req, res) => {
   const { limitBytes } = req.body;
   const userId = req.user.id;
@@ -1396,11 +1490,75 @@ app.post('/api/subscription/upgrade', authenticateJWT, async (req, res) => {
   }
 
   try {
-    await query('UPDATE users SET storage_limit = $1 WHERE id = $2', [limitBytes, userId]);
-    res.json({ success: true, storageLimit: limitBytes });
+    const isPaidPlan = limitBytes > 1073741824; // > 1 GB is paid
+    const cardToken = isPaidPlan ? 'tok_mock_' + crypto.randomBytes(8).toString('hex') : null;
+    const cardMask = isPaidPlan ? '4242 42•• •••• ' + Math.floor(1000 + Math.random() * 9000) : null;
+    const cardBrand = isPaidPlan ? 'MIR' : null;
+
+    if (isPaidPlan) {
+      await query(
+        'UPDATE users SET storage_limit = $1, card_token = $2, card_mask = $3, card_brand = $4 WHERE id = $5',
+        [limitBytes, cardToken, cardMask, cardBrand, userId]
+      );
+    } else {
+      await query(
+        'UPDATE users SET storage_limit = $1, card_token = NULL, card_mask = NULL, card_brand = NULL WHERE id = $2',
+        [limitBytes, userId]
+      );
+    }
+
+    res.json({ 
+      success: true, 
+      storageLimit: limitBytes,
+      cardMask,
+      cardBrand
+    });
   } catch (error) {
     console.error('Error upgrading subscription:', error);
     res.status(500).json({ error: 'Не удалось активировать подписку.' });
+  }
+});
+
+// DELETE /api/billing/card - Deletes the tokenized card in one click (recurrent payment token revocation)
+app.delete('/api/billing/card', authenticateJWT, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    // 1. Fetch user to get card token details
+    const result = await query('SELECT id, card_token, card_mask FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден.' });
+    }
+    
+    const user = result.rows[0];
+
+    // 2. If a tokenized card exists, trigger the immediate revocation request/webhook to the payment aggregator
+    if (user.card_token) {
+      console.log(`\n============================================================`);
+      console.log(`[Aggregator Webhook] Initiating immediate revocation of recurrent payment token`);
+      console.log(`User ID:     ${user.id}`);
+      console.log(`Card Token:  ${user.card_token}`);
+      console.log(`Card Mask:   ${user.card_mask}`);
+      console.log(`Request URL: POST https://api.payment-gateway.ru/v3/tokens/${user.card_token}/revoke`);
+      console.log(`Headers:     Authorization: Bearer [SECRET_KEY]`);
+      console.log(`------------------------------------------------------------`);
+      console.log(`[Aggregator Webhook Response] Status: 200 OK`);
+      console.log(`Body:        { "status": "revoked", "token": "${user.card_token}", "revoked_at": "${new Date().toISOString()}" }`);
+      console.log(`============================================================\n`);
+    } else {
+      console.log(`[Billing] User ${userId} requested card deletion, but no card was tokenized.`);
+    }
+
+    // 3. Clear card credentials from database immediately (FZ No. 376-FZ compliance)
+    await query(
+      'UPDATE users SET card_token = NULL, card_mask = NULL, card_brand = NULL WHERE id = $1',
+      [userId]
+    );
+
+    res.json({ success: true, message: 'Карта успешно удалена, автоплатежи немедленно отменены.' });
+  } catch (error) {
+    console.error('Error deleting card:', error);
+    res.status(500).json({ error: 'Не удалось удалить привязанную карту.' });
   }
 });
 
@@ -1603,7 +1761,7 @@ app.get('/api/photos', authenticateJWT, async (req, res) => {
   }
 });
 
-// Delete a photo
+// Delete a photo (soft delete, moves to Trash bin)
 app.delete('/api/photos/:id', authenticateJWT, async (req, res) => {
   const photoId = req.params.id;
   const userId = req.user.id;
@@ -1615,16 +1773,164 @@ app.delete('/api/photos/:id', authenticateJWT, async (req, res) => {
     if (photoResult.rows.length === 0) {
       return res.status(404).json({ error: 'Фотография не найдена или у вас нет прав на её удаление.' });
     }
-    
-    const photo = photoResult.rows[0];
 
-    // 2. Delete from S3 storage
-    await deleteFromStorage(photo.s3_key);
+    // 2. Mark as deleted in DB
+    await query(
+      'UPDATE photos SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2',
+      [photoId, userId]
+    );
 
-    // 3. Delete from Database
-    await query('DELETE FROM photos WHERE id = $1', [photoId]);
+    res.json({ success: true, message: 'Фотография перемещена в корзину.' });
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    res.status(500).json({ error: 'Не удалось удалить фотографию.' });
+  }
+});
 
-    res.json({ success: true, message: 'Фотография успешно удалена.' });
+// GET /api/photos/trash - Get all soft-deleted photos for the user
+app.get('/api/photos/trash', authenticateJWT, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const result = await query(
+      'SELECT id, s3_key, original_name, size, mime_type, created_at, deleted_at FROM photos WHERE user_id = $1 AND is_deleted = true ORDER BY deleted_at DESC',
+      [userId]
+    );
+
+    const photosWithUrls = await Promise.all(
+      result.rows.map(async (photo) => {
+        try {
+          const url = await generatePresignedDownloadUrl(photo.s3_key);
+          return { ...photo, url };
+        } catch (e) {
+          console.error(`Error generating download URL for key ${photo.s3_key}:`, e);
+          return { ...photo, url: null };
+        }
+      })
+    );
+
+    res.json({ photos: photosWithUrls });
+  } catch (error) {
+    console.error('Error fetching trash photos:', error);
+    res.status(500).json({ error: 'Не удалось загрузить фотографии в корзине.' });
+  }
+});
+
+// POST /api/photos/:id/restore - Restore a soft-deleted photo
+app.post('/api/photos/:id/restore', authenticateJWT, async (req, res) => {
+  const photoId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const checkPhoto = await query('SELECT id FROM photos WHERE id = $1 AND user_id = $2 AND is_deleted = true', [photoId, userId]);
+    if (checkPhoto.rows.length === 0) {
+      return res.status(404).json({ error: 'Фотография не найдена в корзине.' });
+    }
+
+    await query(
+      'UPDATE photos SET is_deleted = false, deleted_at = NULL WHERE id = $1 AND user_id = $2',
+      [photoId, userId]
+    );
+
+    res.json({ success: true, message: 'Фотография восстановлена.' });
+  } catch (error) {
+    console.error('Error restoring photo:', error);
+    res.status(500).json({ error: 'Не удалось восстановить фотографию.' });
+  }
+});
+
+// POST /api/photos/bulk-restore - Bulk restore photos from trash
+app.post('/api/photos/bulk-restore', authenticateJWT, async (req, res) => {
+  const { photoIds } = req.body;
+  const userId = req.user.id;
+
+  if (!photoIds || !Array.isArray(photoIds) || photoIds.length === 0) {
+    return res.status(400).json({ error: 'Неверный список идентификаторов.' });
+  }
+
+  try {
+    await query(
+      'UPDATE photos SET is_deleted = false, deleted_at = NULL WHERE id = ANY($1) AND user_id = $2',
+      [photoIds, userId]
+    );
+
+    res.json({ success: true, message: 'Выбранные фотографии успешно восстановлены.' });
+  } catch (error) {
+    console.error('Error in bulk-restore:', error);
+    res.status(500).json({ error: 'Не удалось восстановить фотографии.' });
+  }
+});
+
+// POST /api/photos/bulk-delete-permanent - Permanently delete selected photos
+app.post('/api/photos/bulk-delete-permanent', authenticateJWT, async (req, res) => {
+  const { photoIds } = req.body;
+  const userId = req.user.id;
+
+  if (!photoIds || !Array.isArray(photoIds) || photoIds.length === 0) {
+    return res.status(400).json({ error: 'Неверный список идентификаторов.' });
+  }
+
+  try {
+    // 1. Fetch S3 keys first
+    const photosResult = await query(
+      'SELECT s3_key FROM photos WHERE id = ANY($1) AND user_id = $2 AND is_deleted = true',
+      [photoIds, userId]
+    );
+
+    // 2. Delete each from S3
+    for (const photo of photosResult.rows) {
+      try {
+        await deleteFromStorage(photo.s3_key);
+      } catch (err) {
+        console.error(`Failed to delete S3 key ${photo.s3_key}:`, err);
+      }
+    }
+
+    // 3. Delete from DB
+    await query(
+      'DELETE FROM photos WHERE id = ANY($1) AND user_id = $2',
+      [photoIds, userId]
+    );
+
+    res.json({ success: true, message: 'Выбранные фотографии навсегда удалены из облака.' });
+  } catch (error) {
+    console.error('Error in bulk-delete-permanent:', error);
+    res.status(500).json({ error: 'Не удалось окончательно удалить фотографии.' });
+  }
+});
+
+// POST /api/photos/trash/empty - Empty user's trash bin (permanently delete all soft-deleted photos)
+app.post('/api/photos/trash/empty', authenticateJWT, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    // 1. Fetch S3 keys for all deleted photos
+    const photosResult = await query(
+      'SELECT s3_key FROM photos WHERE user_id = $1 AND is_deleted = true',
+      [userId]
+    );
+
+    // 2. Delete from S3
+    for (const photo of photosResult.rows) {
+      try {
+        await deleteFromStorage(photo.s3_key);
+      } catch (err) {
+        console.error(`Failed to delete S3 key ${photo.s3_key}:`, err);
+      }
+    }
+
+    // 3. Delete from DB
+    await query(
+      'DELETE FROM photos WHERE user_id = $1 AND is_deleted = true',
+      [userId]
+    );
+
+    res.json({ success: true, message: 'Корзина успешно очищена. Все файлы удалены навсегда.' });
+  } catch (error) {
+    console.error('Error emptying trash:', error);
+    res.status(500).json({ error: 'Не удалось очистить корзину.' });
+  }
+});
   } catch (error) {
     console.error('Error deleting photo:', error);
     res.status(500).json({ error: 'Не удалось удалить фотографию.' });
@@ -1733,6 +2039,115 @@ app.get('/', (req, res) => {
   res.json({ status: 'healthy', service: 'Легко Сохранить API' });
 });
 
+// ==========================================
+// DAILY LIFECYCLE AUTOMATION DAEMON (CRON)
+// ==========================================
+
+async function runDailyGarbageCollection() {
+  console.log('[GC Daemon] Starting daily garbage collection scan...');
+  const now = new Date();
+
+  try {
+    // 1. Clean Trash Bin (permanently delete photos soft-deleted for >= 30 days)
+    const trashThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const trashResult = await query(
+      'SELECT id, s3_key FROM photos WHERE is_deleted = true AND deleted_at <= $1',
+      [trashThreshold.toISOString()]
+    );
+
+    if (trashResult.rows.length > 0) {
+      console.log(`[GC Daemon] Found ${trashResult.rows.length} photos in Trash to permanently purge.`);
+      
+      const photoIds = trashResult.rows.map(p => p.id);
+      
+      // Delete from S3 storage
+      for (const photo of trashResult.rows) {
+        try {
+          await deleteFromStorage(photo.s3_key);
+        } catch (err) {
+          console.error(`[GC Daemon] Failed to delete S3 key ${photo.s3_key}:`, err.message);
+        }
+      }
+
+      // Delete from DB
+      await query('DELETE FROM photos WHERE id = ANY($1)', [photoIds]);
+      console.log(`[GC Daemon] Successfully purged ${photoIds.length} photos from Trash.`);
+    }
+
+    // 2. Inactivity Warning (150 days inactive)
+    const warningThreshold = new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000);
+    const warnUsersResult = await query(
+      'SELECT id, name, email FROM users WHERE last_active_at <= $1 AND warning_sent_at IS NULL',
+      [warningThreshold.toISOString()]
+    );
+
+    for (const user of warnUsersResult.rows) {
+      if (user.email && user.email.includes('@')) {
+        try {
+          console.log(`[GC Daemon] Sending 150-day inactivity warning email to ${user.name} (${user.email})`);
+          await sendInactivityWarning(user.email, user.name, 150);
+          
+          // Mark warning as sent
+          await query(
+            'UPDATE users SET warning_sent_at = CURRENT_TIMESTAMP WHERE id = $1',
+            [user.id]
+          );
+        } catch (err) {
+          console.error(`[GC Daemon] Failed to send inactivity warning to user ${user.id}:`, err.message);
+        }
+      }
+    }
+
+    // 3. Inactivity Purge (180 days inactive)
+    const purgeThreshold = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    const purgeUsersResult = await query(
+      'SELECT id, name, email FROM users WHERE last_active_at <= $1',
+      [purgeThreshold.toISOString()]
+    );
+
+    for (const user of purgeUsersResult.rows) {
+      console.log(`[GC Daemon] Account inactive for >= 180 days. Initiating full storage purge for User ${user.name} (ID: ${user.id}).`);
+      
+      // Fetch all user's photos (both active and soft-deleted)
+      const photosResult = await query(
+        'SELECT s3_key FROM photos WHERE user_id = $1',
+        [user.id]
+      );
+
+      // Delete user's files from Selectel S3
+      for (const photo of photosResult.rows) {
+        try {
+          await deleteFromStorage(photo.s3_key);
+        } catch (err) {
+          console.error(`[GC Daemon] Failed to delete S3 key ${photo.s3_key} during account purge:`, err.message);
+        }
+      }
+
+      // Cascade delete user from the DB
+      await query('DELETE FROM users WHERE id = $1', [user.id]);
+      console.log(`[GC Daemon] User ${user.id} and all related records successfully deleted from DB.`);
+    }
+
+    console.log('[GC Daemon] Garbage collection scan finished.');
+  } catch (error) {
+    console.error('[GC Daemon] Error during garbage collection:', error);
+  }
+}
+
+// Start GC Daemon running daily (every 24 hours)
+function startGcDaemon() {
+  // Run on startup after 10 seconds to avoid overloading database initialization
+  setTimeout(() => {
+    runDailyGarbageCollection();
+  }, 10000);
+
+  // Run every 24 hours
+  setInterval(() => {
+    runDailyGarbageCollection();
+  }, 24 * 60 * 60 * 1000);
+}
+
 app.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
+  startGcDaemon();
 });

@@ -7,6 +7,8 @@ import BetaLock from './components/BetaLock.jsx';
 import TesterFeedback from './components/TesterFeedback.jsx';
 import SharedAlbum from './components/SharedAlbum.jsx';
 import Offer from './components/Offer.jsx';
+import WelcomeAcceptance from './components/WelcomeAcceptance.jsx';
+import ProfileModal from './components/ProfileModal.jsx';
 import ThemeSwitcher from './components/ThemeSwitcher.jsx';
 import PalettesPlayground from './components/PalettesPlayground.jsx';
 import { LogOut, ShieldCheck, RefreshCw, User, X, CreditCard } from 'lucide-react';
@@ -35,6 +37,7 @@ export default function App() {
   const [storage, setStorage] = useState({ used: 0, limit: 1073741824 });
   const [loading, setLoading] = useState(true);
   const [isCheckingProfile, setIsCheckingProfile] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState('gallery'); // 'gallery', 'subscription', or 'palettes'
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'classic');
@@ -163,7 +166,12 @@ export default function App() {
       setUser({
         id: data.id,
         name: data.name,
-        email: data.email
+        email: data.email,
+        acceptedOffer: data.acceptedOffer,
+        acceptedOfferAt: data.acceptedOfferAt,
+        acceptedOfferVersion: data.acceptedOfferVersion,
+        cardMask: data.cardMask,
+        cardBrand: data.cardBrand
       });
 
       // Save Yandex account locally if applicable
@@ -428,6 +436,22 @@ export default function App() {
     );
   }
 
+  // WELCOME ACCEPTANCE (CLICKWRAP)
+  if (token && user && !user.acceptedOffer) {
+    return (
+      <>
+        <WelcomeAcceptance
+          user={user}
+          onAccept={() => setUser(prev => ({ ...prev, acceptedOffer: true }))}
+          onViewOffer={() => setShowOffer(true)}
+          onLogout={handleLogout}
+        />
+        <ThemeSwitcher currentTheme={theme} onThemeSelect={setTheme} currentFont={font} onFontSelect={setFont} />
+        <TesterFeedback token={token} user={user} />
+      </>
+    );
+  }
+
   // LOCK SCREEN (PIN REQUIRED)
   if (!pinVerified) {
     return (
@@ -501,14 +525,18 @@ export default function App() {
           {/* User profile & logout */}
           {user && (
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 bg-brand-100/60 px-3 py-1.5 rounded-full border border-brand-200/20">
-                <div className="w-6 h-6 rounded-full bg-brand-300 flex items-center justify-center text-brand-800">
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-2 bg-brand-100/60 hover:bg-brand-200/60 px-3 py-1.5 rounded-full border border-brand-200/20 transition-all cursor-pointer group"
+                title="Личный кабинет"
+              >
+                <div className="w-6 h-6 rounded-full bg-brand-300 group-hover:bg-brand-400 flex items-center justify-center text-brand-800 shrink-0 transition-colors">
                   <User className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs font-semibold text-brand-800">
+                <span className="text-xs font-semibold text-brand-800 hidden xs:inline max-w-[120px] truncate">
                   {user.name}
                 </span>
-              </div>
+              </button>
               
               <button
                 onClick={handleLogout}
@@ -608,6 +636,15 @@ export default function App() {
       </footer>
       <ThemeSwitcher currentTheme={theme} onThemeSelect={setTheme} currentFont={font} onFontSelect={setFont} />
       <TesterFeedback token={token} user={user} />
+      {showProfileModal && (
+        <ProfileModal
+          user={user}
+          setUser={setUser}
+          token={token}
+          storage={storage}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
     </div>
   );
 }

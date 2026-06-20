@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Allow: /shared/
+Disallow: /auth-callback
+Disallow: /api/
+
+Sitemap: https://легкосохранить.рф/sitemap.xml

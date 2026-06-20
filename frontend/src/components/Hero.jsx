@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp, X, Trash2 } from 'lucide-react';
+import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp, X, Trash2, Lock, Share2, HelpCircle, Check } from 'lucide-react';
 
 import yandexLogo from '../assets/yandex.svg';
 import sberLogo from '../assets/sber.svg';
@@ -34,6 +34,11 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
 
   const [yandexAccounts, setYandexAccounts] = useState([]);
   const [showYandexAccountsModal, setShowYandexAccountsModal] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  const toggleFaq = (index) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
 
   useEffect(() => {
     try {
@@ -214,9 +219,11 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between px-6 py-12 md:py-20 selection:bg-brand-200">
-      {/* Header / Brand Logo */}
-      <header className="max-w-4xl mx-auto w-full flex items-center justify-between">
+    <div className="min-h-screen selection:bg-brand-200 flex flex-col">
+      {/* Hero Top Screen */}
+      <div className="min-h-screen flex flex-col justify-between px-6 py-12 md:py-20 max-w-4xl mx-auto w-full">
+        {/* Header / Brand Logo */}
+        <header className="w-full flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/logo.png" className="w-10 h-10 object-contain" alt="Логотип" />
           <span className="font-serif font-bold text-2xl md:text-3xl tracking-tight text-brand-900">
@@ -499,6 +506,304 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
           </div>
         </div>
       </footer>
+      </div>
+
+      {/* SEO-Optimized Landing Page Content */}
+      <div className="max-w-4xl mx-auto w-full px-6 pb-24 space-y-28">
+        
+        {/* Showcase Section: Interactive CSS mockup */}
+        <section id="showcase" className="w-full animate-photo-entry">
+          <div className="text-center mb-10">
+            <span className="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-100/60 px-3 py-1 rounded-full">Интуитивный интерфейс</span>
+            <h2 className="font-serif text-3xl md:text-4xl text-brand-900 mt-3 font-semibold">
+              Как выглядит ваше личное облако
+            </h2>
+            <p className="text-sm text-brand-600 mt-2 max-w-lg mx-auto font-light">
+              Мы убрали все лишнее, чтобы вы могли сосредоточиться на главном — ваших воспоминаниях.
+            </p>
+          </div>
+
+          {/* Interactive CSS Mockup Frame */}
+          <div className="bg-white/60 border border-brand-200/40 rounded-[32px] p-4 md:p-8 shadow-xl backdrop-blur-lg transition-all duration-500 hover:shadow-2xl">
+            {/* Mockup Header */}
+            <div className="flex items-center justify-between border-b border-brand-200/30 pb-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-red-400"></span>
+                  <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
+                  <span className="w-3 h-3 rounded-full bg-green-400"></span>
+                </div>
+                <span className="text-xs text-brand-500 font-mono hidden sm:inline">легкосохранить.рф/галерея</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold bg-brand-100 text-brand-700 px-3 py-1 rounded-lg">1 ГБ свободен</span>
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              </div>
+            </div>
+
+            {/* Mockup Gallery UI */}
+            <div className="space-y-6">
+              {/* Tab Simulator */}
+              <div className="flex gap-2 border-b border-brand-200/20 pb-3">
+                <button className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-500 text-white shadow-sm cursor-default">Все фотографии</button>
+                <button className="text-xs font-medium px-3 py-1.5 rounded-lg text-brand-600 hover:bg-brand-100/50 cursor-default">Альбомы</button>
+                <button className="text-xs font-medium px-3 py-1.5 rounded-lg text-brand-600 hover:bg-brand-100/50 cursor-default">Избранное</button>
+              </div>
+
+              {/* Photo Grid Simulator */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {/* Photo 1 */}
+                <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-rose-300 to-pink-400 flex items-center justify-center">
+                    <Heart className="w-10 h-10 text-white/40 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-left">
+                    <p className="text-white text-xs font-medium truncate">Семейный пикник</p>
+                    <p className="text-white/70 text-[9px]">Май 2026</p>
+                  </div>
+                </div>
+
+                {/* Photo 2 */}
+                <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-amber-300 to-orange-400 flex items-center justify-center">
+                    <Sparkles className="w-10 h-10 text-white/40 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-left">
+                    <p className="text-white text-xs font-medium truncate">Выпускной вечер</p>
+                    <p className="text-white/70 text-[9px]">Июнь 2026</p>
+                  </div>
+                </div>
+
+                {/* Photo 3 */}
+                <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-emerald-300 to-teal-400 flex items-center justify-center">
+                    <ShieldCheck className="w-10 h-10 text-white/40 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-left">
+                    <p className="text-white text-xs font-medium truncate">Поездка в горы</p>
+                    <p className="text-white/70 text-[9px]">Февраль 2026</p>
+                  </div>
+                </div>
+
+                {/* Photo 4 */}
+                <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md cursor-pointer hidden md:block">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-indigo-300 to-purple-400 flex items-center justify-center">
+                    <Lock className="w-10 h-10 text-white/40 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-left">
+                    <p className="text-white text-xs font-medium truncate">Личный архив</p>
+                    <p className="text-white/70 text-[9px]">Январь 2026</p>
+                  </div>
+                </div>
+
+                {/* Photo 5 */}
+                <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md cursor-pointer hidden md:block">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-sky-300 to-blue-400 flex items-center justify-center">
+                    <Share2 className="w-10 h-10 text-white/40 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-left">
+                    <p className="text-white text-xs font-medium truncate">Совместный альбом</p>
+                    <p className="text-white/70 text-[9px]">Март 2026</p>
+                  </div>
+                </div>
+
+                {/* Photo 6 */}
+                <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-brand-200/50 flex flex-col items-center justify-center p-4 hover:border-brand-400 transition-colors cursor-pointer hidden md:flex">
+                  <span className="text-xs font-bold text-brand-500 group-hover:text-brand-700 transition-colors">+ Загрузить</span>
+                  <span className="text-[9px] text-brand-400 text-center mt-1">Перетащите файлы сюда</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Detailed Features Section */}
+        <section id="features" className="w-full">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-100/60 px-3 py-1 rounded-full">Преимущества сервиса</span>
+            <h2 className="font-serif text-3xl md:text-4xl text-brand-900 mt-3 font-semibold">
+              Почему выбирают ЛегкоСохранить.рф
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <article className="bg-white/40 border border-brand-200/30 rounded-3xl p-6 transition-all duration-300 hover:bg-white/60 hover:shadow-md">
+              <div className="w-12 h-12 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-600 mb-5">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-semibold text-brand-900 mb-2">Безопасность и ПИН-код</h3>
+              <p className="text-xs text-brand-600 leading-relaxed font-light">
+                Дополнительная защита вашей галереи. Даже если кто-то получит доступ к вашему телефону, ваши личные фотографии останутся под защитой уникального ПИН-кода.
+              </p>
+            </article>
+
+            {/* Feature 2 */}
+            <article className="bg-white/40 border border-brand-200/30 rounded-3xl p-6 transition-all duration-300 hover:bg-white/60 hover:shadow-md">
+              <div className="w-12 h-12 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-600 mb-5">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-semibold text-brand-900 mb-2">Российские сервера (ФЗ-152)</h3>
+              <p className="text-xs text-brand-600 leading-relaxed font-light">
+                Все данные физически хранятся на территории РФ в сертифицированных дата-центрах. Полное соответствие закону о персональных данных и стабильный доступ без сбоев.
+              </p>
+            </article>
+
+            {/* Feature 3 */}
+            <article className="bg-white/40 border border-brand-200/30 rounded-3xl p-6 transition-all duration-300 hover:bg-white/60 hover:shadow-md">
+              <div className="w-12 h-12 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-600 mb-5">
+                <Share2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-semibold text-brand-900 mb-2">Альбомы по ссылке в 1 клик</h3>
+              <p className="text-xs text-brand-600 leading-relaxed font-light">
+                Создавайте публичные или приватные веб-альбомы. Ваши друзья и родственники смогут мгновенно открыть их на любом устройстве без необходимости скачивать приложения и регистрироваться.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        {/* Competitor Comparison Section */}
+        <section id="comparison" className="w-full">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-100/60 px-3 py-1 rounded-full">Честное сравнение</span>
+            <h2 className="font-serif text-3xl md:text-4xl text-brand-900 mt-3 font-semibold">
+              Как мы выглядим на фоне аналогов
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl border border-brand-200/40 bg-white/30 backdrop-blur-md shadow-sm">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-brand-200/40 bg-brand-100/50">
+                  <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider">Возможности</th>
+                  <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider bg-brand-100/80">ЛегкоСохранить.рф</th>
+                  <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider">Зарубежные облака</th>
+                  <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider">Обычные диски</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-200/20 text-xs text-brand-800">
+                <tr>
+                  <td className="p-4 font-medium text-brand-900">Навязчивая реклама</td>
+                  <td className="p-4 bg-brand-50/50 text-emerald-600 font-semibold">
+                    <span className="flex items-center gap-1"><Check className="w-4 h-4" /> Полностью нет</span>
+                  </td>
+                  <td className="p-4 text-brand-500">Часто есть на бесплатных</td>
+                  <td className="p-4 text-brand-500">Много рекламных баннеров</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-medium text-brand-900">Защита папок ПИН-кодом</td>
+                  <td className="p-4 bg-brand-50/50 text-emerald-600 font-semibold">
+                    Да, на любом тарифе
+                  </td>
+                  <td className="p-4 text-brand-400">Только общий пароль от аккаунта</td>
+                  <td className="p-4 text-brand-400">Нет защиты отдельных альбомов</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-medium text-brand-900">Скорость доступа в РФ</td>
+                  <td className="p-4 bg-brand-50/50 text-emerald-600 font-semibold">
+                    Максимальная (сервера в РФ)
+                  </td>
+                  <td className="p-4 text-brand-500">Возможны блокировки и замедления</td>
+                  <td className="p-4 text-brand-500">Зависит от загрузки сервиса</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-medium text-brand-900">Простота интерфейса</td>
+                  <td className="p-4 bg-brand-50/50 text-emerald-600 font-semibold">
+                    Минимализм, без лишних кнопок
+                  </td>
+                  <td className="p-4 text-brand-400">Сложные кабинеты и настройки</td>
+                  <td className="p-4 text-brand-400">Перегружены файловыми структурами</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Interactive FAQ Section with JSON-LD ready structure */}
+        <section id="faq" className="w-full">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-100/60 px-3 py-1 rounded-full">Часто задаваемые вопросы</span>
+            <h2 className="font-serif text-3xl md:text-4xl text-brand-900 mt-3 font-semibold">
+              Отвечаем на популярные вопросы
+            </h2>
+          </div>
+
+          <div className="space-y-4 max-w-2xl mx-auto">
+            {/* FAQ 1 */}
+            <div className="bg-white/40 border border-brand-200/30 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/50">
+              <button 
+                onClick={() => toggleFaq(0)}
+                className="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-900 text-xs md:text-sm cursor-pointer select-none"
+              >
+                <span>Каков размер бесплатного хранилища и как его увеличить?</span>
+                {openFaqIndex === 0 ? <ChevronUp className="w-4 h-4 text-brand-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-brand-500 shrink-0" />}
+              </button>
+              <div 
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaqIndex === 0 ? 'max-h-40 opacity-100 border-t border-brand-200/10' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="p-5 text-xs text-brand-600 leading-relaxed font-light">
+                  Каждый зарегистрированный пользователь бесплатно получает 1 ГБ пространства навсегда. Этого достаточно для безопасного хранения сотен фотографий высокого разрешения. При необходимости вы можете расширить хранилище, выбрав один из выгодных тарифов в личном кабинете.
+                </div>
+              </div>
+            </div>
+
+            {/* FAQ 2 */}
+            <div className="bg-white/40 border border-brand-200/30 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/50">
+              <button 
+                onClick={() => toggleFaq(1)}
+                className="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-900 text-xs md:text-sm cursor-pointer select-none"
+              >
+                <span>Насколько безопасно хранить фотографии на ЛегкоСохранить.рф?</span>
+                {openFaqIndex === 1 ? <ChevronUp className="w-4 h-4 text-brand-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-brand-500 shrink-0" />}
+              </button>
+              <div 
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaqIndex === 1 ? 'max-h-40 opacity-100 border-t border-brand-200/10' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="p-5 text-xs text-brand-600 leading-relaxed font-light">
+                  Безопасность ваших воспоминаний — наш главный приоритет. Сервера физически находятся в сертифицированных дата-центрах на территории РФ (соответствие ФЗ-152 о персональных данных). Передача данных шифруется SSL-сертификатом, а защита ПИН-кодом исключает несанкционированный доступ, даже если кто-то взял ваш разблокированный телефон.
+                </div>
+              </div>
+            </div>
+
+            {/* FAQ 3 */}
+            <div className="bg-white/40 border border-brand-200/30 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/50">
+              <button 
+                onClick={() => toggleFaq(2)}
+                className="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-900 text-xs md:text-sm cursor-pointer select-none"
+              >
+                <span>Как поделиться альбомом с родственниками или друзьями?</span>
+                {openFaqIndex === 2 ? <ChevronUp className="w-4 h-4 text-brand-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-brand-500 shrink-0" />}
+              </button>
+              <div 
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaqIndex === 2 ? 'max-h-40 opacity-100 border-t border-brand-200/10' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="p-5 text-xs text-brand-600 leading-relaxed font-light">
+                  Создайте альбом в личном кабинете, выберите фотографии и нажмите кнопку «Поделиться». Система сгенерирует защищенную уникальную ссылку. Любой человек, имеющий эту ссылку, сможет просматривать и скачивать ваши фотографии на любом устройстве без регистрации на нашем сайте.
+                </div>
+              </div>
+            </div>
+
+            {/* FAQ 4 */}
+            <div className="bg-white/40 border border-brand-200/30 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/50">
+              <button 
+                onClick={() => toggleFaq(3)}
+                className="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-900 text-xs md:text-sm cursor-pointer select-none"
+              >
+                <span>Работает ли сервис на смартфонах как приложение?</span>
+                {openFaqIndex === 3 ? <ChevronUp className="w-4 h-4 text-brand-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-brand-500 shrink-0" />}
+              </button>
+              <div 
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaqIndex === 3 ? 'max-h-45 opacity-100 border-t border-brand-200/10' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="p-5 text-xs text-brand-600 leading-relaxed font-light">
+                  Да! Наш сайт разработан как современное прогрессивное веб-приложение (PWA). Вы можете добавить его на домашний экран вашего iPhone или Android-смартфона через меню вашего браузера (например, Safari на iOS: нажмите «Поделиться» &rarr; «На экран Домой»). Он будет работать в полноэкранном режиме как стандартное приложение, экономя место.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
 
       {/* Modal: Yandex Account Selector */}
       {showYandexAccountsModal && (

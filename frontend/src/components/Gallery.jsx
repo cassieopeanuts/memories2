@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Eye, Image as ImageIcon, Heart, ChevronLeft, ChevronRight, 
-  Folder, FolderPlus, Plus, MoreVertical, Check, Trash2, ArrowLeft, Move,
+  Folder, FolderPlus, Plus, MoreVertical, Check, Trash2, ArrowLeft, Move, RefreshCw,
   AlertCircle, CheckCircle, Info, Share2, Copy, Globe, ExternalLink, Play, Search
 } from 'lucide-react';
 import UploadZone from './UploadZone.jsx';
@@ -169,9 +169,16 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     if (!albumId) return;
     setLoadingPhotos(true);
     try {
-      const response = await fetch(`${backendUrl}/api/albums/${albumId}/photos`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      let response;
+      if (albumId === 'trash') {
+        response = await fetch(`${backendUrl}/api/photos/trash`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } else {
+        response = await fetch(`${backendUrl}/api/albums/${albumId}/photos`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Ошибка загрузки фото');
       setPhotos(data.photos || []);
@@ -358,18 +365,18 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     }
   };
 
-  // Delete photo permanently from cloud storage
+  // Delete photo (soft-delete to trash)
   const handleDeletePhoto = async (photoId) => {
     setConfirmConfig({
       isOpen: true,
-      message: 'Вы уверены, что хотите удалить это фото? Оно будет удалено навсегда! Восстановить его будет невозможно, это сотрет снимок из облака бесповоротно.',
+      message: 'Вы действительно хотите переместить эту фотографию в корзину? Она будет храниться там в течение 30 дней, после чего автоматически удалится навсегда.',
       onConfirm: async () => {
         try {
           const response = await fetch(`${backendUrl}/api/photos/${photoId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          if (!response.ok) throw new Error('Не удалось удалить фотографию');
+          if (!response.ok) throw new Error('Не удалось переместить фото в корзину');
           
           setSelectedIndex(null);
           setShowOptionsDropdown(false);
@@ -379,7 +386,150 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           if (onUploadComplete) {
             onUploadComplete();
           }
-          showToast('Фотография удалена из облака.');
+          fetchAlbums(); // update counts
+          showToast('Фотография перемещена в корзину.');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      }
+    });
+  };
+
+  // Restore a single soft-deleted photo from Trash
+  const handleRestoreSinglePhoto = async (photoId) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/photos/${photoId}/restore`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Не удалось восстановить фотографию');
+      
+      setSelectedIndex(null);
+      if (activeAlbum) {
+        fetchAlbumPhotos(activeAlbum.id);
+      }
+      fetchAlbums(); // update count
+      showToast('Фотография восстановлена.');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  // Permanently delete a single photo from Trash
+  const handleDeletePhotoPermanent = (photoId) => {
+    setConfirmConfig({
+      isOpen: true,
+      message: 'Вы уверены, что хотите удалить эту фотографию навсегда? Данные будут полностью удалены из облачного хранилища Selectel S3, и восстановить их будет невозможно.',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`${backendUrl}/api/photos/bulk-delete-permanent`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ photoIds: [photoId] })
+          });
+          if (!response.ok) throw new Error('Не удалось окончательно удалить фотографию');
+          
+          setSelectedIndex(null);
+          if (activeAlbum) {
+            fetchAlbumPhotos(activeAlbum.id);
+          }
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
+          fetchAlbums();
+          showToast('Фотография навсегда удалена.');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      }
+    });
+  };
+
+  // Bulk restore photos from Trash
+  const handleBulkRestore = async () => {
+    if (selectedPhotoIds.length === 0) return;
+    try {
+      const response = await fetch(`${backendUrl}/api/photos/bulk-restore`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ photoIds: selectedPhotoIds })
+      });
+      if (!response.ok) throw new Error('Не удалось восстановить выбранные фотографии');
+      
+      setIsSelectMode(false);
+      setSelectedPhotoIds([]);
+      if (activeAlbum) {
+        fetchAlbumPhotos(activeAlbum.id);
+      }
+      fetchAlbums();
+      showToast('Выбранные фотографии восстановлены.');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  // Bulk permanent delete photos from Trash
+  const handleBulkDeletePermanent = () => {
+    if (selectedPhotoIds.length === 0) return;
+    setConfirmConfig({
+      isOpen: true,
+      message: `Вы уверены, что хотите окончательно удалить ${selectedPhotoIds.length} ${getPhotoWord(selectedPhotoIds.length)}? Это действие сотрет все файлы из облачного хранилища и будет абсолютно необратимо.`,
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`${backendUrl}/api/photos/bulk-delete-permanent`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ photoIds: selectedPhotoIds })
+          });
+          if (!response.ok) throw new Error('Не удалось окончательно удалить выбранные фотографии');
+          
+          setIsSelectMode(false);
+          setSelectedPhotoIds([]);
+          if (activeAlbum) {
+            fetchAlbumPhotos(activeAlbum.id);
+          }
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
+          fetchAlbums();
+          showToast('Выбранные фотографии навсегда удалены из облака.');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      }
+    });
+  };
+
+  // Empty Trash Bin
+  const handleEmptyTrash = () => {
+    setConfirmConfig({
+      isOpen: true,
+      message: 'Вы уверены, что хотите полностью очистить корзину? Все удаленные фотографии будут безвозвратно удалены из облака Selectel S3.',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`${backendUrl}/api/photos/trash/empty`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (!response.ok) throw new Error('Не удалось очистить корзину');
+          
+          if (activeAlbum) {
+            fetchAlbumPhotos(activeAlbum.id);
+          }
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
+          fetchAlbums();
+          showToast('Корзина успешно очищена.');
         } catch (err) {
           showToast(err.message, 'error');
         }
@@ -788,6 +938,41 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               <Folder className="w-5 h-5 text-brand-500" />
               <span className="text-[10px] text-center leading-tight">Все альбомы ({albums.length})</span>
             </div>
+
+            {/* Trash Bin Card */}
+            <div
+              onClick={() => {
+                setActiveAlbum({ id: 'trash', name: 'Корзина' });
+                setIsSelectMode(false);
+                setSelectedPhotoIds([]);
+              }}
+              className={`album-card bg-white border rounded-2xl p-4 cursor-pointer select-none flex flex-col justify-between h-32 transition-all
+                ${activeAlbum && activeAlbum.id === 'trash'
+                  ? 'active-card border-red-500 ring-2 ring-red-500/10 bg-red-50/10 shadow-sm'
+                  : 'border-brand-200/40 hover:border-red-450'
+                }
+              `}
+            >
+              <div className="flex justify-between items-start w-full">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors
+                  ${activeAlbum && activeAlbum.id === 'trash'
+                    ? 'bg-red-100 text-red-500'
+                    : 'bg-brand-100 text-brand-500'
+                  }
+                `}>
+                  <Trash2 className="w-4.5 h-4.5" />
+                </div>
+              </div>
+
+              <div className="min-w-0 mt-3">
+                <h4 className="font-serif font-bold text-xs text-brand-900 truncate">
+                  Корзина
+                </h4>
+                <p className="text-[9px] text-brand-500 font-semibold mt-0.5 uppercase tracking-wide leading-none">
+                  Удаленные снимки
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -798,7 +983,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pt-4 border-t border-brand-200/30">
             <div>
               <h3 className="font-serif text-lg md:text-xl text-brand-900 font-semibold">
-                Фотографии: {activeAlbum.name}
+                {activeAlbum.id === 'trash' ? 'Корзина' : `Фотографии: ${activeAlbum.name}`}
               </h3>
               <p className="text-[11px] text-brand-900 font-light mt-0.5">
                 {totalPhotos} {getPhotoWord(totalPhotos)}
@@ -806,7 +991,17 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
             </div>
 
             <div className="flex items-center gap-2">
-              {activeAlbum.name !== 'Общий' && (
+              {activeAlbum.id === 'trash' && !isSelectMode && totalPhotos > 0 && (
+                <button
+                  onClick={handleEmptyTrash}
+                  className="flex items-center gap-1.5 text-xs font-semibold border border-red-200 hover:bg-red-50 text-red-600 px-3.5 py-2 rounded-2xl cursor-pointer transition-colors shadow-sm"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Очистить корзину
+                </button>
+              )}
+
+              {activeAlbum.name !== 'Общий' && activeAlbum.id !== 'trash' && (
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="flex items-center gap-1.5 text-xs font-semibold border border-brand-200 hover:bg-brand-100/30 text-brand-800 px-3.5 py-2 rounded-2xl cursor-pointer transition-colors shadow-sm"
@@ -848,13 +1043,27 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               <div className="w-14 h-14 rounded-full bg-brand-100/60 flex items-center justify-center text-brand-400 mb-4">
                 <ImageIcon className="w-7 h-7" />
               </div>
-              <h4 className="font-serif text-base text-brand-800 mb-1">В альбоме пока пусто</h4>
+              <h4 className="font-serif text-base text-brand-800 mb-1">
+                {activeAlbum.id === 'trash' ? 'Корзина пуста' : 'В альбоме пока пусто'}
+              </h4>
               <p className="text-xs text-brand-600 font-light max-w-xs leading-relaxed">
-                Сделайте снимок на камеру или выберите готовые кадры из галереи телефона выше, чтобы они сохранились в альбоме.
+                {activeAlbum.id === 'trash' 
+                  ? 'Сюда попадают фотографии, которые вы удаляете из альбомов. Они будут храниться 30 дней, после чего автоматически удалятся навсегда.' 
+                  : 'Сделайте снимок на камеру или выберите готовые кадры из галереи телефона выше, чтобы они сохранились в альбоме.'
+                }
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+            <>
+              {activeAlbum.id === 'trash' && (
+                <div className="mb-6 p-4 bg-brand-50 border border-brand-200/40 rounded-2xl flex items-start gap-3 shadow-inner">
+                  <span className="text-lg">💡</span>
+                  <div className="text-xs text-brand-800 font-light leading-relaxed">
+                    <b>Очистка файлов:</b> Файлы из корзины автоматически удаляются на 31-й день после перемещения. Вы также можете удалить их навсегда вручную или восстановить в любой момент.
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
               {photos.map((photo, index) => {
                 const isSelected = selectedPhotoIds.includes(photo.id);
                 return (
@@ -935,6 +1144,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                 );
               })}
             </div>
+            </>
           )}
         </div>
       )}
@@ -954,13 +1164,33 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           >
             Отменить
           </button>
-          <button 
-            onClick={() => setShowAddToAlbum(true)}
-            disabled={selectedPhotoIds.length === 0}
-            className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm"
-          >
-            Добавить в альбом
-          </button>
+          
+          {activeAlbum && activeAlbum.id === 'trash' ? (
+            <>
+              <button 
+                onClick={handleBulkRestore}
+                disabled={selectedPhotoIds.length === 0}
+                className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm"
+              >
+                Восстановить
+              </button>
+              <button 
+                onClick={handleBulkDeletePermanent}
+                disabled={selectedPhotoIds.length === 0}
+                className="text-xs font-semibold bg-red-500 hover:bg-red-650 text-white px-4 py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm"
+              >
+                Удалить навсегда
+              </button>
+            </>
+          ) : (
+            <button 
+              onClick={() => setShowAddToAlbum(true)}
+              disabled={selectedPhotoIds.length === 0}
+              className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm"
+            >
+              Добавить в альбом
+            </button>
+          )}
         </div>
       )}
 
@@ -1212,59 +1442,91 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                 
                 {showOptionsDropdown && (
                   <div className="absolute right-0 mt-2 w-56 bg-neutral-900/95 border border-neutral-800 rounded-2xl shadow-xl z-[60] overflow-hidden py-1.5 animate-photo-entry backdrop-blur-md">
-                    {/* В избранное / Из избранного */}
-                    <button
-                      onClick={(e) => {
-                        toggleFavorite(selectedPhoto, e);
-                        setShowOptionsDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between"
-                    >
-                      <span>{selectedPhoto.is_favorite ? 'Убрать из избранного' : 'Добавить в избранное'}</span>
-                      <Heart className={`w-4 h-4 ${selectedPhoto.is_favorite ? 'text-brand-500 fill-brand-500' : 'text-white/60'}`} />
-                    </button>
+                    {activeAlbum && activeAlbum.id === 'trash' ? (
+                      <>
+                        {/* Восстановить */}
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setShowOptionsDropdown(false);
+                            await handleRestoreSinglePhoto(selectedPhoto.id);
+                          }}
+                          className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between"
+                        >
+                          <span>Восстановить</span>
+                          <RefreshCw className="w-4 h-4 text-white/60" />
+                        </button>
 
-                    {/* Добавить в альбом */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowOptionsDropdown(false);
-                        setSelectedPhotoIds([selectedPhoto.id]);
-                        setShowAddToAlbum(true);
-                      }}
-                      className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between"
-                    >
-                      <span>Добавить в альбом</span>
-                      <FolderPlus className="w-4 h-4 text-white/60" />
-                    </button>
+                        {/* Удалить навсегда */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowOptionsDropdown(false);
+                            handleDeletePhotoPermanent(selectedPhoto.id);
+                          }}
+                          className="w-full text-left px-4 py-3 text-xs text-red-400 hover:text-red-350 hover:bg-red-950/20 transition-colors font-semibold cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
+                        >
+                          <span>Удалить навсегда</span>
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {/* В избранное / Из избранного */}
+                        <button
+                          onClick={(e) => {
+                            toggleFavorite(selectedPhoto, e);
+                            setShowOptionsDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between"
+                        >
+                          <span>{selectedPhoto.is_favorite ? 'Убрать из избранного' : 'Добавить в избранное'}</span>
+                          <Heart className={`w-4 h-4 ${selectedPhoto.is_favorite ? 'text-brand-500 fill-brand-500' : 'text-white/60'}`} />
+                        </button>
 
-                    {/* Убрать из этого альбома */}
-                    {activeAlbum && activeAlbum.name !== 'Общий' && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowOptionsDropdown(false);
-                          handleRemovePhotoFromAlbum(selectedPhoto.id);
-                        }}
-                        className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
-                      >
-                        <span>Убрать из этого альбома</span>
-                        <X className="w-4 h-4 text-white/60" />
-                      </button>
+                        {/* Добавить в альбом */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowOptionsDropdown(false);
+                            setSelectedPhotoIds([selectedPhoto.id]);
+                            setShowAddToAlbum(true);
+                          }}
+                          className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between"
+                        >
+                          <span>Добавить в альбом</span>
+                          <FolderPlus className="w-4 h-4 text-white/60" />
+                        </button>
+
+                        {/* Убрать из этого альбома */}
+                        {activeAlbum && activeAlbum.name !== 'Общий' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowOptionsDropdown(false);
+                              handleRemovePhotoFromAlbum(selectedPhoto.id);
+                            }}
+                            className="w-full text-left px-4 py-3 text-xs text-white hover:bg-white/5 transition-colors font-medium cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
+                          >
+                            <span>Убрать из этого альбома</span>
+                            <X className="w-4 h-4 text-white/60" />
+                          </button>
+                        )}
+
+                        {/* Удалить в корзину */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowOptionsDropdown(false);
+                            handleDeletePhoto(selectedPhoto.id);
+                          }}
+                          className="w-full text-left px-4 py-3 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors font-semibold cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
+                        >
+                          <span>Удалить в корзину</span>
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </>
                     )}
-
-                    {/* Удалить навсегда */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowOptionsDropdown(false);
-                        handleDeletePhoto(selectedPhoto.id);
-                      }}
-                      className="w-full text-left px-4 py-3 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors font-semibold cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
-                    >
-                      <span>Удалить навсегда</span>
-                      <Trash2 className="w-4 h-4 text-red-400" />
-                    </button>
                   </div>
                 )}
               </div>

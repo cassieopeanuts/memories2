@@ -102,16 +102,27 @@ export async function mockQuery(text, params = []) {
     return { rows };
   }
   
-  // 3. SELECT id, name, email, pin_code, storage_limit, push_subscriptions FROM users WHERE id = $1
-  if (queryText.includes('SELECT') && queryText.includes('FROM users WHERE id =')) {
+  if (queryText.includes('FROM users WHERE id =')) {
     const id = params[0];
     const rows = db.users.filter(u => u.id === id).map(u => ({
       id: u.id,
       name: u.name,
       email: u.email,
+      yandex_id: u.yandex_id,
+      sber_id: u.sber_id,
+      tbank_id: u.tbank_id,
       pin_code: u.pin_code,
       storage_limit: u.storage_limit,
-      push_subscriptions: u.push_subscriptions || []
+      push_subscriptions: u.push_subscriptions || [],
+      accepted_offer: u.accepted_offer || false,
+      accepted_offer_at: u.accepted_offer_at || null,
+      accepted_offer_version: u.accepted_offer_version || null,
+      card_token: u.card_token || null,
+      card_mask: u.card_mask || null,
+      card_brand: u.card_brand || null,
+      last_active_at: u.last_active_at || new Date().toISOString(),
+      warning_sent_at: u.warning_sent_at || null,
+      created_at: u.created_at
     }));
     return { rows };
   }
@@ -131,6 +142,14 @@ export async function mockQuery(text, params = []) {
       pin_code: null,
       storage_limit: 1073741824, // 1 GB in bytes
       push_subscriptions: [],
+      accepted_offer: false,
+      accepted_offer_at: null,
+      accepted_offer_version: null,
+      card_token: null,
+      card_mask: null,
+      card_brand: null,
+      last_active_at: new Date().toISOString(),
+      warning_sent_at: null,
       created_at: new Date().toISOString()
     };
     
@@ -216,6 +235,59 @@ export async function mockQuery(text, params = []) {
     }
     return { rows: [] };
   }
+
+  // UPDATE users SET accepted_offer = ...
+  if (queryText.includes('UPDATE users SET accepted_offer =')) {
+    const [accepted, acceptedAt, version, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].accepted_offer = accepted === true || accepted === 'true';
+      db.users[idx].accepted_offer_at = acceptedAt;
+      db.users[idx].accepted_offer_version = version;
+      db.users[idx].last_active_at = new Date().toISOString();
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // UPDATE users SET card_token = ...
+  if (queryText.includes('UPDATE users SET card_token =')) {
+    const [token, mask, brand, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].card_token = token;
+      db.users[idx].card_mask = mask;
+      db.users[idx].card_brand = brand;
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // UPDATE users SET last_active_at = ...
+  if (queryText.includes('UPDATE users SET last_active_at =')) {
+    const id = params[0];
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].last_active_at = new Date().toISOString();
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // UPDATE users SET warning_sent_at = ...
+  if (queryText.includes('UPDATE users SET warning_sent_at =')) {
+    const [warningAt, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].warning_sent_at = warningAt;
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
   
   // 5. SELECT SUM(size) as total_size FROM photos WHERE user_id = $1
   if (queryText.includes('SELECT SUM(size) as total_size FROM photos WHERE user_id =')) {
@@ -286,12 +358,35 @@ export async function mockQuery(text, params = []) {
     }
     return { rows: [] };
   }
+
+  // 6d. UPDATE photos SET is_deleted = $1, deleted_at = $2 WHERE id = $3 (or id = ANY($3))
+  if (queryText.includes('UPDATE photos SET is_deleted =')) {
+    // Params could be [is_deleted, deleted_at, id, user_id] or [is_deleted, deleted_at, ids]
+    const [isDeleted, deletedAt, idOrIds, userId] = params;
+    const isDeletedBool = isDeleted === true || isDeleted === 'true';
+    const targetIds = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+    
+    let updatedRows = [];
+    db.photos.forEach((p, idx) => {
+      if (targetIds.includes(p.id) && (!userId || p.user_id === userId)) {
+        db.photos[idx].is_deleted = isDeletedBool;
+        db.photos[idx].deleted_at = deletedAt;
+        updatedRows.push(db.photos[idx]);
+      }
+    });
+    
+    if (updatedRows.length > 0) {
+      writeMockDb(db);
+    }
+    return { rows: updatedRows };
+  }
   
   // 7. SELECT * FROM photos WHERE user_id = $1
   if (queryText.includes('FROM photos WHERE user_id =')) {
     const userId = params[0];
+    const isTrashQuery = queryText.includes('is_deleted = true');
     const rows = db.photos
-      .filter(p => p.user_id === userId)
+      .filter(p => p.user_id === userId && (isTrashQuery ? (p.is_deleted === true) : (p.is_deleted !== true)))
       .map(p => ({
         id: p.id,
         user_id: p.user_id,
@@ -319,12 +414,13 @@ export async function mockQuery(text, params = []) {
     return { rows };
   }
   
-  // 9. DELETE FROM photos WHERE id = $1
-  if (queryText.includes('DELETE FROM photos WHERE id =')) {
-    const id = params[0];
+  // 9. DELETE FROM photos WHERE id = $1 or id = ANY($1)
+  if (queryText.includes('DELETE FROM photos WHERE id =') || queryText.includes('DELETE FROM photos WHERE id = ANY(')) {
+    const idOrIds = params[0];
+    const targetIds = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
     const initialLength = db.photos.length;
-    db.photos = db.photos.filter(p => p.id !== id);
-    db.album_photos = db.album_photos.filter(ap => ap.photo_id !== id);
+    db.photos = db.photos.filter(p => !targetIds.includes(p.id));
+    db.album_photos = db.album_photos.filter(ap => !targetIds.includes(ap.photo_id));
     writeMockDb(db);
     return { rows: [], rowCount: initialLength - db.photos.length };
   }
@@ -433,6 +529,43 @@ export async function mockQuery(text, params = []) {
       }
     }
     return { rows: [] };
+  }
+  // SELECT id, name, email FROM users WHERE last_active_at <= ... (for inactivity check)
+  if (queryText.includes('SELECT id, name, email FROM users WHERE last_active_at <=')) {
+    const threshold = params[0];
+    const checkWarningSent = queryText.includes('warning_sent_at IS NULL');
+    const rows = db.users.filter(u => {
+      const isOld = new Date(u.last_active_at) <= new Date(threshold);
+      const satisfiesWarning = checkWarningSent ? (!u.warning_sent_at) : true;
+      return isOld && satisfiesWarning;
+    }).map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email
+    }));
+    return { rows };
+  }
+
+  // SELECT id, s3_key FROM photos WHERE is_deleted = true AND deleted_at <= ... (for trash purge)
+  if (queryText.includes('SELECT id, s3_key FROM photos WHERE is_deleted = true AND deleted_at <=')) {
+    const threshold = params[0];
+    const rows = db.photos.filter(p => {
+      return p.is_deleted === true && new Date(p.deleted_at) <= new Date(threshold);
+    }).map(p => ({
+      id: p.id,
+      s3_key: p.s3_key
+    }));
+    return { rows };
+  }
+
+  // Delete user: DELETE FROM users WHERE id = $1 (cascade deletes in mock db)
+  if (queryText.includes('DELETE FROM users WHERE id =')) {
+    const id = params[0];
+    db.users = db.users.filter(u => u.id !== id);
+    db.photos = db.photos.filter(p => p.user_id !== id);
+    db.albums = db.albums.filter(a => a.user_id !== id);
+    writeMockDb(db);
+    return { rows: [], rowCount: 1 };
   }
 
   // 13. Delete album: DELETE FROM albums WHERE id = $1

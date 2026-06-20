@@ -122,12 +122,19 @@ export async function authenticateJWT(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    // Fetch user from DB to verify they still exist and get storage limits
-    const result = await query('SELECT id, name, email, storage_limit FROM users WHERE id = $1', [decoded.userId]);
+    // Fetch user from DB to verify they still exist and get storage limits and new fields
+    const result = await query(
+      'SELECT id, name, email, storage_limit, accepted_offer, accepted_offer_at, accepted_offer_version, card_token, card_mask, card_brand FROM users WHERE id = $1', 
+      [decoded.userId]
+    );
     
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Пользователь не найден в системе.' });
     }
+
+    // Asynchronously update last active timestamp
+    query('UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = $1', [decoded.userId])
+      .catch(err => console.error('Failed to update user last_active_at:', err));
 
     req.user = result.rows[0];
     next();
