@@ -726,7 +726,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
         {loadingAlbums ? (
           <div className="text-center py-6 text-brand-500 text-xs font-semibold">Загрузка альбомов...</div>
         ) : (
-          <div className="card-deck-scroll overflow-y-visible">
+          <div className="albums-carousel overflow-y-visible">
             {albums.map((album) => {
               const isActive = activeAlbum && activeAlbum.id === album.id;
               const photoCount = album.photoCount || 0;
@@ -742,7 +742,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     setIsSelectMode(false);
                     setSelectedPhotoIds([]);
                   }}
-                  className={`card-deck-item bg-white border rounded-2xl p-4 cursor-pointer select-none flex flex-col justify-between h-32
+                  className={`album-card bg-white border rounded-2xl p-4 cursor-pointer select-none flex flex-col justify-between h-32
                     ${isActive 
                       ? 'active-card border-brand-500 ring-2 ring-brand-500/10 bg-brand-50/20 shadow-sm' 
                       : 'border-brand-200/40 hover:border-brand-400'
@@ -783,7 +783,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
             {/* Show All Card */}
             <div
               onClick={() => setShowAlbumSelector(true)}
-              className="card-deck-item border border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-2xl p-4 cursor-pointer flex flex-col items-center justify-center gap-2 text-brand-600 hover:text-brand-900 transition-all font-semibold text-xs h-32"
+              className="album-card border border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-2xl p-4 cursor-pointer flex flex-col items-center justify-center gap-2 text-brand-600 hover:text-brand-900 transition-all font-semibold text-xs h-32"
             >
               <Folder className="w-5 h-5 text-brand-500" />
               <span className="text-[10px] text-center leading-tight">Все альбомы ({albums.length})</span>
