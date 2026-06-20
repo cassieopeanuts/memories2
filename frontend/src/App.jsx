@@ -7,6 +7,8 @@ import BetaLock from './components/BetaLock.jsx';
 import TesterFeedback from './components/TesterFeedback.jsx';
 import SharedAlbum from './components/SharedAlbum.jsx';
 import Offer from './components/Offer.jsx';
+import ThemeSwitcher from './components/ThemeSwitcher.jsx';
+import PalettesPlayground from './components/PalettesPlayground.jsx';
 import { LogOut, ShieldCheck, RefreshCw, User, X, CreditCard } from 'lucide-react';
 
 function urlBase64ToUint8Array(base64String) {
@@ -34,7 +36,22 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isCheckingProfile, setIsCheckingProfile] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' or 'subscription'
+  const [activeTab, setActiveTab] = useState('gallery'); // 'gallery', 'subscription', or 'palettes'
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'classic');
+  const [font, setFont] = useState(() => localStorage.getItem('font') || 'classic');
+
+  // Set theme on mount and when changed
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // Set font on mount and when changed
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font', font);
+    localStorage.setItem('font', font);
+  }, [font]);
+
   const [sharedAlbumToken, setSharedAlbumToken] = useState(() => {
     const pathParts = window.location.pathname.split('/');
     if (pathParts[1] === 'shared' && pathParts[2]) {
@@ -128,6 +145,15 @@ export default function App() {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
+          // Remove the expired token from yandex_accounts
+          try {
+            const accountsStr = localStorage.getItem('yandex_accounts') || '[]';
+            const accounts = JSON.parse(accountsStr);
+            const updated = accounts.filter(acc => acc.token !== token);
+            localStorage.setItem('yandex_accounts', JSON.stringify(updated));
+          } catch (e) {
+            console.error('Error cleaning up yandex_accounts on auth failure:', e);
+          }
           handleLogout();
           return;
         }
@@ -139,6 +165,27 @@ export default function App() {
         name: data.name,
         email: data.email
       });
+
+      // Save Yandex account locally if applicable
+      if (data.yandexId) {
+        try {
+          const accountsStr = localStorage.getItem('yandex_accounts') || '[]';
+          const accounts = JSON.parse(accountsStr);
+          // Filter out duplicates
+          const updated = accounts.filter(acc => acc.yandexId !== data.yandexId && acc.email !== data.email);
+          // Push new one
+          updated.push({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            yandexId: data.yandexId,
+            token: token
+          });
+          localStorage.setItem('yandex_accounts', JSON.stringify(updated));
+        } catch (e) {
+          console.error('Error saving Yandex account to localStorage:', e);
+        }
+      }
       setStorage(prev => ({ ...prev, limit: data.storageLimit }));
       setHasPin(data.hasPin);
     } catch (err) {
@@ -345,6 +392,7 @@ export default function App() {
             window.history.replaceState({}, document.title, '/');
           }} 
         />
+        <ThemeSwitcher currentTheme={theme} onThemeSelect={setTheme} currentFont={font} onFontSelect={setFont} />
         <TesterFeedback token={token} user={user} />
       </>
     );
@@ -374,6 +422,7 @@ export default function App() {
           onEmailLoginSuccess={handleEmailLoginSuccess} 
           onViewOffer={() => setShowOffer(true)}
         />
+        <ThemeSwitcher currentTheme={theme} onThemeSelect={setTheme} currentFont={font} onFontSelect={setFont} />
         <TesterFeedback token={token} user={user} />
       </>
     );
@@ -393,6 +442,7 @@ export default function App() {
           onLogout={handleLogout}
           backendUrl={backendUrl}
         />
+        <ThemeSwitcher currentTheme={theme} onThemeSelect={setTheme} currentFont={font} onFontSelect={setFont} />
         <TesterFeedback token={token} user={user} />
       </>
     );
@@ -435,6 +485,16 @@ export default function App() {
               }`}
             >
               Подписка
+            </button>
+            <button
+              onClick={() => setActiveTab('palettes')}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                activeTab === 'palettes' 
+                  ? 'bg-white text-brand-900 shadow-sm' 
+                  : 'text-brand-600 hover:text-brand-900'
+              }`}
+            >
+              Палитры
             </button>
           </div>
 
@@ -525,12 +585,19 @@ export default function App() {
             onUploadComplete={fetchStorageStats} 
             activeTab={activeTab}
           />
-        ) : (
+        ) : activeTab === 'subscription' ? (
           <Subscription 
             token={token} 
             storage={storage} 
             onUpgradeSuccess={handleUpgradeSuccess} 
             onRedirectToGallery={() => setActiveTab('gallery')}
+          />
+        ) : (
+          <PalettesPlayground 
+            currentTheme={theme} 
+            onThemeChange={setTheme}
+            currentFont={font}
+            onFontChange={setFont}
           />
         )}
       </main>
@@ -539,6 +606,7 @@ export default function App() {
       <footer className="w-full py-8 text-center text-[10px] text-brand-400 font-semibold tracking-wider uppercase bg-brand-100/20 mt-12 border-t border-brand-200/20">
         © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНАЯ ГАЛЕРЕЯ
       </footer>
+      <ThemeSwitcher currentTheme={theme} onThemeSelect={setTheme} currentFont={font} onFontSelect={setFont} />
       <TesterFeedback token={token} user={user} />
     </div>
   );

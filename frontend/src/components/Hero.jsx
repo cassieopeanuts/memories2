@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp, X, Trash2 } from 'lucide-react';
 
 import yandexLogo from '../assets/yandex.svg';
 import sberLogo from '../assets/sber.svg';
@@ -32,6 +32,20 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   const timerRef = useRef(null);
   const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
 
+  const [yandexAccounts, setYandexAccounts] = useState([]);
+  const [showYandexAccountsModal, setShowYandexAccountsModal] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('yandex_accounts');
+      if (saved) {
+        setYandexAccounts(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading Yandex accounts from localStorage:', e);
+    }
+  }, []);
+
   useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -40,7 +54,38 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   }, [countdown]);
 
   const handleYandexLogin = () => {
+    if (yandexAccounts && yandexAccounts.length > 0) {
+      setShowYandexAccountsModal(true);
+    } else {
+      redirectToYandexOAuth();
+    }
+  };
+
+  const redirectToYandexOAuth = () => {
     window.location.href = `${backendUrl}/api/auth/yandex?origin=${encodeURIComponent(window.location.origin)}`;
+  };
+
+  const handleSelectYandexAccount = (account) => {
+    setShowYandexAccountsModal(false);
+    onEmailLoginSuccess({
+      token: account.token,
+      user: {
+        id: account.id,
+        name: account.name,
+        email: account.email
+      }
+    });
+  };
+
+  const handleDeleteYandexAccount = (e, indexToDelete) => {
+    e.stopPropagation(); // Prevent triggering selection login
+    const updated = yandexAccounts.filter((_, idx) => idx !== indexToDelete);
+    setYandexAccounts(updated);
+    try {
+      localStorage.setItem('yandex_accounts', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Error saving updated Yandex accounts list:', err);
+    }
   };
 
   const handleSberLogin = () => {
@@ -454,6 +499,74 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
           </div>
         </div>
       </footer>
+
+      {/* Modal: Yandex Account Selector */}
+      {showYandexAccountsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 backdrop-blur-md animate-fade-in">
+          <div className="bg-white/90 rounded-[28px] p-6 max-w-sm w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-serif text-lg font-semibold text-brand-900 flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#FC3F1D] text-white font-bold text-xs">Я</span>
+                Вход через Яндекс
+              </h3>
+              <button 
+                onClick={() => setShowYandexAccountsModal(false)}
+                className="text-brand-400 hover:text-brand-900 transition-colors p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-brand-600 font-light leading-relaxed mb-5 text-center">
+              Выберите сохраненный аккаунт для входа:
+            </p>
+
+            <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1">
+              {yandexAccounts.map((account, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => handleSelectYandexAccount(account)}
+                  className="group relative flex items-center justify-between p-4 bg-brand-50/40 hover:bg-brand-50 border border-brand-200/30 hover:border-brand-300/60 rounded-2xl cursor-pointer transition-all duration-300 shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-sm select-none shadow-inner group-hover:bg-brand-200 transition-colors">
+                      {account.name ? account.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-semibold text-brand-900 group-hover:text-brand-950 transition-colors truncate max-w-[160px]">
+                        {account.name || 'Пользователь'}
+                      </div>
+                      <div className="text-xs font-light text-brand-500 truncate max-w-[160px]">
+                        {account.email}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={(e) => handleDeleteYandexAccount(e, idx)}
+                    className="p-2 text-neutral-400 hover:text-red-500 rounded-xl hover:bg-red-50 transition-all z-10 shrink-0 cursor-pointer"
+                    title="Забыть этот аккаунт"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowYandexAccountsModal(false);
+                  redirectToYandexOAuth();
+                }}
+                className="w-full h-12 bg-neutral-900 hover:bg-neutral-800 text-white rounded-2xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                Выбрать другой аккаунт
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

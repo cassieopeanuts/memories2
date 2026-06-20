@@ -6,6 +6,14 @@ import {
 } from 'lucide-react';
 import UploadZone from './UploadZone.jsx';
 
+const getShareUrl = (shareToken) => {
+  const origin = window.location.origin;
+  const targetOrigin = origin.includes('xn--80affoidsgaujr8a0h.xn--p1ai')
+    ? origin.replace('xn--80affoidsgaujr8a0h.xn--p1ai', 'легкосохранить.рф')
+    : origin;
+  return `${targetOrigin}/shared/${shareToken}`;
+};
+
 export default function Gallery({ token, storage, onUploadComplete, activeTab }) {
   const [albums, setAlbums] = useState([]);
   const [activeAlbum, setActiveAlbum] = useState(null); // null = show albums grid
@@ -1086,12 +1094,12 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     <input
                       type="text"
                       readOnly
-                      value={`${window.location.origin}/shared/${activeAlbum.share_token}`}
+                      value={getShareUrl(activeAlbum.share_token)}
                       className="flex-1 bg-transparent border-none focus:outline-none text-xs font-semibold text-brand-800 truncate"
                     />
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/shared/${activeAlbum.share_token}`);
+                        navigator.clipboard.writeText(getShareUrl(activeAlbum.share_token));
                         setCopied(true);
                         showToast('Ссылка скопирована в буфер обмена!');
                         setTimeout(() => setCopied(false), 2000);
@@ -1102,7 +1110,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                       {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                     </button>
                     <a
-                      href={`/shared/${activeAlbum.share_token}`}
+                      href={getShareUrl(activeAlbum.share_token)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 bg-white hover:bg-brand-100/50 border border-brand-200 rounded-xl text-brand-600 hover:text-brand-900 transition-all flex items-center justify-center shrink-0"
@@ -1120,7 +1128,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                   <div className="flex gap-2">
                     {/* Telegram */}
                     <a
-                      href={`https://t.me/share/url?url=${encodeURIComponent(`${window.location.origin}/shared/${activeAlbum.share_token}`)}&text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»!`)}`}
+                      href={`https://t.me/share/url?url=${encodeURIComponent(getShareUrl(activeAlbum.share_token))}&text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»!`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 py-2.5 bg-[#229ED9] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"
@@ -1129,7 +1137,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     </a>
                     {/* WhatsApp */}
                     <a
-                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»: ${window.location.origin}/shared/${activeAlbum.share_token}`)}`}
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»: ${getShareUrl(activeAlbum.share_token)}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 py-2.5 bg-[#25D366] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"
@@ -1138,7 +1146,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     </a>
                     {/* VK */}
                     <a
-                      href={`https://vk.com/share.php?url=${encodeURIComponent(`${window.location.origin}/shared/${activeAlbum.share_token}`)}&title=${encodeURIComponent(`Фотоальбом «${activeAlbum.name}»`)}`}
+                      href={`https://vk.com/share.php?url=${encodeURIComponent(getShareUrl(activeAlbum.share_token))}&title=${encodeURIComponent(`Фотоальбом «${activeAlbum.name}»`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 py-2.5 bg-[#0077FF] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"

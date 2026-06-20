@@ -780,7 +780,7 @@ app.post('/api/auth/verify-pin', authenticateJWT, async (req, res) => {
 // Get profile details
 app.get('/api/auth/me', authenticateJWT, async (req, res) => {
   try {
-    const result = await query('SELECT id, name, email, pin_code, storage_limit FROM users WHERE id = $1', [req.user.id]);
+    const result = await query('SELECT id, name, email, yandex_id, pin_code, storage_limit FROM users WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Пользователь не найден.' });
     }
@@ -789,6 +789,7 @@ app.get('/api/auth/me', authenticateJWT, async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      yandexId: user.yandex_id,
       hasPin: !!user.pin_code,
       storageLimit: parseInt(user.storage_limit, 10)
     });
@@ -1154,6 +1155,165 @@ app.get('/api/shared/album/:share_token', async (req, res) => {
   } catch (error) {
     console.error('Error fetching shared album:', error);
     res.status(500).json({ error: 'Не удалось загрузить фотографии альбома.' });
+  }
+});
+
+// Helper to fetch the frontend's compiled index.html template from various possible endpoints/paths
+async function fetchFrontendHtml() {
+  const targets = [];
+  
+  if (process.env.NODE_ENV === 'development') {
+    targets.push('http://frontend:5173');
+    targets.push('http://localhost:5173');
+  } else {
+    targets.push('http://frontend:80');
+    if (process.env.FRONTEND_URL) {
+      targets.push(process.env.FRONTEND_URL);
+    }
+  }
+
+  // Try fetching via HTTP first
+  for (const target of targets) {
+    try {
+      const res = await fetch(target + '/', { signal: AbortSignal.timeout(2000) });
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.includes('id="root"')) {
+          return text;
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch frontend index.html from ${target}:`, err.message);
+    }
+  }
+
+  // Try reading local file as fallback (useful for local development outside Docker)
+  const localPaths = [
+    path.join(process.cwd(), '../frontend/dist/index.html'),
+    path.join(process.cwd(), '../frontend/index.html'),
+    path.join(process.cwd(), 'dist/index.html'),
+    path.join(process.cwd(), 'index.html')
+  ];
+  for (const p of localPaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const text = fs.readFileSync(p, 'utf8');
+        if (text && text.includes('id="root"')) {
+          return text;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  
+  // Return fallback index.html template if all fails
+  return `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ЛегкоСохранить.рф — Хранилище ваших воспоминаний</title>
+    <meta name="description" content="Самое просто хранилище для ваших воспоминаний. Сохраняйте то, что дорого, в один клик." />
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>`;
+}
+
+// GET /shared/:share_token - Intercept shared page requests to inject Open Graph meta tags for preview scrapers
+app.get('/shared/:share_token', async (req, res) => {
+  const { share_token } = req.params;
+
+  try {
+    // 1. Fetch album details from DB
+    const albumResult = await query(
+      'SELECT id, name, user_id FROM albums WHERE share_token = $1',
+      [share_token]
+    );
+
+    if (albumResult.rows.length === 0) {
+      // Serve default HTML so the React client can render its own "disabled/invalid link" error UI
+      const defaultHtml = await fetchFrontendHtml();
+      return res.send(defaultHtml);
+    }
+
+    const album = albumResult.rows[0];
+
+    // 2. Get owner's name
+    const ownerResult = await query('SELECT name FROM users WHERE id = $1', [album.user_id]);
+    const ownerName = ownerResult.rows.length > 0 ? ownerResult.rows[0].name : 'Пользователь';
+
+    // 3. Get first photo as cover photo
+    const photosResult = await query(
+      `SELECT p.s3_key 
+       FROM photos p 
+       JOIN album_photos ap ON p.id = ap.photo_id 
+       WHERE ap.album_id = $1 
+       ORDER BY ap.position ASC LIMIT 1`,
+      [album.id]
+    );
+
+    let coverPhotoUrl = null;
+    if (photosResult.rows.length > 0) {
+      try {
+        coverPhotoUrl = await generatePresignedDownloadUrl(photosResult.rows[0].s3_key);
+      } catch (e) {
+        console.error('Error generating presigned URL for cover photo:', e);
+      }
+    }
+
+    // 4. Fetch the frontend HTML template
+    let html = await fetchFrontendHtml();
+
+    // 5. Replace title, description and inject Open Graph meta tags
+    const albumName = album.name;
+    const shareUrl = `https://легкосохранить.рф/shared/${share_token}`;
+    const descriptionText = `Посмотрите фотоальбом «${albumName}» (автор: ${ownerName}) на ЛегкоСохранить.рф`;
+
+    // Replace original title if present
+    if (html.includes('<title>')) {
+      html = html.replace(/<title>.*?<\/title>/, `<title>Фотоальбом «${albumName}» — ЛегкоСохранить.рф</title>`);
+    } else {
+      html = html.replace('</head>', `<title>Фотоальбом «${albumName}» — ЛегкоСохранить.рф</title>\n</head>`);
+    }
+
+    // Replace original description if present
+    if (html.includes('name="description"')) {
+      html = html.replace(/<meta name="description" content=".*?"\s*\/?>/, `<meta name="description" content="${descriptionText}" />`);
+    } else {
+      html = html.replace('</head>', `<meta name="description" content="${descriptionText}" />\n</head>`);
+    }
+
+    // Inject Open Graph / Twitter meta tags
+    const ogTags = `
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${shareUrl}" />
+    <meta property="og:title" content="Фотоальбом «${albumName}»" />
+    <meta property="og:description" content="${descriptionText}" />
+    ${coverPhotoUrl ? `<meta property="og:image" content="${coverPhotoUrl}" />` : ''}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="${shareUrl}" />
+    <meta property="twitter:title" content="Фотоальбом «${albumName}»" />
+    <meta property="twitter:description" content="${descriptionText}" />
+    ${coverPhotoUrl ? `<meta property="twitter:image" content="${coverPhotoUrl}" />` : ''}
+`;
+
+    html = html.replace('</head>', `${ogTags}\n</head>`);
+
+    res.send(html);
+  } catch (error) {
+    console.error('Error rendering shared album page:', error);
+    try {
+      const fallbackHtml = await fetchFrontendHtml();
+      res.send(fallbackHtml);
+    } catch (e) {
+      res.status(500).send('Internal Server Error');
+    }
   }
 });
 

@@ -1,5 +1,42 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Jun';
+  src: url('./assets/fonts/Jun_Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Jun';
+  src: url('./assets/fonts/Jun_Italic.otf') format('opentype');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Fontimer';
+  src: url('./assets/fonts/AVFontimer-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Fontimer';
+  src: url('./assets/fonts/AVFontimer-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'J Audio Cassette';
+  src: url('./assets/fonts/J Audio Cassette.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Chetty';
+  src: url('./assets/fonts/CHETTY.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
@@ -15,11 +52,155 @@
   --color-brand-900: #232334;
 }
 
+html[data-font="classic"] {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+html[data-font="jun"] {
+  --font-sans: "Jun", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Jun", ui-serif, Georgia, serif;
+}
+
+html[data-font="fontimer"] {
+  --font-sans: "Fontimer", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fontimer", ui-serif, Georgia, serif;
+}
+
+html[data-font="j-audio-cassette"] {
+  --font-sans: "J Audio Cassette", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "J Audio Cassette", ui-serif, Georgia, serif;
+}
+
+html[data-font="chetty"] {
+  --font-sans: "Chetty", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Chetty", ui-serif, Georgia, serif;
+}
+
+
+html[data-theme="classic"] {
+  --color-brand-50: #fff6eb;
+  --color-brand-100: #fcf0e1;
+  --color-brand-200: #d69fac;
+  --color-brand-300: #d69fac;
+  --color-brand-400: #898999;
+  --color-brand-500: #ca727f;
+  --color-brand-600: #b8626e;
+  --color-brand-700: #a3535f;
+  --color-brand-800: #3a3a4d;
+  --color-brand-900: #232334;
+}
+
+html[data-theme="lilac"] {
+  --color-brand-50: #FAF3F1;
+  --color-brand-100: #E1C0BA;
+  --color-brand-200: #DAB7C7;
+  --color-brand-300: #CFA3B6;
+  --color-brand-400: #8B787D;
+  --color-brand-500: #AD7872;
+  --color-brand-600: #9C6660;
+  --color-brand-700: #8A5550;
+  --color-brand-800: #5C4353;
+  --color-brand-900: #2D2325;
+}
+
+html[data-theme="sakura"] {
+  --color-brand-50: #F8F5F6;
+  --color-brand-100: #E3DADD;
+  --color-brand-200: #B7A0A7;
+  --color-brand-300: #A68B93;
+  --color-brand-400: #726756;
+  --color-brand-500: #A2747B;
+  --color-brand-600: #8C5F66;
+  --color-brand-700: #774D53;
+  --color-brand-800: #534136;
+  --color-brand-900: #33251E;
+}
+
+html[data-theme="mint"] {
+  --color-brand-50: #FAF4F5;
+  --color-brand-100: #D1B4B6;
+  --color-brand-200: #93C4C0;
+  --color-brand-300: #7CAEAA;
+  --color-brand-400: #AA9084;
+  --color-brand-500: #7CB488;
+  --color-brand-600: #669E72;
+  --color-brand-700: #52875D;
+  --color-brand-800: #51505C;
+  --color-brand-900: #2E2D36;
+}
+
+html[data-theme="autumn"] {
+  --color-brand-50: #FAF3F0;
+  --color-brand-100: #E1C3B8;
+  --color-brand-200: #D8A39B;
+  --color-brand-300: #C98E85;
+  --color-brand-400: #928E5D;
+  --color-brand-500: #8B664F;
+  --color-brand-600: #76543F;
+  --color-brand-700: #614331;
+  --color-brand-800: #574C4A;
+  --color-brand-900: #332B2A;
+}
+
 body {
   background-color: var(--color-brand-50);
   color: var(--color-brand-900);
   font-family: var(--font-sans);
 }
+
+/* Smooth transition for theme switching */
+body, 
+.glass-header, 
+footer,
+button, 
+a, 
+input, 
+textarea,
+select,
+.bg-brand-50, 
+.bg-brand-100, 
+.bg-brand-200, 
+.bg-brand-300, 
+.bg-brand-500, 
+.bg-brand-600, 
+.bg-brand-700, 
+.text-brand-900, 
+.text-brand-800, 
+.text-brand-600, 
+.text-brand-500, 
+.text-brand-400, 
+.border-brand-200, 
+.border-brand-300, 
+.border-brand-100 {
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Background petals dynamic tinting */
+body::before {
+  transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-theme="lilac"] body::before {
+  filter: hue-rotate(60deg) saturate(0.8) opacity(0.25);
+}
+
+html[data-theme="sakura"] body::before {
+  filter: hue-rotate(15deg) opacity(0.3);
+}
+
+html[data-theme="mint"] body::before {
+  filter: hue-rotate(180deg) saturate(0.8) opacity(0.3);
+}
+
+html[data-theme="autumn"] body::before {
+  filter: hue-rotate(-20deg) saturate(1.2) opacity(0.3);
+}
+
 
 body::before {
   content: "";
