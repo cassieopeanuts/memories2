@@ -262,3 +262,54 @@ body::before {
 .animate-photo-entry {
   animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Fanned card deck horizontal carousel */
+.card-deck-scroll {
+  display: flex;
+  overflow-x: auto;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  padding-left: 0.5rem;
+  padding-right: 2rem;
+  gap: 0px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+.card-deck-scroll::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.card-deck-item {
+  flex-shrink: 0;
+  width: 14rem; /* w-56 */
+  scroll-snap-align: start;
+  margin-right: -2rem; /* overlapping */
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              z-index 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-deck-item:hover {
+  transform: translateY(-0.75rem) scale(1.02) rotate(-0.5deg);
+  z-index: 20;
+  margin-right: 0px;
+  margin-left: 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.card-deck-item.active-card {
+  z-index: 10;
+  transform: translateY(-0.2rem);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+.card-deck-item.active-card:hover {
+  transform: translateY(-0.75rem) scale(1.02) rotate(-0.5deg);
+  z-index: 20;
+  margin-right: 0px;
+  margin-left: 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+}
+

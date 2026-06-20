@@ -189,7 +189,7 @@ export default function UploadZone({ token, onUploadComplete }) {
   const activeUploads = Object.values(uploads);
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-6">
+    <div className="w-full mb-6">
       {zoneError && (
         <div className="mb-3 p-3 bg-red-50/90 border border-red-200 text-red-800 text-xs font-semibold rounded-xl text-center backdrop-blur-sm animate-photo-entry">
           {zoneError}
@@ -202,7 +202,7 @@ export default function UploadZone({ token, onUploadComplete }) {
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={onButtonClick}
-        className={`w-full p-4 text-center transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-4 border border-dashed rounded-2xl
+        className={`w-full p-2.5 px-4 text-center transition-all duration-300 cursor-pointer flex items-center justify-between gap-4 border border-dashed rounded-xl
           ${isDragActive 
             ? 'border-brand-500 bg-brand-100/40 scale-[1.005]' 
             : 'border-brand-300 bg-white/40 hover:bg-white/60 hover:scale-[1.002]'
@@ -219,20 +219,20 @@ export default function UploadZone({ token, onUploadComplete }) {
         />
 
         <div className="flex items-center gap-3 text-left">
-          <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 shrink-0 shadow-inner">
-            <UploadCloud className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 shrink-0 shadow-inner">
+            <UploadCloud className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="font-serif text-sm font-semibold text-brand-900">
+            <h4 className="font-serif text-xs font-semibold text-brand-900 leading-tight">
               Сохранить новые фото и видео
             </h4>
-            <p className="text-[11px] text-brand-900/60 font-light hidden sm:block">
-              Перетащите файлы сюда или нажмите, чтобы выбрать
+            <p className="text-[10px] text-brand-900/50 font-light hidden sm:block leading-none mt-0.5">
+              Перетащите файлы сюда или нажмите для выбора
             </p>
           </div>
         </div>
         
-        <div className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:opacity-95 text-white font-semibold rounded-xl text-xs transition-all duration-200 shadow-sm inline-flex items-center justify-center gap-1.5 active:scale-[0.98]">
+        <div className="px-3.5 py-1.5 bg-gradient-to-r from-brand-500 to-brand-600 hover:opacity-95 text-white font-semibold rounded-lg text-[10px] transition-all duration-200 shadow-sm inline-flex items-center justify-center gap-1 active:scale-[0.98] shrink-0">
           Выбрать файлы
         </div>
       </div>

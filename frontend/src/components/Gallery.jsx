@@ -678,7 +678,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   // Render unified view
   return (
     <div className="w-full max-w-5xl mx-auto px-2">
-      {/* Storage Reassuring Banner */}
+      {/* 1. Storage Reassuring Banner */}
       <div className="bg-white border border-brand-200/30 px-4 py-3 rounded-2xl mb-6 flex flex-wrap items-center justify-between gap-3 shadow-sm text-xs">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
@@ -697,9 +697,22 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
         </div>
       </div>
 
-      {/* Album Selection Area */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+      {/* 2. Upload Zone (compact, above albums) */}
+      {activeAlbum && (
+        <UploadZone 
+          token={token} 
+          albumId={activeAlbum.id}
+          onUploadComplete={() => {
+            fetchAlbumPhotos(activeAlbum.id);
+            fetchAlbums(false);
+            onUploadComplete();
+          }} 
+        />
+      )}
+
+      {/* 3. Album Selection Area (fanned card deck horizontal carousel) */}
+      <div className="mb-6 overflow-y-visible">
+        <div className="flex items-center justify-between mb-1">
           <h3 className="font-serif text-base font-bold text-brand-900">Ваши Альбомы</h3>
           <button
             onClick={() => setShowCreateAlbum(true)}
@@ -713,50 +726,34 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
         {loadingAlbums ? (
           <div className="text-center py-6 text-brand-500 text-xs font-semibold">Загрузка альбомов...</div>
         ) : (
-          <>
-            {/* Mobile Adaptive 3D Card Deck */}
-            <div className="md:hidden">
-              {renderMobileDeck()}
-            </div>
-
-            {/* Desktop Grid Layout with Limit */}
-            <div className="hidden md:grid md:grid-cols-4 gap-4">
-              {albums.slice(0, 3).map((album, index) => {
-                const isActive = activeAlbum && activeAlbum.id === album.id;
-                const photoCount = album.photoCount || 0;
-                return (
-                  <div
-                    key={album.id}
-                    onClick={() => {
-                      if (activeAlbum && activeAlbum.id === album.id) {
-                        fetchAlbumPhotos(album.id);
-                      } else {
-                        setActiveAlbum(album);
-                      }
-                      setIsSelectMode(false);
-                      setSelectedPhotoIds([]);
-                    }}
-                    className={`bg-white border rounded-2xl p-4 cursor-pointer select-none flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300
-                      ${isActive 
-                        ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/40' 
-                        : 'border-brand-200/40 hover:border-brand-400 hover:scale-[1.01]'
-                      }
-                    `}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-500 flex items-center justify-center shrink-0">
-                        <Folder className="w-5 h-5 fill-brand-500/10" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="font-serif font-bold text-sm text-brand-900 truncate">
-                          {album.name}
-                        </h4>
-                        <p className="text-[10px] text-brand-900 font-medium mt-0.5">
-                          {photoCount} {getPhotoWord(photoCount)}
-                        </p>
-                      </div>
+          <div className="card-deck-scroll overflow-y-visible">
+            {albums.map((album) => {
+              const isActive = activeAlbum && activeAlbum.id === album.id;
+              const photoCount = album.photoCount || 0;
+              return (
+                <div
+                  key={album.id}
+                  onClick={() => {
+                    if (activeAlbum && activeAlbum.id === album.id) {
+                      fetchAlbumPhotos(album.id);
+                    } else {
+                      setActiveAlbum(album);
+                    }
+                    setIsSelectMode(false);
+                    setSelectedPhotoIds([]);
+                  }}
+                  className={`card-deck-item bg-white border rounded-2xl p-4 cursor-pointer select-none flex flex-col justify-between h-32
+                    ${isActive 
+                      ? 'active-card border-brand-500 ring-2 ring-brand-500/10 bg-brand-50/20 shadow-sm' 
+                      : 'border-brand-200/40 hover:border-brand-400'
+                    }
+                  `}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <div className="w-9 h-9 rounded-xl bg-brand-100 text-brand-500 flex items-center justify-center shrink-0">
+                      <Folder className="w-4.5 h-4.5 fill-brand-500/10" />
                     </div>
-
+                    
                     {album.name !== 'Общий' && (
                       <button
                         onClick={(e) => {
@@ -770,23 +767,32 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                       </button>
                     )}
                   </div>
-                );
-              })}
-              
-              {/* Show All Card */}
-              <div
-                onClick={() => setShowAlbumSelector(true)}
-                className="border border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-2xl p-4 cursor-pointer flex items-center justify-center gap-2 text-brand-600 hover:text-brand-900 transition-all font-semibold text-xs shadow-sm"
-              >
-                <Folder className="w-4 h-4 text-brand-500" />
-                <span>Все альбомы ({albums.length})</span>
-              </div>
+
+                  <div className="min-w-0 mt-3">
+                    <h4 className="font-serif font-bold text-xs text-brand-900 truncate">
+                      {album.name}
+                    </h4>
+                    <p className="text-[9px] text-brand-500 font-semibold mt-0.5 uppercase tracking-wide leading-none">
+                      {photoCount} {getPhotoWord(photoCount)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+            
+            {/* Show All Card */}
+            <div
+              onClick={() => setShowAlbumSelector(true)}
+              className="card-deck-item border border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-2xl p-4 cursor-pointer flex flex-col items-center justify-center gap-2 text-brand-600 hover:text-brand-900 transition-all font-semibold text-xs h-32"
+            >
+              <Folder className="w-5 h-5 text-brand-500" />
+              <span className="text-[10px] text-center leading-tight">Все альбомы ({albums.length})</span>
             </div>
-          </>
+          </div>
         )}
       </div>
 
-      {/* Active Album Photos Area */}
+      {/* 4. Active Album Photos Area */}
       {activeAlbum && (
         <div className="animate-photo-entry">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pt-4 border-t border-brand-200/30">
@@ -831,17 +837,6 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               )}
             </div>
           </div>
-
-          {/* Upload Zone inside Album */}
-          <UploadZone 
-            token={token} 
-            albumId={activeAlbum.id}
-            onUploadComplete={() => {
-              fetchAlbumPhotos(activeAlbum.id);
-              fetchAlbums(false);
-              onUploadComplete();
-            }} 
-          />
 
           <div className="w-full h-[1px] bg-brand-200/20 my-8"></div>
 
