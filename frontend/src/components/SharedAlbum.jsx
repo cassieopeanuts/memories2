@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Eye, Image as ImageIcon, ChevronLeft, ChevronRight, 
-  ArrowLeft, RefreshCw, AlertCircle, Globe, Play
+  ArrowLeft, RefreshCw, AlertCircle, Play
 } from 'lucide-react';
 
 export default function SharedAlbum({ shareToken, onBackToApp }) {
@@ -126,9 +126,7 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
       <header className="sticky top-0 z-40 w-full glass-header py-4 px-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 flex items-center justify-center text-brand-50 shadow-sm">
-              <Globe className="w-4.5 h-4.5" />
-            </div>
+            <img src="/logo.png" className="w-9 h-9 object-contain" alt="Логотип" />
             <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-900">
               ЛегкоСохранить.РФ
             </span>
