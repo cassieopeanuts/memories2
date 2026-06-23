@@ -119,17 +119,37 @@ export default function App() {
     setShowIOSTip(false);
   };
 
-  // 1. Handle SSO OAuth Callback
+  // 1. Handle SSO OAuth Callback & Payment Success Callback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get('token');
+    const paymentStatus = params.get('status');
     
     if (window.location.pathname === '/auth-callback' && urlToken) {
       localStorage.setItem('token', urlToken);
       setToken(urlToken);
       window.history.replaceState({}, document.title, '/');
+    } else if (paymentStatus === 'success') {
+      setActiveTab('subscription');
+      window.history.replaceState({}, document.title, '/');
+      setTimeout(() => {
+        checkProfile();
+        if (token) {
+          // Fetch updated storage capacity
+          fetch(`${backendUrl}/api/photos`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.storage) {
+                setStorage(data.storage);
+              }
+            })
+            .catch(err => console.error('Error refreshing storage stats after payment:', err));
+        }
+      }, 500);
     }
-  }, []);
+  }, [token]);
 
   // 2. Load user profile on token boot
   const checkProfile = async () => {

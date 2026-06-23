@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp, X, Trash2, Lock, Share2, HelpCircle, Check } from 'lucide-react';
 
-import yandexLogo from '../assets/yandex.svg';
-import sberLogo from '../assets/sber.svg';
-import tbankLogo from '../assets/tbank.svg';
-
 // Brand SVG Icons using official SVGs
 const YandexIcon = () => (
-  <img src={yandexLogo} className="h-5.5 w-auto object-contain shrink-0" alt="Yandex" />
+  <img src="/yandex.svg" className="h-5.5 w-auto object-contain shrink-0" alt="Yandex" />
 );
 
 const SberIcon = () => (
-  <img src={sberLogo} className="h-5 w-auto object-contain shrink-0" alt="Sber" />
+  <img src="/sber.svg" className="h-5 w-auto object-contain shrink-0" alt="Sber" />
 );
 
 const TBankIcon = () => (
-  <img src={tbankLogo} className="h-5.5 w-auto object-contain shrink-0" alt="T-Bank" />
+  <img src="/tbank.svg" className="h-5.5 w-auto object-contain shrink-0" alt="T-Bank" />
 );
 
 export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
@@ -30,7 +26,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   const [isEmailChecked, setIsEmailChecked] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const timerRef = useRef(null);
-  const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
 
   const [yandexAccounts, setYandexAccounts] = useState([]);
   const [showYandexAccountsModal, setShowYandexAccountsModal] = useState(false);

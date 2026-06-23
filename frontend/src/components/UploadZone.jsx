@@ -6,7 +6,7 @@ export default function UploadZone({ token, onUploadComplete }) {
   const [uploads, setUploads] = useState({});
   const [zoneError, setZoneError] = useState('');
   const fileInputRef = useRef(null);
-  const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
 
   const handleDrag = (e) => {
     e.preventDefault();

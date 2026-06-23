@@ -8,7 +8,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
 
   const plans = [
     {
@@ -70,28 +70,41 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
     setPaymentMethod(method);
     setPaymentStep('processing');
 
-    // Simulate payment processing for 2 seconds
-    setTimeout(async () => {
-      try {
-        const response = await fetch(`${backendUrl}/api/subscription/upgrade`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ limitBytes: selectedPlan.limitBytes })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Ошибка активации тарифа');
-        
+    // Map limits to standard prices
+    let price = 0;
+    if (selectedPlan.limitBytes === 5 * 1024 * 1024 * 1024) price = 99;
+    else if (selectedPlan.limitBytes === 20 * 1024 * 1024 * 1024) price = 250;
+    else if (selectedPlan.limitBytes === 100 * 1024 * 1024 * 1024) price = 500;
+    else if (selectedPlan.limitBytes === 1000 * 1024 * 1024 * 1024) price = 2500;
+
+    try {
+      const response = await fetch(`${backendUrl}/api/billing/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          limitBytes: selectedPlan.limitBytes,
+          planName: selectedPlan.name,
+          price: price
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Ошибка активации тарифа');
+      
+      if (data.confirmationUrl) {
+        // Redirect user to the secure payment checkout page
+        window.location.href = data.confirmationUrl;
+      } else if (data.downgraded) {
         setPaymentStep('success');
         onUpgradeSuccess(data.storageLimit);
-      } catch (err) {
-        setErrorMsg(err.message);
-        setTimeout(() => setErrorMsg(''), 5000);
-        setSelectedPlan(null);
       }
-    }, 2500);
+    } catch (err) {
+      setErrorMsg(err.message);
+      setTimeout(() => setErrorMsg(''), 5000);
+      setSelectedPlan(null);
+    }
   };
 
   const currentLimit = storage.limit || 1073741824;

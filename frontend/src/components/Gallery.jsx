@@ -7,7 +7,7 @@ import {
 import UploadZone from './UploadZone.jsx';
 
 const getShareUrl = (shareToken) => {
-  const origin = window.location.origin;
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const targetOrigin = origin.includes('xn--80affoidsgaujr8a0h.xn--p1ai')
     ? origin.replace('xn--80affoidsgaujr8a0h.xn--p1ai', 'легкосохранить.рф')
     : origin;
@@ -123,7 +123,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
 
 
-  const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
 
   // Fetch albums on mount or token change
   const fetchAlbums = async (selectDefault = false) => {

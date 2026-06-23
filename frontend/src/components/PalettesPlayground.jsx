@@ -629,7 +629,7 @@ export default function PalettesPlayground({ currentTheme, onThemeChange, curren
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                 <div className="space-y-0.5">
                   <span className="font-bold block">Фотографии успешно загружены!</span>
-                  <span className="text-[10px] text-emerald-600 leading-relaxed font-light">3 новых снимка добавлены в альбом "Весенний пикник". Резервная копия создана.</span>
+                  <span className="text-[10px] text-emerald-600 leading-relaxed font-light">3 новых снимка добавлены в альбом &quot;Весенний пикник&quot;. Резервная копия создана.</span>
                 </div>
               </div>
 
@@ -638,7 +638,7 @@ export default function PalettesPlayground({ currentTheme, onThemeChange, curren
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
                 <div className="space-y-0.5">
                   <span className="font-bold block">Превышен лимит хранилища!</span>
-                  <span className="text-[10px] text-red-600 leading-relaxed font-light">Не удалось загрузить файл "IMG_2026.JPG" (18.4 МБ). В вашем сейфе осталось всего 12 МБ. Пожалуйста, обновите тариф.</span>
+                  <span className="text-[10px] text-red-600 leading-relaxed font-light">Не удалось загрузить файл &quot;IMG_2026.JPG&quot; (18.4 МБ). В вашем сейфе осталось всего 12 МБ. Пожалуйста, обновите тариф.</span>
                 </div>
               </div>
 

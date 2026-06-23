@@ -1,0 +1,314 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Jun';
+  src: url('./fonts/Jun_Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Jun';
+  src: url('./fonts/Jun_Italic.otf') format('opentype');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Fontimer';
+  src: url('./fonts/AVFontimer-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Fontimer';
+  src: url('./fonts/AVFontimer-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'J Audio Cassette';
+  src: url('./fonts/J Audio Cassette.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Chetty';
+  src: url('./fonts/CHETTY.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --color-brand-50: #fff6eb;
+  --color-brand-100: #fcf0e1;
+  --color-brand-200: #d69fac;
+  --color-brand-300: #d69fac;
+  --color-brand-400: #898999;
+  --color-brand-500: #ca727f;
+  --color-brand-600: #b8626e;
+  --color-brand-700: #a3535f;
+  --color-brand-800: #3a3a4d;
+  --color-brand-900: #232334;
+}
+
+html[data-font="classic"] {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+html[data-font="jun"] {
+  --font-sans: "Jun", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Jun", ui-serif, Georgia, serif;
+}
+
+html[data-font="fontimer"] {
+  --font-sans: "Fontimer", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fontimer", ui-serif, Georgia, serif;
+}
+
+html[data-font="j-audio-cassette"] {
+  --font-sans: "J Audio Cassette", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "J Audio Cassette", ui-serif, Georgia, serif;
+}
+
+html[data-font="chetty"] {
+  --font-sans: "Chetty", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Chetty", ui-serif, Georgia, serif;
+}
+
+html[data-theme="classic"] {
+  --color-brand-50: #fff6eb;
+  --color-brand-100: #fcf0e1;
+  --color-brand-200: #d69fac;
+  --color-brand-300: #d69fac;
+  --color-brand-400: #898999;
+  --color-brand-500: #ca727f;
+  --color-brand-600: #b8626e;
+  --color-brand-700: #a3535f;
+  --color-brand-800: #3a3a4d;
+  --color-brand-900: #232334;
+}
+
+html[data-theme="lilac"] {
+  --color-brand-50: #FAF3F1;
+  --color-brand-100: #E1C0BA;
+  --color-brand-200: #DAB7C7;
+  --color-brand-300: #CFA3B6;
+  --color-brand-400: #8B787D;
+  --color-brand-500: #AD7872;
+  --color-brand-600: #9C6660;
+  --color-brand-700: #8A5550;
+  --color-brand-800: #5C4353;
+  --color-brand-900: #2D2325;
+}
+
+html[data-theme="sakura"] {
+  --color-brand-50: #F8F5F6;
+  --color-brand-100: #E3DADD;
+  --color-brand-200: #B7A0A7;
+  --color-brand-300: #A68B93;
+  --color-brand-400: #726756;
+  --color-brand-500: #A2747B;
+  --color-brand-600: #8C5F66;
+  --color-brand-700: #774D53;
+  --color-brand-800: #534136;
+  --color-brand-900: #33251E;
+}
+
+html[data-theme="mint"] {
+  --color-brand-50: #FAF4F5;
+  --color-brand-100: #D1B4B6;
+  --color-brand-200: #93C4C0;
+  --color-brand-300: #7CAEAA;
+  --color-brand-400: #AA9084;
+  --color-brand-500: #7CB488;
+  --color-brand-600: #669E72;
+  --color-brand-700: #52875D;
+  --color-brand-800: #51505C;
+  --color-brand-900: #2E2D36;
+}
+
+html[data-theme="autumn"] {
+  --color-brand-50: #FAF3F0;
+  --color-brand-100: #E1C3B8;
+  --color-brand-200: #D8A39B;
+  --color-brand-300: #C98E85;
+  --color-brand-400: #928E5D;
+  --color-brand-500: #8B664F;
+  --color-brand-600: #76543F;
+  --color-brand-700: #614331;
+  --color-brand-800: #574C4A;
+  --color-brand-900: #332B2A;
+}
+
+body {
+  background-color: var(--color-brand-50);
+  color: var(--color-brand-900);
+  font-family: var(--font-sans);
+}
+
+body, 
+.glass-header, 
+footer,
+button, 
+a, 
+input, 
+textarea,
+select,
+.bg-brand-50, 
+.bg-brand-100, 
+.bg-brand-200, 
+.bg-brand-300, 
+.bg-brand-500, 
+.bg-brand-600, 
+.bg-brand-700, 
+.text-brand-900, 
+.text-brand-800, 
+.text-brand-600, 
+.text-brand-500, 
+.text-brand-400, 
+.border-brand-200, 
+.border-brand-300, 
+.border-brand-100 {
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body::before {
+  transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-theme="lilac"] body::before {
+  filter: hue-rotate(60deg) saturate(0.8) opacity(0.25);
+}
+
+html[data-theme="sakura"] body::before {
+  filter: hue-rotate(15deg) opacity(0.3);
+}
+
+html[data-theme="mint"] body::before {
+  filter: hue-rotate(180deg) saturate(0.8) opacity(0.3);
+}
+
+html[data-theme="autumn"] body::before {
+  filter: hue-rotate(-20deg) saturate(1.2) opacity(0.3);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -10;
+  background-image: url('/petals-bg.svg');
+  background-repeat: no-repeat;
+  background-size: 2000px 2000px;
+  background-position: center;
+  pointer-events: none;
+}
+
+.min-h-screen.bg-brand-50 {
+  background-color: transparent !important;
+}
+
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(214, 159, 172, 0.15);
+}
+
+.glass-header {
+  background: rgba(255, 246, 235, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(214, 159, 172, 0.3);
+}
+
+.upload-border {
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%23d69facff' stroke-width='2' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+  border-radius: 24px;
+}
+
+.upload-border-active {
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%23ca727fff' stroke-width='3' stroke-dasharray='12%2c 6' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+  border-radius: 24px;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-photo-entry {
+  animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.albums-carousel {
+  display: flex;
+  overflow-x: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
+  padding-left: 0.25rem;
+  padding-right: 1.5rem;
+  gap: 1rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-200) transparent;
+}
+
+.albums-carousel::-webkit-scrollbar {
+  height: 5px;
+}
+.albums-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.albums-carousel::-webkit-scrollbar-thumb {
+  background: var(--brand-200);
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+.albums-carousel::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-300);
+}
+
+.album-card {
+  flex-shrink: 0;
+  width: 14rem;
+  scroll-snap-align: start;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.album-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+.album-card.active-card {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+.album-card.active-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+}

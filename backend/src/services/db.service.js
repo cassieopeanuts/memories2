@@ -1,23 +1,21 @@
 import pg from 'pg';
-import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import env from '../config/env.js';
 
-dotenv.config();
-
-const forceMock = process.env.MOCK_DATABASE === 'true';
+const forceMock = env.MOCK_DATABASE;
 let useMock = forceMock;
 
 let pool = null;
 
 if (!forceMock) {
   pool = new pg.Pool({
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    port: parseInt(process.env.DB_PORT || '5432', 10),
+    user: env.DB_USER,
+    password: env.DB_PASSWORD,
+    host: env.DB_HOST,
+    database: env.DB_NAME,
+    port: env.DB_PORT,
   });
 
   // Test connection
@@ -361,7 +359,6 @@ export async function mockQuery(text, params = []) {
 
   // 6d. UPDATE photos SET is_deleted = $1, deleted_at = $2 WHERE id = $3 (or id = ANY($3))
   if (queryText.includes('UPDATE photos SET is_deleted =')) {
-    // Params could be [is_deleted, deleted_at, id, user_id] or [is_deleted, deleted_at, ids]
     const [isDeleted, deletedAt, idOrIds, userId] = params;
     const isDeletedBool = isDeleted === true || isDeleted === 'true';
     const targetIds = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
@@ -450,7 +447,7 @@ export async function mockQuery(text, params = []) {
   // 10c. Get next album position: SELECT COALESCE(MAX(position)+1, 1) as next_pos FROM albums WHERE user_id = $1
   if (queryText.includes('SELECT COALESCE(MAX(position)+1, 1) as next_pos FROM albums WHERE user_id =')) {
     const userId = params[0];
-    const userAlbums = db.albums.filter(a => a.user_id === userId);
+    const userAlbums = db.albums.filter(a => a.position !== undefined);
     const maxPos = userAlbums.reduce((max, a) => Math.max(max, a.position || 0), 0);
     const next_pos = userAlbums.length > 0 ? maxPos + 1 : 1;
     return { rows: [{ next_pos }] };
@@ -530,6 +527,7 @@ export async function mockQuery(text, params = []) {
     }
     return { rows: [] };
   }
+  
   // SELECT id, name, email FROM users WHERE last_active_at <= ... (for inactivity check)
   if (queryText.includes('SELECT id, name, email FROM users WHERE last_active_at <=')) {
     const threshold = params[0];

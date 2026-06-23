@@ -1,7 +1,5 @@
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import env from '../config/env.js';
 
 // Keep track of the last time we sent a specific notification to a user to throttle them
 // Key format: `${userId}:${notificationType}` -> timestamp
@@ -14,12 +12,12 @@ const THROTTLE_DURATION = 24 * 60 * 60 * 1000;
  * Creates Nodemailer transport based on environment variables
  */
 function getTransporter() {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
+  const smtpHost = env.SMTP_HOST;
+  const smtpPort = env.SMTP_PORT || 465;
   // Default to secure if port is 465, 1127 (Selectel secure port), or SMTP_SECURE is explicitly true
-  const smtpSecure = process.env.SMTP_SECURE === 'true' || smtpPort === 465 || smtpPort === 1127;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const smtpSecure = env.SMTP_SECURE || smtpPort === 465 || smtpPort === 1127;
+  const smtpUser = env.SMTP_USER;
+  const smtpPass = env.SMTP_PASS;
 
   if (!smtpHost) {
     return null;
@@ -52,7 +50,7 @@ export async function sendEmail({ to, subject, text, html }) {
   }
 
   const transporter = getTransporter();
-  const smtpUser = process.env.SMTP_USER;
+  const smtpUser = env.SMTP_USER;
   
   // Sender email must be verified. If SMTP_USER is empty or doesn't have @, default to a verified domain address
   const fromEmail = (smtpUser && smtpUser.includes('@'))

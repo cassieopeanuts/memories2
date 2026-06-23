@@ -1,0 +1,24 @@
+{
+  "name": "ЛегкоСохранить.рф",
+  "short_name": "Сохранить.рф",
+  "description": "Самое простое хранилище для ваших воспоминаний. Сохраняйте то, что дорого, в один клик.",
+  "theme_color": "#fcf9f8",
+  "background_color": "#fcf9f8",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

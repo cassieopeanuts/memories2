@@ -14,14 +14,14 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
   const [touchStartX, setTouchStartX] = useState(null);
   const lightboxRef = useRef(null);
 
-  const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
 
   useEffect(() => {
     const fetchSharedAlbum = async () => {
       setLoading(true);
       setErrorMsg('');
       try {
-        const response = await fetch(`${backendUrl}/api/shared/album/${shareToken}`);
+        const response = await fetch(`${backendUrl}/api/albums/shared/album/${shareToken}`);
         const data = await response.json();
         
         if (!response.ok) {
