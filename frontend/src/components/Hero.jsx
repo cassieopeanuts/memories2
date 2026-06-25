@@ -3,7 +3,7 @@ import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp, X, Trash2, 
 
 // Brand SVG Icons using official SVGs
 const YandexIcon = () => (
-  <img src="/yandex.svg" className="h-5.5 w-auto object-contain shrink-0" alt="Yandex" />
+  <img src="/yandex.svg" className="h-5 w-auto object-contain shrink-0" alt="Yandex" />
 );
 
 const SberIcon = () => (
@@ -11,7 +11,7 @@ const SberIcon = () => (
 );
 
 const TBankIcon = () => (
-  <img src="/tbank.svg" className="h-5.5 w-auto object-contain shrink-0" alt="T-Bank" />
+  <img src="/tbank.svg" className="h-5 w-auto object-contain shrink-0" alt="T-Bank" />
 );
 
 export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
