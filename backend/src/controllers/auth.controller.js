@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import https from 'https';
 import env from '../config/env.js';
 import { query } from '../services/db.service.js';
 import { 
@@ -216,7 +218,7 @@ export async function yandexAuth(req, res, next) {
       return res.send(getMockOauthHtml('yandex', mockProfile, targetOrigin));
     }
     
-    const yandexUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
+    const yandexUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&force_confirm=yes`;
     res.redirect(yandexUrl);
   } catch (err) {
     next(err);
@@ -275,27 +277,269 @@ export async function yandexCallback(req, res, next) {
   }
 }
 
-// 2. Sber ID OIDC Simulation
+// 2. Sber ID OIDC Real & Simulation
 export async function sberAuth(req, res, next) {
   try {
     const { origin } = req.query;
     const targetOrigin = isValidOrigin(origin) ? (origin || env.FRONTEND_URL) : env.FRONTEND_URL;
-    const mockProfile = getMockProfile('sber');
-    res.send(getMockOauthHtml('sber', mockProfile, targetOrigin));
+    const clientId = env.SBER_CLIENT_ID;
+
+    if (clientId === 'mock_sber_client_id' || !clientId) {
+      const mockProfile = getMockProfile('sber');
+      return res.send(getMockOauthHtml('sber', mockProfile, targetOrigin));
+    }
+
+    const state = crypto.randomBytes(16).toString('hex');
+    const nonce = crypto.randomBytes(16).toString('hex');
+
+    // Save state in a HTTP-only cookie using native Set-Cookie header
+    res.setHeader('Set-Cookie', `sber_auth_state=${state}; Max-Age=300; Path=/; HttpOnly; Secure; SameSite=Lax`);
+
+    const redirectUri = encodeURIComponent(env.SBER_REDIRECT_URI);
+    const sberUrl = `https://id.sber.ru/openid/oauth/2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=openid%20email%20name&state=${state}&nonce=${nonce}`;
+    res.redirect(sberUrl);
   } catch (err) {
     next(err);
   }
 }
 
-// 2b. T-Bank ID OIDC Simulation
+// Sber ID callback (OIDC Token exchange & Profile retrieval)
+// Helper for Sber ID Mutual TLS requests using native Node.js https module
+function requestSberAPI(url, options = {}, bodyParams = null) {
+  return new Promise((resolve, reject) => {
+    const parsedUrl = new URL(url);
+    const sberOpts = {
+      method: options.method || 'GET',
+      hostname: parsedUrl.hostname,
+      path: parsedUrl.pathname + (parsedUrl.search || ''),
+      port: 443,
+      headers: {
+        ...options.headers
+      }
+    };
+
+    // Load certs if they exist in the project
+    try {
+      const rootCaPath = './certs/russian_trusted_root_ca.pem';
+      const clientCertPath = './certs/client.crt';
+      const clientKeyPath = './certs/client.key';
+
+      if (fs.existsSync(rootCaPath)) {
+        sberOpts.ca = fs.readFileSync(rootCaPath);
+      }
+      if (fs.existsSync(clientCertPath) && fs.existsSync(clientKeyPath)) {
+        sberOpts.cert = fs.readFileSync(clientCertPath);
+        sberOpts.key = fs.readFileSync(clientKeyPath);
+      }
+    } catch (e) {
+      console.warn('Error loading Sber SSL certificates:', e.message);
+    }
+
+    let bodyData = null;
+    if (bodyParams) {
+      bodyData = bodyParams.toString();
+      sberOpts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      sberOpts.headers['Content-Length'] = Buffer.byteLength(bodyData);
+    }
+
+    const req = https.request(sberOpts, (res) => {
+      let responseBody = '';
+      res.on('data', (chunk) => { responseBody += chunk; });
+      res.on('end', () => {
+        resolve({
+          ok: res.statusCode >= 200 && res.statusCode < 300,
+          status: res.statusCode,
+          json: () => Promise.resolve(JSON.parse(responseBody)),
+          text: () => Promise.resolve(responseBody)
+        });
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    if (bodyData) {
+      req.write(bodyData);
+    }
+    req.end();
+  });
+}
+
+// Sber ID callback (OIDC Token exchange & Profile retrieval)
+export async function sberCallback(req, res, next) {
+  const { code, state } = req.query;
+
+  // Manual cookie parsing since cookie-parser is not registered in Express app
+  const rawCookies = req.headers.cookie || '';
+  const cookies = Object.fromEntries(rawCookies.split('; ').map(c => c.split('=')));
+  const savedState = cookies.sber_auth_state;
+
+  // Clear cookie immediately
+  res.setHeader('Set-Cookie', 'sber_auth_state=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax');
+
+  if (!code) {
+    return res.status(400).send('Authorization code missing');
+  }
+
+  if (!state || state !== savedState) {
+    return res.status(400).send('Invalid state parameter (CSRF protection failed)');
+  }
+
+  try {
+    // Exchange auth code for tokens using client certificate helper
+    const tokenResponse = await requestSberAPI('https://id.sber.ru/openid/oauth/2.0/token', {
+      method: 'POST'
+    }, new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: env.SBER_REDIRECT_URI,
+      client_id: env.SBER_CLIENT_ID,
+      client_secret: env.SBER_CLIENT_SECRET
+    }));
+
+    if (!tokenResponse.ok) {
+      const errText = await tokenResponse.text();
+      throw new Error(`Sber ID token exchange failed: ${errText}`);
+    }
+
+    const tokens = await tokenResponse.json();
+
+    // Fetch user profile info
+    const userInfoResponse = await requestSberAPI('https://id.sber.ru/openid/oauth/2.0/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`
+      }
+    });
+
+    if (!userInfoResponse.ok) {
+      const errText = await userInfoResponse.text();
+      throw new Error(`Sber ID userinfo request failed: ${errText}`);
+    }
+
+    const profile = await userInfoResponse.json();
+
+    // Safely extract name and email
+    const name = profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(' ') || 'Пользователь Сбер ID';
+
+    const user = await findOrCreateUser({
+      sberId: profile.sub || profile.id,
+      name: name,
+      email: profile.email
+    });
+
+    const token = generateToken(user);
+
+    // Trigger welcome push
+    sendPushNotification(user.id, 'Привет!', 'Добро пожаловать через Сбер ID', '/')
+      .catch(err => console.error('Sber ID login push failed:', err));
+
+    res.redirect(`${env.FRONTEND_URL}/auth-callback?token=${token}`);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// 2b. T-Bank ID OIDC Real & Simulation
 export async function tbankAuth(req, res, next) {
   try {
     const { origin } = req.query;
     const targetOrigin = isValidOrigin(origin) ? (origin || env.FRONTEND_URL) : env.FRONTEND_URL;
-    const mockProfile = getMockProfile('tbank');
-    res.send(getMockOauthHtml('tbank', mockProfile, targetOrigin));
+    const clientId = env.TBANK_CLIENT_ID;
+
+    if (clientId === 'mock_tbank_client_id' || !clientId) {
+      const mockProfile = getMockProfile('tbank');
+      return res.send(getMockOauthHtml('tbank', mockProfile, targetOrigin));
+    }
+
+    const state = crypto.randomBytes(16).toString('hex');
+
+    // Save state in a HTTP-only cookie using native Set-Cookie header
+    res.setHeader('Set-Cookie', `tbank_auth_state=${state}; Max-Age=300; Path=/; HttpOnly; Secure; SameSite=Lax`);
+
+    const redirectUri = encodeURIComponent(env.TBANK_REDIRECT_URI);
+    const tbankUrl = `https://id.tinkoff.ru/auth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=openid%20profile%20email&state=${state}`;
+    res.redirect(tbankUrl);
   } catch (err) {
     next(err);
+  }
+}
+
+// T-Bank ID callback (OIDC Token exchange & Profile retrieval)
+export async function tbankCallback(req, res, next) {
+  const { code, state } = req.query;
+
+  // Manual cookie parsing since cookie-parser is not registered in Express app
+  const rawCookies = req.headers.cookie || '';
+  const cookies = Object.fromEntries(rawCookies.split('; ').map(c => c.split('=')));
+  const savedState = cookies.tbank_auth_state;
+
+  // Clear cookie immediately
+  res.setHeader('Set-Cookie', 'tbank_auth_state=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax');
+
+  if (!code) {
+    return res.status(400).send('Authorization code missing');
+  }
+
+  if (!state || state !== savedState) {
+    return res.status(400).send('Invalid state parameter (CSRF protection failed)');
+  }
+
+  try {
+    // Exchange auth code for tokens
+    const tokenResponse = await fetch('https://id.tinkoff.ru/auth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: env.TBANK_REDIRECT_URI,
+        client_id: env.TBANK_CLIENT_ID,
+        client_secret: env.TBANK_CLIENT_SECRET
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      const errText = await tokenResponse.text();
+      throw new Error(`T-Bank ID token exchange failed: ${errText}`);
+    }
+
+    const tokens = await tokenResponse.json();
+
+    // Fetch user profile info
+    const userInfoResponse = await fetch('https://id.tinkoff.ru/userinfo/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`
+      }
+    });
+
+    if (!userInfoResponse.ok) {
+      const errText = await userInfoResponse.text();
+      throw new Error(`T-Bank ID userinfo request failed: ${errText}`);
+    }
+
+    const profile = await userInfoResponse.json();
+
+    // Safely extract name and email
+    const name = profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(' ') || 'Пользователь Т-Банк ID';
+
+    const user = await findOrCreateUser({
+      tbankId: profile.sub || profile.id,
+      name: name,
+      email: profile.email
+    });
+
+    const token = generateToken(user);
+
+    // Trigger welcome push
+    sendPushNotification(user.id, 'Привет!', 'Добро пожаловать через Т-Банк ID', '/')
+      .catch(err => console.error('T-Bank ID login push failed:', err));
+
+    res.redirect(`${env.FRONTEND_URL}/auth-callback?token=${token}`);
+  } catch (error) {
+    next(error);
   }
 }
 

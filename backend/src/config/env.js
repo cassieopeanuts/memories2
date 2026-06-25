@@ -42,6 +42,16 @@ const envSchema = z.object({
   YANDEX_CLIENT_SECRET: z.string().default('mock_yandex_client_secret'),
   REDIRECT_URI: z.string().default('http://localhost:5000/api/auth/yandex/callback'),
 
+  // Sber ID OAuth
+  SBER_CLIENT_ID: z.string().default('mock_sber_client_id'),
+  SBER_CLIENT_SECRET: z.string().default('mock_sber_client_secret'),
+  SBER_REDIRECT_URI: z.string().default('http://localhost:5000/api/auth/sber/callback'),
+
+  // T-Bank ID OAuth
+  TBANK_CLIENT_ID: z.string().default('mock_tbank_client_id'),
+  TBANK_CLIENT_SECRET: z.string().default('mock_tbank_client_secret'),
+  TBANK_REDIRECT_URI: z.string().default('http://localhost:5000/api/auth/tbank/callback'),
+
   // SMTP configuration
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.preprocess((val) => (val ? Number(val) : 465), z.number()),

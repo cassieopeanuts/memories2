@@ -7,6 +7,7 @@ const themes = [
   { id: 'sakura', name: 'Сакура 💮', colors: ['#F8F5F6', '#E3DADD', '#B7A0A7', '#A2747B', '#33251E'] },
   { id: 'mint', name: 'Мята 🌿', colors: ['#FAF4F5', '#D1B4B6', '#93C4C0', '#7CB488', '#2E2D36'] },
   { id: 'autumn', name: 'Осень 🍁', colors: ['#FAF3F0', '#E1C3B8', '#D8A39B', '#8B664F', '#332B2A'] },
+  { id: 'peony', name: 'Пион 🪷', colors: ['#FAF5F6', '#f8afc9', '#c0708b', '#7e3748', '#54525a'] },
 ];
 
 const fonts = [

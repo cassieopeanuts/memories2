@@ -4,7 +4,9 @@ import {
   yandexAuth, 
   yandexCallback, 
   sberAuth, 
+  sberCallback,
   tbankAuth, 
+  tbankCallback,
   mockLoginConfirm, 
   demoLogin, 
   checkEmail, 
@@ -54,7 +56,9 @@ const acceptOfferSchema = z.object({
 router.get('/yandex', authLimiter, yandexAuth);
 router.get('/yandex/callback', yandexCallback);
 router.get('/sber', authLimiter, sberAuth);
+router.get('/sber/callback', sberCallback);
 router.get('/tbank', authLimiter, tbankAuth);
+router.get('/tbank/callback', tbankCallback);
 router.get('/mock-login-confirm', mockLoginConfirm);
 
 // Demo Login
