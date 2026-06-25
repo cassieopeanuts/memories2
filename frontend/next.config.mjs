@@ -10,7 +10,8 @@ const nextConfig = {
   webpack: (config, { webpack }) => {
     config.plugins.push(
       new webpack.DefinePlugin({
-        'import.meta.env.VITE_API_URL': 'process.env.NEXT_PUBLIC_API_URL',
+        'import.meta.env.VITE_API_URL': JSON.stringify(process.env.NEXT_PUBLIC_API_URL || ''),
+        'process.env.NEXT_PUBLIC_API_URL': JSON.stringify(process.env.NEXT_PUBLIC_API_URL || ''),
       })
     );
     return config;
