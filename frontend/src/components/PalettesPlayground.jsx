@@ -114,7 +114,9 @@ const fontsList = [
   { id: 'poiret-one', name: 'Пуаре Ван (Poiret One) 📐', family: '"Poiret One", sans-serif', desc: 'Элегантный геометрический гротеск в стиле арт-деко. Отлично подходит для заголовков.' },
   { id: 'raleway', name: 'Рэйлвэй (Raleway) 🌸', family: '"Raleway", sans-serif', desc: 'Стильный и чистый нео-гротеск с характерными начертаниями букв. Универсальный выбор.' },
   { id: 'tenor-sans', name: 'Тенор Санс (Tenor Sans) 📅', family: '"Tenor Sans", sans-serif', desc: 'Гуманистический гротеск, разработанный специально для высокой моды и премиального брендинга.' },
-  { id: 'ysabeau-infant', name: 'Изабо Инфант (Ysabeau Infant) ✍️', family: '"Ysabeau Infant", sans-serif', desc: 'Изящный и изысканный шрифт без засечек, вдохновленный классическими антиквами.' }
+  { id: 'ysabeau-infant', name: 'Изабо Инфант (Ysabeau Infant) ✍️', family: '"Ysabeau Infant", sans-serif', desc: 'Изящный и изысканный шрифт без засечек, вдохновленный классическими антиквами.' },
+  { id: 'bona-nova', name: 'Бона Нова (Bona Nova) 📜', family: '"Bona Nova", serif', desc: 'Элегантный контрастный шрифт с засечками, воссозданный на основе исторических польских шрифтовых традиций.' },
+  { id: 'fira-code', name: 'Фира Код (Fira Code) 💻', family: '"Fira Code", monospace', desc: 'Моноширинный шрифт со специальными программными лигатурами. Отличается высокой геометрической строгостью.' }
 ];
 
 export default function PalettesPlayground({ currentTheme, onThemeChange, currentFont, onFontChange }) {

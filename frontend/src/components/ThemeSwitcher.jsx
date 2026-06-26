@@ -15,7 +15,9 @@ const fonts = [
   { id: 'poiret-one', name: 'Пуаре Ван (Poiret) 📐', family: '"Poiret One", sans-serif' },
   { id: 'raleway', name: 'Рэйлвэй (Raleway) 🌸', family: '"Raleway", sans-serif' },
   { id: 'tenor-sans', name: 'Тенор Санс (Tenor) 📅', family: '"Tenor Sans", sans-serif' },
-  { id: 'ysabeau-infant', name: 'Изабо Инфант (Ysabeau) ✍️', family: '"Ysabeau Infant", sans-serif' }
+  { id: 'ysabeau-infant', name: 'Изабо Инфант (Ysabeau) ✍️', family: '"Ysabeau Infant", sans-serif' },
+  { id: 'bona-nova', name: 'Бона Нова (Bona Nova) 📜', family: '"Bona Nova", serif' },
+  { id: 'fira-code', name: 'Фира Код (Fira Code) 💻', family: '"Fira Code", monospace' }
 ];
 
 export default function ThemeSwitcher({ currentTheme, onThemeSelect, currentFont, onFontSelect }) {

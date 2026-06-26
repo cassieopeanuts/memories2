@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poiret+One&family=Raleway:ital,wght@0,100..900;1,100..900&family=Tenor+Sans&family=Ysabeau+Infant:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bona+Nova:ital,wght@0,400;0,700;1,400&family=Fira+Code:wght@300..700&family=Poiret+One&family=Raleway:ital,wght@0,100..900;1,100..900&family=Tenor+Sans&family=Ysabeau+Infant:ital,wght@0,100..900;1,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -79,6 +79,16 @@ html[data-font="tenor-sans"] {
 html[data-font="ysabeau-infant"] {
   --font-sans: "Ysabeau Infant", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Ysabeau Infant", ui-serif, Georgia, serif;
+}
+
+html[data-font="bona-nova"] {
+  --font-sans: "Bona Nova", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Bona Nova", ui-serif, Georgia, serif;
+}
+
+html[data-font="fira-code"] {
+  --font-sans: "Fira Code", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fira Code", ui-serif, Georgia, serif;
 }
 
 html[data-theme="classic"] {
