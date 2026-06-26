@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poiret+One&family=Raleway:ital,wght@0,100..900;1,100..900&family=Tenor+Sans&family=Ysabeau+Infant:ital,wght@0,100..900;1,100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -59,24 +61,24 @@ html[data-font="classic"] {
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
 }
 
-html[data-font="jun"] {
-  --font-sans: "Jun", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Jun", ui-serif, Georgia, serif;
+html[data-font="poiret-one"] {
+  --font-sans: "Poiret One", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Poiret One", ui-serif, Georgia, serif;
 }
 
-html[data-font="fontimer"] {
-  --font-sans: "Fontimer", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Fontimer", ui-serif, Georgia, serif;
+html[data-font="raleway"] {
+  --font-sans: "Raleway", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Raleway", ui-serif, Georgia, serif;
 }
 
-html[data-font="j-audio-cassette"] {
-  --font-sans: "J Audio Cassette", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "J Audio Cassette", ui-serif, Georgia, serif;
+html[data-font="tenor-sans"] {
+  --font-sans: "Tenor Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Tenor Sans", ui-serif, Georgia, serif;
 }
 
-html[data-font="chetty"] {
-  --font-sans: "Chetty", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Chetty", ui-serif, Georgia, serif;
+html[data-font="ysabeau-infant"] {
+  --font-sans: "Ysabeau Infant", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Ysabeau Infant", ui-serif, Georgia, serif;
 }
 
 html[data-theme="classic"] {

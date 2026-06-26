@@ -111,10 +111,10 @@ const themes = [
 
 const fontsList = [
   { id: 'classic', name: 'Стандартный (Inter) 🌸', family: 'Inter, sans-serif', desc: 'Строгий, современный гротеск. Отличная читаемость для больших объемов текста.' },
-  { id: 'jun', name: 'Юн (Jun) 📐', family: 'Jun, sans-serif', desc: 'Уникальная изящная антиква с засечками от Василия Шишкина. Придает премиальный характер.' },
-  { id: 'fontimer', name: 'Фонтимер (Fontimer) 📅', family: 'Fontimer, sans-serif', desc: 'Винтажный газетный шрифт с засечками. Создает ощущение классического бумажного фотоальбома.' },
-  { id: 'j-audio-cassette', name: 'Аудиокассета (J Audio) 📻', family: 'J Audio Cassette, sans-serif', desc: 'Декоративный ретро-шрифт. Напоминает надписи на кассетах с пленкой из 80-х.' },
-  { id: 'chetty', name: 'Четти (Chetty) ✍️', family: 'Chetty, sans-serif', desc: 'Рукописный, воздушный шрифт. Придает личный, теплый и доверительный тон.' }
+  { id: 'poiret-one', name: 'Пуаре Ван (Poiret One) 📐', family: '"Poiret One", sans-serif', desc: 'Элегантный геометрический гротеск в стиле арт-деко. Отлично подходит для заголовков.' },
+  { id: 'raleway', name: 'Рэйлвэй (Raleway) 🌸', family: '"Raleway", sans-serif', desc: 'Стильный и чистый нео-гротеск с характерными начертаниями букв. Универсальный выбор.' },
+  { id: 'tenor-sans', name: 'Тенор Санс (Tenor Sans) 📅', family: '"Tenor Sans", sans-serif', desc: 'Гуманистический гротеск, разработанный специально для высокой моды и премиального брендинга.' },
+  { id: 'ysabeau-infant', name: 'Изабо Инфант (Ysabeau Infant) ✍️', family: '"Ysabeau Infant", sans-serif', desc: 'Изящный и изысканный шрифт без засечек, вдохновленный классическими антиквами.' }
 ];
 
 export default function PalettesPlayground({ currentTheme, onThemeChange, currentFont, onFontChange }) {

@@ -12,10 +12,10 @@ const themes = [
 
 const fonts = [
   { id: 'classic', name: 'Стандартный (Inter) 🌸', family: 'Inter, sans-serif' },
-  { id: 'jun', name: 'Юн (Jun) 📐', family: 'Jun, sans-serif' },
-  { id: 'fontimer', name: 'Фонтимер (Fontimer) 📅', family: 'Fontimer, sans-serif' },
-  { id: 'j-audio-cassette', name: 'Аудиокассета (J Audio) 📻', family: 'J Audio Cassette, sans-serif' },
-  { id: 'chetty', name: 'Четти (Chetty) ✍️', family: 'Chetty, sans-serif' }
+  { id: 'poiret-one', name: 'Пуаре Ван (Poiret) 📐', family: '"Poiret One", sans-serif' },
+  { id: 'raleway', name: 'Рэйлвэй (Raleway) 🌸', family: '"Raleway", sans-serif' },
+  { id: 'tenor-sans', name: 'Тенор Санс (Tenor) 📅', family: '"Tenor Sans", sans-serif' },
+  { id: 'ysabeau-infant', name: 'Изабо Инфант (Ysabeau) ✍️', family: '"Ysabeau Infant", sans-serif' }
 ];
 
 export default function ThemeSwitcher({ currentTheme, onThemeSelect, currentFont, onFontSelect }) {
