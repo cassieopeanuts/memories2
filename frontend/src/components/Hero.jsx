@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ShieldCheck, Heart, Sparkles, Mail, ChevronDown, ChevronUp, X, Trash2, Lock, Share2, HelpCircle, Check } from 'lucide-react';
+import Script from 'next/script';
 
 // Brand SVG Icons using official SVGs
 const YandexIcon = () => (
@@ -12,6 +13,10 @@ const SberIcon = () => (
 
 const TBankIcon = () => (
   <img src="/tbank.svg" className="h-5 w-auto object-contain shrink-0" alt="T-Bank" />
+);
+
+const VKIcon = () => (
+  <img src="/vk.svg" className="h-5 w-auto object-contain shrink-0" alt="VK" />
 );
 
 export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) {
@@ -30,6 +35,104 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
 
   const [yandexAccounts, setYandexAccounts] = useState([]);
   const [showYandexAccountsModal, setShowYandexAccountsModal] = useState(false);
+  const [vkSdkActive, setVkSdkActive] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hostname === 'xn--80affoidsgaujr8a0h.xn--p1ai') {
+      setVkSdkActive(true);
+    }
+  }, []);
+
+  const handleVkSdkSuccess = useCallback(async (data, widgetInstance = null) => {
+    if (widgetInstance && typeof widgetInstance.close === 'function') {
+      widgetInstance.close();
+    }
+
+    if (!data || !data.access_token) {
+      console.error('No access token in VK exchange data:', data);
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg('');
+
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/vk/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: data.access_token })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to authenticate session with VK ID token');
+      }
+
+      const resData = await response.json();
+      if (resData.token) {
+        onEmailLoginSuccess(resData.token);
+      }
+    } catch (err) {
+      console.error('VK token authentication error:', err);
+      setErrorMsg(err.message || 'Ошибка авторизации через VK ID.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [backendUrl, onEmailLoginSuccess]);
+
+  const handleVkSdkLoad = () => {
+    if (typeof window !== 'undefined' && window.VKIDSDK) {
+      const VKID = window.VKIDSDK;
+
+      VKID.Config.init({
+        app: 54655785,
+        redirectUrl: 'https://xn--80affoidsgaujr8a0h.xn--p1ai/api/auth/vk/callback',
+        responseMode: VKID.ConfigResponseMode.Callback,
+        source: VKID.ConfigSource.LOWCODE,
+        scope: 'email',
+      });
+
+      // 1. Initialize Floating OneTap widget
+      const floatingOneTap = new VKID.FloatingOneTap();
+      floatingOneTap.render({
+        appName: 'ЛегкоСохранить.РФ',
+        showAlternativeLogin: true
+      })
+      .on(VKID.WidgetEvents.ERROR, (err) => console.error('VK OneTap Widget Error:', err))
+      .on(VKID.FloatingOneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
+        const code = payload.code;
+        const deviceId = payload.device_id;
+
+        VKID.Auth.exchangeCode(code, deviceId)
+          .then((data) => handleVkSdkSuccess(data, floatingOneTap))
+          .catch((err) => console.error('VK exchangeCode error:', err));
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (vkSdkActive && typeof window !== 'undefined' && window.VKIDSDK) {
+      const VKID = window.VKIDSDK;
+
+      const oauthContainer = document.getElementById('vk-oauth-container');
+      if (oauthContainer && !oauthContainer.hasChildNodes()) {
+        const oAuth = new VKID.OAuthList();
+        oAuth.render({
+          container: oauthContainer,
+          oauthList: ['vkid']
+        })
+        .on(VKID.WidgetEvents.ERROR, (err) => console.error('VK OAuthList Error:', err))
+        .on(VKID.OAuthListInternalEvents.LOGIN_SUCCESS, function (payload) {
+          const code = payload.code;
+          const deviceId = payload.device_id;
+
+          VKID.Auth.exchangeCode(code, deviceId)
+            .then(handleVkSdkSuccess)
+            .catch((err) => console.error('VK exchangeCode error:', err));
+        });
+      }
+    }
+  }, [vkSdkActive, handleVkSdkSuccess]);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   const toggleFaq = (index) => {
@@ -95,6 +198,10 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
 
   const handleTBankLogin = () => {
     window.location.href = `${backendUrl}/api/auth/tbank?origin=${encodeURIComponent(window.location.origin)}`;
+  };
+
+  const handleVkLogin = () => {
+    window.location.href = `${backendUrl}/api/auth/vk?origin=${encodeURIComponent(window.location.origin)}`;
   };
 
   const handleEmailSubmit = async (e) => {
@@ -284,6 +391,20 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
               <TBankIcon />
               <span className="text-base font-bold text-[#232334]">ID</span>
             </button>
+
+            {/* VK ID */}
+            {vkSdkActive ? (
+              <div id="vk-oauth-container" className="w-full"></div>
+            ) : (
+              <button
+                onClick={handleVkLogin}
+                className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+                title="Войти через VK ID"
+              >
+                <VKIcon />
+                <span className="text-base font-bold text-[#232334]">ID</span>
+              </button>
+            )}
           </div>
 
           {/* Email collapsible trigger */}
@@ -317,7 +438,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
                         placeholder="Ваш e-mail (например, anna@mail.ru)"
                         required
                         disabled={isEmailChecked}
-                        className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium disabled:opacity-70"
+                        className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-base text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium disabled:opacity-70"
                       />
                     </div>
                     {isEmailChecked && isNewUser && (
@@ -331,7 +452,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Ваше имя"
                           required
-                          className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
+                          className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-base text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-medium"
                         />
                       </div>
                     )}
@@ -378,7 +499,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
                         type="text"
                         value={code}
                         onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="0 0 0 0 0 0"
+                        placeholder="000000"
                         required
                         className="w-full px-4 py-3 text-center tracking-[12px] font-mono text-2xl bg-brand-50 border border-brand-200/60 rounded-2xl text-brand-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-bold"
                       />
@@ -433,24 +554,30 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
           <p className="text-xs text-brand-600 font-medium mb-3 uppercase tracking-wider">
             Режим разработки (Вход без ключей)
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-1.5">
             <button
               onClick={() => onDemoLogin('yandex')}
-              className="py-2.5 px-2 bg-brand-200/50 hover:bg-brand-200 text-brand-800 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
+              className="py-2.5 px-1 bg-brand-200/50 hover:bg-brand-200 text-brand-800 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
             >
               Яндекс 👩‍🦰
             </button>
             <button
               onClick={() => onDemoLogin('sber')}
-              className="py-2.5 px-2 bg-brand-200/50 hover:bg-brand-200 text-brand-800 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
+              className="py-2.5 px-1 bg-brand-200/50 hover:bg-brand-200 text-brand-800 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
             >
               Сбер 👩
             </button>
             <button
               onClick={() => onDemoLogin('tbank')}
-              className="py-2.5 px-2 bg-brand-200/50 hover:bg-brand-200 text-brand-800 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
+              className="py-2.5 px-1 bg-brand-200/50 hover:bg-brand-200 text-brand-800 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
             >
               Т-Банк 🧔
+            </button>
+            <button
+              onClick={() => onDemoLogin('vk')}
+              className="py-2.5 px-1 bg-brand-200/50 hover:bg-brand-200 text-brand-800 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
+            >
+              VK 👨
             </button>
           </div>
         </div>
@@ -867,6 +994,15 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
             </div>
           </div>
         </div>
+      )}
+
+      {/* Load VK ID SDK in production */}
+      {vkSdkActive && (
+        <Script
+          src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"
+          onLoad={handleVkSdkLoad}
+          strategy="afterInteractive"
+        />
       )}
     </div>
   );

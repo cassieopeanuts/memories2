@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     yandex_id VARCHAR(255) UNIQUE,
     sber_id VARCHAR(255) UNIQUE,
     tbank_id VARCHAR(255) UNIQUE,
+    vk_id VARCHAR(255) UNIQUE,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE,
     pin_code VARCHAR(255),
@@ -60,6 +61,7 @@ CREATE INDEX IF NOT EXISTS idx_photos_user_id ON photos(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_yandex_id ON users(yandex_id);
 CREATE INDEX IF NOT EXISTS idx_users_sber_id ON users(sber_id);
 CREATE INDEX IF NOT EXISTS idx_users_tbank_id ON users(tbank_id);
+CREATE INDEX IF NOT EXISTS idx_users_vk_id ON users(vk_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_albums_user_id ON albums(user_id);
 

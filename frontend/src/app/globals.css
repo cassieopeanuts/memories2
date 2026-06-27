@@ -175,6 +175,12 @@ body {
   font-family: var(--font-sans);
 }
 
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body, 
 .glass-header, 
 footer,

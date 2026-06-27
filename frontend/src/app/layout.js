@@ -1,6 +1,7 @@
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import BetaWrapper from "@/components/BetaWrapper";
 
 export const metadata = {
   title: "ЛегкоСохранить.РФ — Ваше личное семейное облако",
@@ -18,7 +19,9 @@ export default function RootLayout({ children }) {
       <body className="antialiased">
         <AuthProvider>
           <ThemeProvider>
-            {children}
+            <BetaWrapper>
+              {children}
+            </BetaWrapper>
           </ThemeProvider>
         </AuthProvider>
       </body>

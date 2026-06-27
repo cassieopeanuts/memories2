@@ -109,7 +109,7 @@ export default function PinLock({ token, mode, onSuccess, onLogout, backendUrl }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-gradient-to-b from-brand-50 to-brand-100 flex flex-col justify-between p-6 select-none animate-photo-entry">
+    <div className="fixed inset-0 z-50 bg-gradient-to-b from-brand-50 to-brand-100 flex flex-col justify-between p-6 select-none animate-photo-entry touch-none">
       
       {/* Top Header info */}
       <div className="text-center mt-10">
@@ -158,8 +158,9 @@ export default function PinLock({ token, mode, onSuccess, onLogout, backendUrl }
             <button
               key={num}
               onClick={() => handleKeyPress(num)}
+              onTouchStart={() => {}}
               disabled={isLoading}
-              className="w-16 h-16 rounded-full border border-brand-200 bg-white/70 active:bg-brand-200/50 hover:bg-white text-brand-900 font-serif font-bold text-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              className="w-16 h-16 rounded-full border border-brand-200 bg-white/70 active:bg-brand-200/50 hover:bg-white text-brand-900 font-serif font-bold text-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shadow-sm disabled:opacity-50 touch-none"
             >
               {num}
             </button>
@@ -167,24 +168,27 @@ export default function PinLock({ token, mode, onSuccess, onLogout, backendUrl }
           
           <button
             onClick={handleClear}
+            onTouchStart={() => {}}
             disabled={isLoading || pin.length === 0}
-            className="w-16 h-16 text-xs text-brand-500 font-semibold uppercase tracking-wider flex items-center justify-center cursor-pointer hover:text-brand-800 disabled:opacity-30 active:scale-95 transition-all"
+            className="w-16 h-16 text-xs text-brand-500 font-semibold uppercase tracking-wider flex items-center justify-center cursor-pointer hover:text-brand-800 disabled:opacity-30 active:scale-95 transition-all touch-none"
           >
             Сброс
           </button>
           
           <button
             onClick={() => handleKeyPress(0)}
+            onTouchStart={() => {}}
             disabled={isLoading}
-            className="w-16 h-16 rounded-full border border-brand-200 bg-white/70 active:bg-brand-200/50 hover:bg-white text-brand-900 font-serif font-bold text-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+            className="w-16 h-16 rounded-full border border-brand-200 bg-white/70 active:bg-brand-200/50 hover:bg-white text-brand-900 font-serif font-bold text-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shadow-sm disabled:opacity-50 touch-none"
           >
             0
           </button>
           
           <button
             onClick={handleBackspace}
+            onTouchStart={() => {}}
             disabled={isLoading || pin.length === 0}
-            className="w-16 h-16 text-xs text-brand-500 font-semibold uppercase tracking-wider flex items-center justify-center cursor-pointer hover:text-brand-800 disabled:opacity-30 active:scale-95 transition-all"
+            className="w-16 h-16 text-xs text-brand-500 font-semibold uppercase tracking-wider flex items-center justify-center cursor-pointer hover:text-brand-800 disabled:opacity-30 active:scale-95 transition-all touch-none"
           >
             Стереть
           </button>
@@ -193,7 +197,8 @@ export default function PinLock({ token, mode, onSuccess, onLogout, backendUrl }
         {/* Change account option */}
         <button
           onClick={onLogout}
-          className="mt-8 mx-auto flex items-center gap-1 text-[11px] font-bold text-brand-500 hover:text-brand-800 uppercase tracking-widest cursor-pointer active:scale-95 transition-colors"
+          onTouchStart={() => {}}
+          className="mt-8 mx-auto flex items-center gap-1 text-[11px] font-bold text-brand-500 hover:text-brand-800 uppercase tracking-widest cursor-pointer active:scale-95 transition-colors touch-none"
         >
           <LogOut className="w-3.5 h-3.5" />
           Выйти из аккаунта

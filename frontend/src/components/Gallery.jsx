@@ -40,6 +40,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
   const [showAddToAlbum, setShowAddToAlbum] = useState(false);
+  const [targetAlbumForSelect, setTargetAlbumForSelect] = useState(null);
 
   // Drag & Drop local states
   const [draggedAlbumIndex, setDraggedAlbumIndex] = useState(null);
@@ -51,6 +52,16 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
+  };
+
+  const handleStartSelectForAlbum = (album) => {
+    setTargetAlbumForSelect(album);
+    const generalAlbum = albums.find(a => a.name === 'Общий');
+    if (generalAlbum) {
+      setActiveAlbum(generalAlbum);
+    }
+    setIsSelectMode(true);
+    setSelectedPhotoIds([]);
   };
 
   // Album Sharing States
@@ -119,6 +130,15 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     // Check if the device has no fine pointer (mouse/trackpad) i.e. it is a touch-only mobile device (phone/tablet)
     const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
     setIsTouchOnly(!hasFinePointer);
+
+    // Initialize touch-drag-drop polyfill on the client side
+    if (typeof window !== 'undefined') {
+      import('mobile-drag-drop').then((mod) => {
+        mod.polyfill({
+          holdToDrag: 300 // 300ms hold to start dragging (helps distinguish scrolling from dragging)
+        });
+      });
+    }
   }, []);
 
 
@@ -877,7 +897,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           <div className="text-center py-6 text-brand-500 text-xs font-semibold">Загрузка альбомов...</div>
         ) : (
           <div className="albums-carousel overflow-y-visible">
-            {albums.map((album) => {
+            {albums.map((album, index) => {
               const isActive = activeAlbum && activeAlbum.id === album.id;
               const photoCount = album.photoCount || 0;
               return (
@@ -891,7 +911,25 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     }
                     setIsSelectMode(false);
                     setSelectedPhotoIds([]);
+                    setTargetAlbumForSelect(null);
                   }}
+                  draggable={!isSelectMode && album.name !== 'Общий' && album.id !== 'trash'}
+                  onDragStart={(e) => handleAlbumDragStart(e, index)}
+                  onDragOver={(e) => {
+                    if (draggedAlbumIndex !== null) {
+                      handleAlbumDragOver(e, index);
+                    } else if (draggedPhotoId !== null) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onDrop={(e) => {
+                    if (draggedPhotoId !== null || e.dataTransfer.getData('photoId')) {
+                      handleDropPhotoOnAlbum(e, album.id);
+                    } else {
+                      handleAlbumDrop(e, index);
+                    }
+                  }}
+                  onDragEnd={handleAlbumDragEnd}
                   className={`album-card bg-white border rounded-2xl p-4 cursor-pointer select-none flex flex-col justify-between h-32
                     ${isActive 
                       ? 'active-card border-brand-500 ring-2 ring-brand-500/10 bg-brand-50/20 shadow-sm' 
@@ -980,6 +1018,27 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       {/* 4. Active Album Photos Area */}
       {activeAlbum && (
         <div className="animate-photo-entry">
+          {targetAlbumForSelect && (
+            <div className="mb-6 p-4 bg-brand-100/70 border border-brand-300/40 rounded-2xl flex items-center justify-between shadow-inner animate-photo-entry">
+              <div className="flex items-center gap-2.5">
+                <span className="text-base shrink-0">📁</span>
+                <div className="text-xs text-brand-900 font-semibold leading-snug">
+                  Выберите фотографии для добавления в альбом «{targetAlbumForSelect.name}».
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setTargetAlbumForSelect(null);
+                  setIsSelectMode(false);
+                  setSelectedPhotoIds([]);
+                  setActiveAlbum(targetAlbumForSelect);
+                }}
+                className="text-xs font-bold text-brand-500 hover:text-brand-850 cursor-pointer underline px-2 py-1 shrink-0 uppercase tracking-wider"
+              >
+                Отмена
+              </button>
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pt-4 border-t border-brand-200/30">
             <div>
               <h3 className="font-serif text-lg md:text-xl text-brand-900 font-semibold">
@@ -1046,12 +1105,21 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               <h4 className="font-serif text-base text-brand-800 mb-1">
                 {activeAlbum.id === 'trash' ? 'Корзина пуста' : 'В альбоме пока пусто'}
               </h4>
-              <p className="text-xs text-brand-600 font-light max-w-xs leading-relaxed">
+              <p className="text-xs text-brand-600 font-light max-w-xs mx-auto leading-relaxed mb-4">
                 {activeAlbum.id === 'trash' 
                   ? 'Сюда попадают фотографии, которые вы удаляете из альбомов. Они будут храниться 30 дней, после чего автоматически удалятся навсегда.' 
                   : 'Сделайте снимок на камеру или выберите готовые кадры из галереи телефона выше, чтобы они сохранились в альбоме.'
                 }
               </p>
+              {activeAlbum.id !== 'trash' && activeAlbum.name !== 'Общий' && (
+                <button
+                  onClick={() => handleStartSelectForAlbum(activeAlbum)}
+                  className="flex items-center gap-1.5 text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2.5 rounded-2xl cursor-pointer transition-colors shadow-sm active:scale-95"
+                >
+                  <Plus className="w-4 h-4" />
+                  Выбрать из существующих воспоминаний
+                </button>
+              )}
             </div>
           ) : (
             <>
@@ -1069,7 +1137,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                 return (
                   <div
                     key={photo.id}
-                    draggable={!isTouchOnly && !isSelectMode}
+                    draggable={!isSelectMode}
                     onDragStart={(e) => handlePhotoDragStart(e, index, photo.id)}
                     onDragEnd={handlePhotoDragEnd}
                     onDragOver={handlePhotoDragOver}
@@ -1151,8 +1219,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
       {/* Sticky Bottom Actions Bar for Selection Mode */}
       {isSelectMode && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-md px-6 py-4 rounded-3xl border border-brand-200/50 shadow-2xl flex items-center gap-4 animate-photo-entry">
-          <span className="text-xs font-semibold text-brand-800">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-md px-3.5 py-3 sm:px-6 sm:py-4 rounded-[24px] sm:rounded-3xl border border-brand-200/50 shadow-2xl flex items-center gap-2 sm:gap-4 w-[calc(100vw-1.5rem)] sm:w-auto max-w-lg justify-between sm:justify-start animate-photo-entry">
+          <span className="text-[11px] sm:text-xs font-semibold text-brand-800 shrink-0">
             Выбрано: {selectedPhotoIds.length}
           </span>
           <button 
@@ -1160,35 +1228,50 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               setIsSelectMode(false);
               setSelectedPhotoIds([]);
             }}
-            className="text-xs font-medium text-brand-600 hover:text-brand-950 px-3.5 py-2 border border-brand-200 rounded-2xl cursor-pointer transition-colors active:scale-95"
+            className="text-[11px] sm:text-xs font-medium text-brand-600 hover:text-brand-950 px-2.5 py-2 sm:px-3.5 sm:py-2 border border-brand-200 rounded-2xl cursor-pointer transition-colors active:scale-95 shrink-0"
           >
-            Отменить
+            Отмена
           </button>
           
           {activeAlbum && activeAlbum.id === 'trash' ? (
-            <>
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <button 
                 onClick={handleBulkRestore}
                 disabled={selectedPhotoIds.length === 0}
-                className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm"
+                className="text-[11px] sm:text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
               >
                 Восстановить
               </button>
               <button 
                 onClick={handleBulkDeletePermanent}
                 disabled={selectedPhotoIds.length === 0}
-                className="text-xs font-semibold bg-red-500 hover:bg-red-650 text-white px-4 py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm"
+                className="text-[11px] sm:text-xs font-semibold bg-red-500 hover:bg-red-650 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
               >
-                Удалить навсегда
+                <span className="hidden sm:inline">Удалить навсегда</span>
+                <span className="sm:hidden">Удалить</span>
               </button>
-            </>
+            </div>
+          ) : targetAlbumForSelect ? (
+            <button 
+              onClick={async () => {
+                await handleAddSelectedToAlbum(targetAlbumForSelect.id);
+                setActiveAlbum(targetAlbumForSelect);
+                setTargetAlbumForSelect(null);
+              }}
+              disabled={selectedPhotoIds.length === 0}
+              className="text-[11px] sm:text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
+            >
+              <span className="hidden sm:inline">Добавить в «{targetAlbumForSelect.name}»</span>
+              <span className="sm:hidden">Добавить</span>
+            </button>
           ) : (
             <button 
               onClick={() => setShowAddToAlbum(true)}
               disabled={selectedPhotoIds.length === 0}
-              className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm"
+              className="text-[11px] sm:text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
             >
-              Добавить в альбом
+              <span className="hidden sm:inline">Добавить в альбом</span>
+              <span className="sm:hidden">В альбом</span>
             </button>
           )}
         </div>
@@ -1264,7 +1347,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
               onChange={(e) => setNewAlbumName(e.target.value)}
               placeholder="Название (например, Отпуск 2026)"
               required
-              className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 font-medium mb-4"
+              className="w-full px-4 py-3 bg-brand-50 border border-brand-200/60 rounded-2xl text-base text-brand-900 focus:outline-none focus:border-brand-500 font-medium mb-4"
             />
             <div className="flex gap-2">
               <button
@@ -1561,14 +1644,18 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
             {/* The Photo or Video */}
             {selectedPhoto.mime_type && selectedPhoto.mime_type.startsWith('video/') ? (
-              <video
-                key={selectedIndex}
-                src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
-                controls
-                autoPlay
-                onClick={(e) => e.stopPropagation()}
-                className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry cursor-default"
-              />
+              <div 
+                onClick={(e) => e.stopPropagation()} 
+                className="max-w-full max-h-[75vh] md:max-h-[80vh] flex items-center justify-center"
+              >
+                <video
+                  key={selectedIndex}
+                  src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-full rounded-2xl object-contain shadow-2xl animate-photo-entry cursor-default"
+                />
+              </div>
             ) : (
               <img
                 key={selectedIndex}
@@ -1664,7 +1751,13 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                 Отмена
               </button>
               <button
-                onClick={confirmConfig.onConfirm}
+                onClick={async () => {
+                  const onConfirmCallback = confirmConfig.onConfirm;
+                  setConfirmConfig({ isOpen: false, message: '', onConfirm: null });
+                  if (onConfirmCallback) {
+                    await onConfirmCallback();
+                  }
+                }}
                 className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-xs font-semibold text-white cursor-pointer transition-colors shadow-sm"
               >
                 Удалить
@@ -1701,7 +1794,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                   placeholder="Поиск альбома..."
                   value={albumSearchQuery}
                   onChange={(e) => setAlbumSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-brand-50 border border-brand-200 rounded-xl text-xs focus:outline-none focus:border-brand-400 text-brand-900 font-light"
+                  className="w-full pl-10 pr-4 py-2.5 bg-brand-50 border border-brand-200 rounded-xl text-base focus:outline-none focus:border-brand-400 text-brand-900 font-light"
                 />
                 <Search className="w-4 h-4 text-brand-400 absolute left-3 top-1/2 -translate-y-1/2" />
               </div>

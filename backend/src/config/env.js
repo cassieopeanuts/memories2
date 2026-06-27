@@ -52,6 +52,11 @@ const envSchema = z.object({
   TBANK_CLIENT_SECRET: z.string().default('mock_tbank_client_secret'),
   TBANK_REDIRECT_URI: z.string().default('http://localhost:5000/api/auth/tbank/callback'),
 
+  // VK ID OAuth
+  VK_CLIENT_ID: z.string().default('mock_vk_client_id'),
+  VK_CLIENT_SECRET: z.string().default('mock_vk_client_secret'),
+  VK_REDIRECT_URI: z.string().default('http://localhost:5000/api/auth/vk/callback'),
+
   // SMTP configuration
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.preprocess((val) => (val ? Number(val) : 465), z.number()),

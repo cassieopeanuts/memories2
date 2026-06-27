@@ -7,6 +7,9 @@ import {
   sberCallback,
   tbankAuth, 
   tbankCallback,
+  vkAuth,
+  vkCallback,
+  vkTokenAuth,
   mockLoginConfirm, 
   demoLogin, 
   checkEmail, 
@@ -59,6 +62,9 @@ router.get('/sber', authLimiter, sberAuth);
 router.get('/sber/callback', sberCallback);
 router.get('/tbank', authLimiter, tbankAuth);
 router.get('/tbank/callback', tbankCallback);
+router.get('/vk', authLimiter, vkAuth);
+router.get('/vk/callback', vkCallback);
+router.post('/vk/token', authLimiter, vkTokenAuth);
 router.get('/mock-login-confirm', mockLoginConfirm);
 
 // Demo Login

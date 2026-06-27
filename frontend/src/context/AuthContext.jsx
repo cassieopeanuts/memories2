@@ -21,9 +21,10 @@ export function AuthProvider({ children }) {
   // Helper to set cookie for Next.js middleware access
   const setTokenCookie = (jwtToken) => {
     if (jwtToken) {
-      document.cookie = `token=${jwtToken}; path=/; max-age=31536000; SameSite=Strict; Secure`;
+      const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      document.cookie = `token=${jwtToken}; path=/; max-age=31536000; SameSite=Lax${isSecure ? '; Secure' : ''}`;
     } else {
-      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict; Secure';
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     }
   };
 

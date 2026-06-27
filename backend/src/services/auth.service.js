@@ -7,7 +7,7 @@ export const JWT_SECRET = env.JWT_SECRET;
 /**
  * Find or create user in PostgreSQL
  */
-export async function findOrCreateUser({ yandexId, sberId, tbankId, name, email }) {
+export async function findOrCreateUser({ yandexId, sberId, tbankId, vkId, name, email }) {
   try {
     let result;
     // 1. First, try searching by the specific SSO ID provided
@@ -17,6 +17,8 @@ export async function findOrCreateUser({ yandexId, sberId, tbankId, name, email 
       result = await query('SELECT * FROM users WHERE sber_id = $1', [sberId]);
     } else if (tbankId) {
       result = await query('SELECT * FROM users WHERE tbank_id = $1', [tbankId]);
+    } else if (vkId) {
+      result = await query('SELECT * FROM users WHERE vk_id = $1', [vkId]);
     }
 
     if (result && result.rows.length > 0) {
@@ -39,6 +41,9 @@ export async function findOrCreateUser({ yandexId, sberId, tbankId, name, email 
         } else if (tbankId) {
           await query('UPDATE users SET tbank_id = $1 WHERE id = $2', [tbankId, existingUser.id]);
           existingUser.tbank_id = tbankId;
+        } else if (vkId) {
+          await query('UPDATE users SET vk_id = $1 WHERE id = $2', [vkId, existingUser.id]);
+          existingUser.vk_id = vkId;
         }
         
         console.log(`Linked SSO provider to existing user account: ${name} (${email})`);
@@ -47,23 +52,23 @@ export async function findOrCreateUser({ yandexId, sberId, tbankId, name, email 
     }
 
     // 3. Fallback: if we only had email (no SSO ID) and found it, return it
-    if (!yandexId && !sberId && !tbankId && email) {
+    if (!yandexId && !sberId && !tbankId && !vkId && email) {
       result = await query('SELECT * FROM users WHERE email = $1', [email]);
       if (result.rows.length > 0) {
         return result.rows[0];
       }
     }
 
-    if (!yandexId && !sberId && !tbankId && !email) {
-      throw new Error('Either Yandex ID, Sber ID, T-Bank ID, or Email must be provided');
+    if (!yandexId && !sberId && !tbankId && !vkId && !email) {
+      throw new Error('Either Yandex ID, Sber ID, T-Bank ID, VK ID, or Email must be provided');
     }
 
     // Create new user if not found anywhere
     const insertResult = await query(
-      `INSERT INTO users (yandex_id, sber_id, tbank_id, name, email) 
-       VALUES ($1, $2, $3, $4, $5) 
+      `INSERT INTO users (yandex_id, sber_id, tbank_id, vk_id, name, email) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING *`,
-      [yandexId || null, sberId || null, tbankId || null, name, email || '']
+      [yandexId || null, sberId || null, tbankId || null, vkId || null, name, email || '']
     );
     
     const user = insertResult.rows[0];
@@ -118,6 +123,12 @@ export function getMockProfile(provider, mockId = '12345') {
       id: `tb-${mockId}`,
       name: 'Татьяна Т-Банкова',
       email: 'tanya.tbank@example.ru'
+    };
+  } else if (provider === 'vk') {
+    return {
+      id: `vk-${mockId}`,
+      name: 'Владимир Вконтактев',
+      email: 'vova.vk@example.ru'
     };
   }
   return null;

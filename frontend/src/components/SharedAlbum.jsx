@@ -242,14 +242,18 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
             )}
 
             {selectedPhoto.mime_type && selectedPhoto.mime_type.startsWith('video/') ? (
-              <video
-                key={selectedIndex}
-                src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
-                controls
-                autoPlay
-                onClick={(e) => e.stopPropagation()}
-                className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl animate-photo-entry cursor-default"
-              />
+              <div 
+                onClick={(e) => e.stopPropagation()} 
+                className="max-w-full max-h-[80vh] flex items-center justify-center"
+              >
+                <video
+                  key={selectedIndex}
+                  src={selectedPhoto.url.startsWith('http') ? selectedPhoto.url : `${backendUrl}${selectedPhoto.url}`}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-full rounded-2xl object-contain shadow-2xl animate-photo-entry cursor-default"
+                />
+              </div>
             ) : (
               <img
                 key={selectedIndex}

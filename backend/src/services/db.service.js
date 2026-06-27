@@ -93,6 +93,13 @@ export async function mockQuery(text, params = []) {
     return { rows };
   }
 
+  // 2d. SELECT * FROM users WHERE vk_id = $1
+  if (queryText.includes('SELECT * FROM users WHERE vk_id =')) {
+    const vkId = params[0];
+    const rows = db.users.filter(u => u.vk_id === vkId);
+    return { rows };
+  }
+
   // 2c. SELECT * FROM users WHERE email = $1
   if (queryText.includes('SELECT * FROM users WHERE email =')) {
     const email = params[0];
@@ -109,6 +116,7 @@ export async function mockQuery(text, params = []) {
       yandex_id: u.yandex_id,
       sber_id: u.sber_id,
       tbank_id: u.tbank_id,
+      vk_id: u.vk_id,
       pin_code: u.pin_code,
       storage_limit: u.storage_limit,
       push_subscriptions: u.push_subscriptions || [],
@@ -135,6 +143,7 @@ export async function mockQuery(text, params = []) {
       yandex_id: null,
       sber_id: null,
       tbank_id: null,
+      vk_id: null,
       name: 'Пользователь',
       email: '',
       pin_code: null,
@@ -228,6 +237,18 @@ export async function mockQuery(text, params = []) {
     const idx = db.users.findIndex(u => u.id === id);
     if (idx !== -1) {
       db.users[idx].tbank_id = tbankId;
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // 4h. UPDATE users SET vk_id = $1 WHERE id = $2
+  if (queryText.includes('UPDATE users SET vk_id =')) {
+    const [vkId, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].vk_id = vkId;
       writeMockDb(db);
       return { rows: [db.users[idx]] };
     }

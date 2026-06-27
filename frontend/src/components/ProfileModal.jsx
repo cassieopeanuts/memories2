@@ -35,6 +35,7 @@ export default function ProfileModal({ user, setUser, token, storage, onClose })
     if (user.id?.toString().startsWith('yd-') || user.yandexId) return 'Яндекс ID';
     if (user.id?.toString().startsWith('sb-')) return 'Сбер ID';
     if (user.id?.toString().startsWith('tb-')) return 'Т-Банк ID';
+    if (user.id?.toString().startsWith('vk-') || user.vkId) return 'VK ID';
     return 'Электронная почта';
   };
 

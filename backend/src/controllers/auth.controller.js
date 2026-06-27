@@ -42,15 +42,18 @@ function isValidOrigin(originUrl) {
 function getMockOauthHtml(provider, profile, targetOrigin) {
   const isYandex = provider === 'yandex';
   const isSber = provider === 'sber';
-  const logo = isYandex ? 'Я' : (isSber ? '✔' : 'Т');
-  const logoBg = isYandex ? '#FC3F1D' : (isSber ? '#128024' : '#FFDD2D');
-  const logoColor = isYandex || isSber ? 'white' : 'black';
-  const providerName = isYandex ? 'Яндекс ID' : (isSber ? 'Сбер ID' : 'Т-Банк ID');
+  const isVk = provider === 'vk';
+  const logo = isYandex ? 'Я' : (isSber ? '✔' : (isVk ? 'VK' : 'Т'));
+  const logoBg = isYandex ? '#FC3F1D' : (isSber ? '#128024' : (isVk ? '#0077FF' : '#FFDD2D'));
+  const logoColor = isYandex || isSber || isVk ? 'white' : 'black';
+  const providerName = isYandex ? 'Яндекс ID' : (isSber ? 'Сбер ID' : (isVk ? 'VK ID' : 'Т-Банк ID'));
   const btnClass = isYandex 
     ? 'background-color: #FFCC00; color: #000; font-weight: 600;' 
     : (isSber 
       ? 'background-image: linear-gradient(to right, #21A038, #128024); color: #fff; font-weight: 600;'
-      : 'background-color: #000000; color: #fff; font-weight: 600;');
+      : (isVk
+        ? 'background-color: #0077FF; color: #fff; font-weight: 600;'
+        : 'background-color: #000000; color: #fff; font-weight: 600;'));
   
   return `
     <!DOCTYPE html>
@@ -543,6 +546,147 @@ export async function tbankCallback(req, res, next) {
   }
 }
 
+// VK ID OAuth Real & Simulation
+export async function vkAuth(req, res, next) {
+  try {
+    const { origin } = req.query;
+    const targetOrigin = isValidOrigin(origin) ? (origin || env.FRONTEND_URL) : env.FRONTEND_URL;
+    const clientId = env.VK_CLIENT_ID;
+
+    if (clientId === 'mock_vk_client_id' || !clientId) {
+      const mockProfile = getMockProfile('vk');
+      return res.send(getMockOauthHtml('vk', mockProfile, targetOrigin));
+    }
+
+    const state = crypto.randomBytes(16).toString('hex');
+    res.setHeader('Set-Cookie', `vk_auth_state=${state}; Max-Age=300; Path=/; HttpOnly; Secure; SameSite=Lax`);
+
+    const redirectUri = encodeURIComponent(env.VK_REDIRECT_URI);
+    const vkUrl = `https://oauth.vk.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&display=page&scope=email&response_type=code&v=5.131&state=${state}`;
+    res.redirect(vkUrl);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function vkCallback(req, res, next) {
+  const { code, state } = req.query;
+
+  if (!code) {
+    return res.status(400).send('Authorization code missing');
+  }
+
+  // State validation
+  const cookies = req.headers.cookie || '';
+  const stateCookie = cookies.split(';').find(c => c.trim().startsWith('vk_auth_state='));
+  const savedState = stateCookie ? stateCookie.split('=')[1] : null;
+
+  if (savedState && state !== savedState) {
+    console.warn('VK ID State mismatch! Potential CSRF.');
+  }
+
+  try {
+    // Exchange code for access token
+    const tokenResponse = await fetch('https://oauth.vk.com/access_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: env.VK_CLIENT_ID,
+        client_secret: env.VK_CLIENT_SECRET,
+        redirect_uri: env.VK_REDIRECT_URI,
+        code: code
+      })
+    });
+
+    const tokenData = await tokenResponse.json();
+    if (!tokenData.access_token) {
+      throw new Error(tokenData.error_description || 'Failed to retrieve VK access token');
+    }
+
+    const userId = tokenData.user_id;
+    const email = tokenData.email || '';
+
+    // Fetch user profile info via users.get
+    const profileResponse = await fetch(`https://api.vk.com/method/users.get?user_ids=${userId}&fields=photo_50&access_token=${tokenData.access_token}&v=5.131`);
+    const profileData = await profileResponse.json();
+
+    if (profileData.error) {
+      throw new Error(profileData.error.error_msg || 'Failed to retrieve VK user info');
+    }
+
+    const vkUser = profileData.response && profileData.response[0];
+    if (!vkUser) {
+      throw new Error('No user data returned from VK API');
+    }
+
+    const name = `${vkUser.first_name || ''} ${vkUser.last_name || ''}`.trim() || 'Пользователь VK';
+
+    const user = await findOrCreateUser({
+      vkId: String(userId),
+      name: name,
+      email: email
+    });
+
+    const token = generateToken(user);
+
+    // Trigger welcome push
+    sendPushNotification(user.id, 'Привет!', 'Добро пожаловать через VK ID', '/')
+      .catch(err => console.error('VK ID login push failed:', err));
+
+    res.redirect(`${env.FRONTEND_URL}/auth-callback?token=${token}`);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function vkTokenAuth(req, res, next) {
+  const { accessToken } = req.body;
+
+  if (!accessToken) {
+    return res.status(400).json({ error: 'Access token missing' });
+  }
+
+  try {
+    // Exchange/fetch user info from OIDC UserInfo endpoint
+    const infoResponse = await fetch('https://id.vk.com/oauth2/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    if (!infoResponse.ok) {
+      const errText = await infoResponse.text();
+      throw new Error(`Failed to retrieve user info from VK ID: ${errText}`);
+    }
+
+    const infoData = await infoResponse.json();
+
+    const userId = infoData.sub || infoData.user_id;
+    const email = infoData.email || '';
+    const name = infoData.name || [infoData.given_name, infoData.family_name].filter(Boolean).join(' ') || 'Пользователь VK';
+
+    if (!userId) {
+      throw new Error('User ID not found in VK ID userinfo response');
+    }
+
+    const user = await findOrCreateUser({
+      vkId: String(userId),
+      name: name,
+      email: email
+    });
+
+    const token = generateToken(user);
+
+    // Trigger welcome push
+    sendPushNotification(user.id, 'Привет!', 'Добро пожаловать через VK ID', '/')
+      .catch(err => console.error('VK ID login push failed:', err));
+
+    res.json({ token });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // 3. Confirm Mock SSO Authorization
 export async function mockLoginConfirm(req, res, next) {
   const { provider, origin } = req.query;
@@ -554,6 +698,7 @@ export async function mockLoginConfirm(req, res, next) {
       yandexId: provider === 'yandex' ? mockProfile.id : null,
       sberId: provider === 'sber' ? mockProfile.id : null,
       tbankId: provider === 'tbank' ? mockProfile.id : null,
+      vkId: provider === 'vk' ? mockProfile.id : null,
       name: mockProfile.name,
       email: mockProfile.email
     });
@@ -580,6 +725,7 @@ export async function demoLogin(req, res, next) {
       yandexId: provider === 'yandex' ? mockProfile.id : null,
       sberId: provider === 'sber' ? mockProfile.id : null,
       tbankId: provider === 'tbank' ? mockProfile.id : null,
+      vkId: provider === 'vk' ? mockProfile.id : null,
       name: mockProfile.name,
       email: mockProfile.email
     });
@@ -775,7 +921,7 @@ export async function verifyPin(req, res, next) {
 // 10. Get Profile Details
 export async function getProfile(req, res, next) {
   try {
-    const result = await query('SELECT id, name, email, yandex_id, pin_code, storage_limit, accepted_offer, accepted_offer_at, accepted_offer_version, card_mask, card_brand FROM users WHERE id = $1', [req.user.id]);
+    const result = await query('SELECT id, name, email, yandex_id, vk_id, pin_code, storage_limit, accepted_offer, accepted_offer_at, accepted_offer_version, card_mask, card_brand FROM users WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Пользователь не найден.' });
     }
@@ -785,6 +931,7 @@ export async function getProfile(req, res, next) {
       name: user.name,
       email: user.email,
       yandexId: user.yandex_id,
+      vkId: user.vk_id,
       hasPin: !!user.pin_code,
       storageLimit: parseInt(user.storage_limit, 10),
       acceptedOffer: user.accepted_offer === true || user.accepted_offer === 'true',
