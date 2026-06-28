@@ -169,6 +169,75 @@ html[data-theme="peony"] {
   --color-brand-900: #2c2b30;
 }
 
+html[data-theme="black-peony"] {
+  --color-brand-50: #110b0d;
+  --color-brand-100: #1c1215;
+  --color-brand-200: #382025;
+  --color-brand-300: #572f37;
+  --color-brand-400: #7b4c56;
+  --color-brand-500: #d95c7b;
+  --color-brand-600: #be4661;
+  --color-brand-700: #a3344c;
+  --color-brand-800: #f5d5dd;
+  --color-brand-900: #FAF5F6;
+}
+
+/* Dark mode overrides for Black Peony theme */
+html[data-theme="black-peony"] .bg-white {
+  background-color: var(--color-brand-100) !important;
+}
+html[data-theme="black-peony"] .bg-white\/90 {
+  background-color: rgba(28, 18, 21, 0.92) !important;
+}
+html[data-theme="black-peony"] .bg-white\/80 {
+  background-color: rgba(28, 18, 21, 0.82) !important;
+}
+html[data-theme="black-peony"] .bg-brand-50 {
+  background-color: var(--color-brand-50) !important;
+}
+html[data-theme="black-peony"] .hover\:bg-brand-50:hover {
+  background-color: var(--color-brand-200) !important;
+}
+html[data-theme="black-peony"] .text-brand-900 {
+  color: var(--color-brand-900) !important;
+}
+html[data-theme="black-peony"] .text-brand-800 {
+  color: var(--color-brand-800) !important;
+}
+html[data-theme="black-peony"] .text-brand-700 {
+  color: var(--color-brand-800) !important;
+}
+html[data-theme="black-peony"] .text-brand-600 {
+  color: var(--color-brand-800) !important;
+}
+html[data-theme="black-peony"] .text-brand-500 {
+  color: var(--color-brand-500) !important;
+}
+html[data-theme="black-peony"] .border-brand-200\/40 {
+  border-color: rgba(87, 47, 55, 0.4) !important;
+}
+html[data-theme="black-peony"] .border-brand-200\/60 {
+  border-color: rgba(87, 47, 55, 0.6) !important;
+}
+html[data-theme="black-peony"] .border-brand-200 {
+  border-color: var(--color-brand-200) !important;
+}
+html[data-theme="black-peony"] .border-brand-300 {
+  border-color: var(--color-brand-300) !important;
+}
+html[data-theme="black-peony"] input {
+  background-color: var(--color-brand-200) !important;
+  color: var(--color-brand-900) !important;
+  border-color: var(--color-brand-300) !important;
+}
+html[data-theme="black-peony"] input::placeholder {
+  color: var(--color-brand-400) !important;
+}
+html[data-theme="black-peony"] select {
+  background-color: var(--color-brand-200) !important;
+  color: var(--color-brand-900) !important;
+}
+
 body {
   background-color: var(--color-brand-50);
   color: var(--color-brand-900);
@@ -229,6 +298,10 @@ html[data-theme="mint"] body::before {
 
 html[data-theme="autumn"] body::before {
   filter: hue-rotate(-20deg) saturate(1.2) opacity(0.3);
+}
+
+html[data-theme="black-peony"] body::before {
+  filter: invert(1) hue-rotate(120deg) opacity(0.06);
 }
 
 body::before {
