@@ -380,8 +380,33 @@ export async function mockQuery(text, params = []) {
 
   // 6d. UPDATE photos SET is_deleted = $1, deleted_at = $2 WHERE id = $3 (or id = ANY($3))
   if (queryText.includes('UPDATE photos SET is_deleted =')) {
-    const [isDeleted, deletedAt, idOrIds, userId] = params;
-    const isDeletedBool = isDeleted === true || isDeleted === 'true';
+    let isDeletedBool = false;
+    let deletedAt = null;
+    let idOrIds = null;
+    let userId = null;
+
+    if (queryText.includes('is_deleted = true')) {
+      isDeletedBool = true;
+      deletedAt = new Date().toISOString();
+    } else if (queryText.includes('is_deleted = false')) {
+      isDeletedBool = false;
+      deletedAt = null;
+    }
+
+    if (params.length === 2) {
+      idOrIds = params[0];
+      userId = params[1];
+    } else if (params.length === 4) {
+      const [isDeletedParam, deletedAtParam, idOrIdsParam, userIdParam] = params;
+      isDeletedBool = isDeletedParam === true || isDeletedParam === 'true';
+      deletedAt = deletedAtParam;
+      idOrIds = idOrIdsParam;
+      userId = userIdParam;
+    } else {
+      idOrIds = params[0];
+      userId = params[1];
+    }
+
     const targetIds = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
     
     let updatedRows = [];
