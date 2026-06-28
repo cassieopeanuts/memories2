@@ -21,6 +21,16 @@ export async function getUploadUrl(req, res, next) {
     return res.status(400).json({ error: 'Не все параметры файла указаны.' });
   }
 
+  const lowerType = fileType.toLowerCase();
+  const fileExt = path.extname(fileName).toLowerCase();
+  const isImage = lowerType.startsWith('image/');
+  const isVideo = lowerType.startsWith('video/');
+  const isAllowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.mp4', '.mov', '.avi', '.mkv', '.webm'].includes(fileExt);
+
+  if (!isImage && !isVideo && !isAllowedExt) {
+    return res.status(400).json({ error: 'Неподдерживаемый формат файла. Разрешены только фотографии и видео.' });
+  }
+
   try {
     // Calculate space usage
     const sizeResult = await query('SELECT SUM(size) as total_size FROM photos WHERE user_id = $1', [userId]);
@@ -61,6 +71,16 @@ export async function confirmUpload(req, res, next) {
 
   if (!s3Key || !originalName || !size || !mimeType) {
     return res.status(400).json({ error: 'Не все метаданные файла предоставлены.' });
+  }
+
+  const lowerType = mimeType.toLowerCase();
+  const fileExt = path.extname(originalName).toLowerCase();
+  const isImage = lowerType.startsWith('image/');
+  const isVideo = lowerType.startsWith('video/');
+  const isAllowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.mp4', '.mov', '.avi', '.mkv', '.webm'].includes(fileExt);
+
+  if (!isImage && !isVideo && !isAllowedExt) {
+    return res.status(400).json({ error: 'Неподдерживаемый формат файла. Разрешены только фотографии и видео.' });
   }
 
   try {

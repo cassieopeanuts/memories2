@@ -40,11 +40,33 @@ export default function UploadZone({ token, onUploadComplete }) {
   };
 
   const handleFiles = (files) => {
-    // Allow images and videos
-    const allowedFiles = files.filter(file => file.type.startsWith('image/') || file.type.startsWith('video/'));
+    const allowedFiles = [];
+    const skippedFiles = [];
+    
+    files.forEach(file => {
+      const type = file.type || '';
+      // Support common media file extensions as fallback if file.type is blank
+      const ext = file.name.split('.').pop().toLowerCase();
+      const isAllowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext);
+      
+      const isAllowed = type.startsWith('image/') || type.startsWith('video/') || (type === '' && isAllowedExt);
+      if (isAllowed) {
+        allowedFiles.push(file);
+      } else {
+        skippedFiles.push(file.name);
+      }
+    });
+
+    if (skippedFiles.length > 0) {
+      setZoneError(`Неподдерживаемые файлы были пропущены: ${skippedFiles.join(', ')}. Разрешены только фото и видео.`);
+      setTimeout(() => setZoneError(''), 5000);
+    }
+
     if (allowedFiles.length === 0) {
-      setZoneError('Пожалуйста, выберите только фотографии или видеоролики.');
-      setTimeout(() => setZoneError(''), 4000);
+      if (skippedFiles.length === 0) {
+        setZoneError('Пожалуйста, выберите только фотографии или видеоролики.');
+        setTimeout(() => setZoneError(''), 4000);
+      }
       return;
     }
     
