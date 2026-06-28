@@ -169,7 +169,7 @@ export default function Dashboard() {
 
   // MAIN SYSTEM (LOGGED IN & UNLOCKED)
   return (
-    <div className="min-h-screen flex flex-col selection:bg-brand-200 bg-brand-50">
+    <div className="min-h-screen flex flex-col selection:bg-brand-200 bg-brand-50 overflow-x-hidden">
       {/* Authenticated Sticky Glass Header */}
       <header className="sticky top-0 z-40 w-full glass-header py-4 px-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
