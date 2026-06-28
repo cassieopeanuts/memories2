@@ -680,6 +680,23 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     e.dataTransfer.effectAllowed = 'copyMove';
     e.dataTransfer.setData('photoId', id);
     e.dataTransfer.setData('text/plain', id);
+
+    // Set custom drag image to the raw image/video element within the card container.
+    // This stops browsers from rendering extra overlays (checkboxes, eye icons) and native white borders.
+    try {
+      const cardEl = e.currentTarget;
+      const imgEl = cardEl.querySelector('img');
+      if (imgEl) {
+        e.dataTransfer.setDragImage(imgEl, imgEl.clientWidth / 2 || 100, imgEl.clientHeight / 2 || 100);
+      } else {
+        const videoEl = cardEl.querySelector('video');
+        if (videoEl) {
+          e.dataTransfer.setDragImage(videoEl, videoEl.clientWidth / 2 || 100, videoEl.clientHeight / 2 || 100);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not set custom drag image:', err.message);
+    }
   };
 
   const handleDropPhotoOnAlbum = async (e, albumId) => {

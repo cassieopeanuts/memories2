@@ -432,3 +432,25 @@ body.selection-mode-active .fixed.bottom-6.left-6 {
   transform: translateY(24px) !important;
   visibility: hidden !important;
 }
+
+/* ============================================================
+   MOBILE DRAG & DROP POLYFILL PREVIEW STYLING
+   ============================================================ */
+
+/* Remove default polyfill outline container frame, shadows, and borders */
+.dnd-poly-drag-image {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  transition: none !important;
+}
+
+/* Hide hover/active dark overlay and eye icon inside the dragged clone card */
+.dnd-poly-drag-image .absolute.inset-0.bg-brand-950\/20,
+.dnd-poly-drag-image .group-hover\:opacity-100 {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
