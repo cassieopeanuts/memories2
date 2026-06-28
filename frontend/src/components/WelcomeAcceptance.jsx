@@ -6,7 +6,7 @@ export default function WelcomeAcceptance({ user, onAccept, onViewOffer, onLogou
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

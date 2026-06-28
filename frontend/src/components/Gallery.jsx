@@ -155,7 +155,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
 
 
-  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
   // Fetch albums on mount or token change
   const fetchAlbums = async (selectDefault = false) => {

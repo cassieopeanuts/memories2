@@ -6,7 +6,7 @@ export default function ProfileModal({ user, setUser, token, storage, onClose })
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return '0 Б';

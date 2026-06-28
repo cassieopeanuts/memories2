@@ -14,7 +14,7 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
   const [touchStartX, setTouchStartX] = useState(null);
   const lightboxRef = useRef(null);
 
-  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
   useEffect(() => {
     const fetchSharedAlbum = async () => {

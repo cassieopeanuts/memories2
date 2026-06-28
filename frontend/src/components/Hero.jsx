@@ -31,7 +31,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
   const [isEmailChecked, setIsEmailChecked] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const timerRef = useRef(null);
-  const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
   const [yandexAccounts, setYandexAccounts] = useState([]);
   const [showYandexAccountsModal, setShowYandexAccountsModal] = useState(false);
