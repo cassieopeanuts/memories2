@@ -378,6 +378,16 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     }
   };
 
+  const getNextIndexAfterDelete = (currentIndex, photoList) => {
+    if (photoList.length <= 1) {
+      return null;
+    }
+    if (currentIndex === photoList.length - 1) {
+      return currentIndex - 1;
+    }
+    return currentIndex;
+  };
+
   // Remove photo from custom album
   const handleRemovePhotoFromAlbum = async (photoId) => {
     if (!activeAlbum || activeAlbum.name === 'Общий') return;
@@ -388,7 +398,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       });
       if (!response.ok) throw new Error('Не удалось убрать фото из альбома');
       
-      setSelectedIndex(null);
+      const nextIndex = getNextIndexAfterDelete(selectedIndex, photos);
+      setSelectedIndex(nextIndex);
       setShowOptionsDropdown(false);
       fetchAlbumPhotos(activeAlbum.id);
       showToast('Фотография убрана из альбома.');
@@ -410,7 +421,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           });
           if (!response.ok) throw new Error('Не удалось переместить фото в корзину');
           
-          setSelectedIndex(null);
+          const nextIndex = getNextIndexAfterDelete(selectedIndex, photos);
+          setSelectedIndex(nextIndex);
           setShowOptionsDropdown(false);
           if (activeAlbum) {
             fetchAlbumPhotos(activeAlbum.id);
@@ -436,7 +448,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       });
       if (!response.ok) throw new Error('Не удалось восстановить фотографию');
       
-      setSelectedIndex(null);
+      const nextIndex = getNextIndexAfterDelete(selectedIndex, photos);
+      setSelectedIndex(nextIndex);
       if (activeAlbum) {
         fetchAlbumPhotos(activeAlbum.id);
       }
@@ -464,7 +477,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           });
           if (!response.ok) throw new Error('Не удалось окончательно удалить фотографию');
           
-          setSelectedIndex(null);
+          const nextIndex = getNextIndexAfterDelete(selectedIndex, photos);
+          setSelectedIndex(nextIndex);
           if (activeAlbum) {
             fetchAlbumPhotos(activeAlbum.id);
           }
@@ -1196,7 +1210,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                         setSelectedIndex(index);
                       }
                     }}
-                    className={`group relative aspect-square bg-brand-100 rounded-3xl overflow-hidden shadow-sm card-hover cursor-pointer animate-photo-entry
+                    className={`group relative aspect-square bg-brand-100 rounded-3xl overflow-hidden shadow-sm card-hover cursor-pointer
                       ${isSelected ? 'ring-4 ring-brand-500 ring-offset-2' : ''}
                     `}
                   >
