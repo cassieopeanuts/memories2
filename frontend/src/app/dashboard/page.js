@@ -288,7 +288,7 @@ export default function Dashboard() {
             <div className="flex-1">
               <h4 className="text-sm font-semibold text-brand-900 mb-1">Как установить на iPhone 📱</h4>
               <p className="text-xs text-brand-700 font-light leading-relaxed">
-                Нажмите кнопку <span className="font-semibold">«Поделиться» 📤</span> внизу экрана Safari, затем выберите <span className="font-semibold">«На экран Домой» ➕</span>. Иконка появится на рабочем столе телефона!
+                Нажмите кнопку <span className="font-semibold">«Поделиться» 📤</span> внизу экрана Safari, затем нажмите <span className="font-semibold">«Показать больше»</span> (или прокрутите меню вниз) и выберите <span className="font-semibold">«На экран Домой» ➕</span>. Иконка появится на рабочем столе телефона!
               </p>
             </div>
             <button 
