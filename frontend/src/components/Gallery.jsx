@@ -252,7 +252,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   };
 
   const handleDeleteAlbum = (albumId, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     setConfirmConfig({
       isOpen: true,
       message: 'Вы действительно хотите удалить этот альбом? Фотографии останутся в общем альбоме.',
@@ -765,6 +765,13 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     return 'фотографий';
   };
 
+  const getAlbumCountText = (count, albumName) => {
+    if (albumName === 'Видео') {
+      return `${count} видео`;
+    }
+    return `${count} ${getPhotoWord(count)}`;
+  };
+
   const handleCycleAlbum = (direction) => {
     if (albums.length <= 1 || !activeAlbum) return;
     const currentIndex = albums.findIndex(a => a.id === activeAlbum.id);
@@ -809,7 +816,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                 {activeAlbum.name}
               </h4>
               <p className="text-[10px] text-brand-600 font-medium">
-                {photoCount} {getPhotoWord(photoCount)}
+                {getAlbumCountText(photoCount, activeAlbum.name)}
               </p>
             </div>
           </div>
@@ -972,7 +979,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                       {album.name}
                     </h4>
                     <p className="text-[9px] text-brand-500 font-semibold mt-0.5 uppercase tracking-wide leading-none">
-                      {photoCount} {getPhotoWord(photoCount)}
+                      {getAlbumCountText(photoCount, album.name)}
                     </p>
                   </div>
                 </div>
@@ -1053,10 +1060,12 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pt-4 border-t border-brand-200/30">
             <div>
               <h3 className="font-serif text-lg md:text-xl text-brand-900 font-semibold">
-                {activeAlbum.id === 'trash' ? 'Корзина' : `Фотографии: ${activeAlbum.name}`}
+                {activeAlbum.id === 'trash' 
+                  ? 'Корзина' 
+                  : (activeAlbum.name === 'Видео' ? 'Видео' : `Фотографии: ${activeAlbum.name}`)}
               </h3>
               <p className="text-[11px] text-brand-900 font-light mt-0.5">
-                {totalPhotos} {getPhotoWord(totalPhotos)}
+                {getAlbumCountText(totalPhotos, activeAlbum.name)}
               </p>
             </div>
 
@@ -1841,7 +1850,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                           </div>
                           <div className="min-w-0">
                             <h4 className="font-serif text-xs text-brand-900 truncate">{album.name}</h4>
-                            <p className="text-[10px] text-brand-500 font-medium">{photoCount} {getPhotoWord(photoCount)}</p>
+                            <p className="text-[10px] text-brand-500 font-medium">{getAlbumCountText(photoCount, album.name)}</p>
                           </div>
                         </div>
                         
