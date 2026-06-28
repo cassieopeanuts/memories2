@@ -25,6 +25,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   // Custom album creation modal
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
+  const [createdAlbumContext, setCreatedAlbumContext] = useState(null);
 
   // Album selector modal & search query
   const [showAlbumSelector, setShowAlbumSelector] = useState(false);
@@ -244,8 +245,8 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       
       setNewAlbumName('');
       setShowCreateAlbum(false);
-      fetchAlbums();
-      showToast('Альбом успешно создан.');
+      await fetchAlbums();
+      setCreatedAlbumContext(data.album);
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -1397,6 +1398,69 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           </form>
         </div>
       )}
+      {/* Modal: Album Created Action Prompt */}
+      {createdAlbumContext && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 backdrop-blur-md">
+          <div className="bg-white/90 rounded-[28px] p-6 max-w-sm w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry text-center">
+            <div className="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mx-auto mb-4">
+              <FolderPlus className="w-6 h-6" />
+            </div>
+            
+            <h3 className="font-serif text-lg font-semibold text-brand-900 mb-2">
+              Альбом создан!
+            </h3>
+            
+            <p className="text-xs text-brand-900/60 font-light mb-6 leading-relaxed">
+              Вы успешно создали альбом <strong>«{createdAlbumContext.name}»</strong>. Что вы хотите сделать дальше?
+            </p>
+
+            <div className="space-y-2.5">
+              {/* Option 1: Select existing photos */}
+              <button
+                onClick={() => {
+                  const general = albums.find(a => a.name === 'Общий');
+                  if (general) {
+                    setActiveAlbum(general);
+                  }
+                  setIsSelectMode(true);
+                  setSelectedPhotoIds([]);
+                  setTargetAlbumForSelect(createdAlbumContext);
+                  setCreatedAlbumContext(null);
+                  showToast('Выберите воспоминания в галерее для добавления.');
+                }}
+                className="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+              >
+                Выбрать воспоминания из галереи
+              </button>
+
+              {/* Option 2: Upload new photos */}
+              <button
+                onClick={() => {
+                  setActiveAlbum(createdAlbumContext);
+                  setCreatedAlbumContext(null);
+                  showToast('Используйте область загрузки выше для добавления новых файлов.');
+                }}
+                className="w-full py-3 bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-900 rounded-2xl text-xs font-semibold cursor-pointer transition-colors"
+              >
+                Загрузить новые файлы
+              </button>
+
+              {/* Option 3: Do nothing / Close */}
+              <button
+                onClick={() => {
+                  setActiveAlbum(createdAlbumContext);
+                  setCreatedAlbumContext(null);
+                }}
+                className="w-full py-3 text-brand-500 hover:text-brand-700 text-xs font-semibold cursor-pointer"
+              >
+                Позже
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Modal: Share Album */}
       {showShareModal && activeAlbum && (
