@@ -1721,7 +1721,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                           </button>
                         )}
 
-                        {/* Удалить в корзину */}
+                        {/* Удалить */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1730,7 +1730,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                           }}
                           className="w-full text-left px-4 py-3 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors font-semibold cursor-pointer flex items-center justify-between border-t border-neutral-800/40"
                         >
-                          <span>Удалить в корзину</span>
+                          <span>Удалить</span>
                           <Trash2 className="w-4 h-4 text-red-400" />
                         </button>
                       </>
