@@ -464,7 +464,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   const handleDeletePhotoPermanent = (photoId) => {
     setConfirmConfig({
       isOpen: true,
-      message: 'Вы уверены, что хотите удалить эту фотографию навсегда? Данные будут полностью удалены из облачного хранилища Selectel S3, и восстановить их будет невозможно.',
+      message: 'Вы уверены, что хотите удалить эту фотографию навсегда? Данные будут полностью удалены из хранилища воспоминаний Selectel S3, и восстановить их будет невозможно.',
       onConfirm: async () => {
         try {
           const response = await fetch(`${backendUrl}/api/photos/bulk-delete-permanent`, {
@@ -525,7 +525,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
     if (selectedPhotoIds.length === 0) return;
     setConfirmConfig({
       isOpen: true,
-      message: `Вы уверены, что хотите окончательно удалить ${selectedPhotoIds.length} ${getPhotoWord(selectedPhotoIds.length)}? Это действие сотрет все файлы из облачного хранилища и будет абсолютно необратимо.`,
+      message: `Вы уверены, что хотите окончательно удалить ${selectedPhotoIds.length} ${getPhotoWord(selectedPhotoIds.length)}? Это действие сотрет все файлы из хранилища воспоминаний и будет абсолютно необратимо.`,
       onConfirm: async () => {
         try {
           const response = await fetch(`${backendUrl}/api/photos/bulk-delete-permanent`, {
@@ -547,7 +547,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
             onUploadComplete();
           }
           fetchAlbums();
-          showToast('Выбранные фотографии навсегда удалены из облака.');
+          showToast('Выбранные фотографии навсегда удалены из хранилища.');
         } catch (err) {
           showToast(err.message, 'error');
         }
@@ -559,7 +559,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   const handleEmptyTrash = () => {
     setConfirmConfig({
       isOpen: true,
-      message: 'Вы уверены, что хотите полностью очистить корзину? Все удаленные фотографии будут безвозвратно удалены из облака Selectel S3.',
+      message: 'Вы уверены, что хотите полностью очистить корзину? Все удаленные фотографии будут безвозвратно удалены из хранилища воспоминаний Selectel S3.',
       onConfirm: async () => {
         try {
           const response = await fetch(`${backendUrl}/api/photos/trash/empty`, {

@@ -135,7 +135,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
       
       {/* Title block */}
       <div className="text-center max-w-lg mx-auto mb-10">
-        <h3 className="font-serif text-2xl md:text-3xl text-brand-900 font-semibold mb-3">Увеличьте облако воспоминаний</h3>
+        <h3 className="font-serif text-2xl md:text-3xl text-brand-900 font-semibold mb-3">Увеличьте хранилище воспоминаний</h3>
         <p className="text-xs text-brand-900 font-light leading-relaxed">
           Сохраняйте дорогие сердцу фотографии в оригинальном качестве. Выберите объем, который подходит вашей семье. Локальная оплата российскими картами.
         </p>
@@ -315,7 +315,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                 </div>
                 <h4 className="font-serif text-lg font-semibold text-brand-900 mb-2">Оплата прошла успешно!</h4>
                 <p className="text-xs text-brand-900 font-light max-w-xs leading-relaxed mb-6">
-                  Мы бережно расширили ваше облако воспоминаний до **{selectedPlan ? selectedPlan.sizeText : ''}**. Приятного использования!
+                  Мы бережно расширили ваше хранилище воспоминаний до **{selectedPlan ? selectedPlan.sizeText : ''}**. Приятного использования!
                 </p>
                 <button
                   onClick={() => {

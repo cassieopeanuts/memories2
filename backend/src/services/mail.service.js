@@ -153,8 +153,8 @@ export async function sendStorageWarning(userId, email, name, currentBytes, limi
   const percentage = Math.min(100, Math.round((currentBytes / limitBytes) * 100));
 
   const subject = isOverLimit 
-    ? 'Заполнено место в вашем облаке — ЛегкоСохранить.рф' 
-    : 'Заканчивается свободное место в вашем облаке — ЛегкоСохранить.рф';
+    ? 'Заполнено место в вашем хранилище — ЛегкоСохранить.рф' 
+    : 'Заканчивается свободное место в вашем хранилище — ЛегкоСохранить.рф';
 
   const text = isOverLimit
     ? `Здравствуйте, ${name}!
@@ -217,7 +217,7 @@ export async function sendInactivityWarning(email, name, daysInactive = 150) {
   const text = `Здравствуйте, ${name}!
 Ваш аккаунт в фотохранилище ЛегкоСохранить.рф неактивен уже ${daysInactive} дней.
 Чтобы сохранить ваши фотографии и видеоматериалы, пожалуйста, совершите вход в аккаунт в течение следующих 30 дней.
-Если вы не выполните вход, через 30 дней (по истечении 180 дней неактивности) все ваши данные и файлы будут автоматически удалены навсегда из нашего облака в соответствии с политикой хранения.`;
+Если вы не выполните вход, через 30 дней (по истечении 180 дней неактивности) все ваши данные и файлы будут автоматически удалены навсегда из нашего хранилища в соответствии с политикой хранения.`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #fcf9f8;">
@@ -236,11 +236,11 @@ export async function sendInactivityWarning(email, name, daysInactive = 150) {
       </p>
       
       <div style="text-align: center; margin: 30px 0;">
-        <a href="https://легкосохранить.рф" style="background-color: #a45a44; color: white; padding: 12px 30px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block;">Войти в облако</a>
+        <a href="https://легкосохранить.рф" style="background-color: #a45a44; color: white; padding: 12px 30px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block;">Войти в хранилище</a>
       </div>
       
       <p style="color: #d32f2f; font-size: 13px; font-weight: bold; line-height: 1.6;">
-        Внимание: если вы не авторизуетесь на сайте, через 30 дней (по истечении 180 дней неактивности) все ваши альбомы, фотографии и видео файлы будут безвозвратно удалены из облака Selectel S3.
+        Внимание: если вы не авторизуетесь на сайте, через 30 дней (по истечении 180 дней неактивности) все ваши альбомы, фотографии и видео файлы будут безвозвратно удалены из хранилища Selectel S3.
       </p>
       
       <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">

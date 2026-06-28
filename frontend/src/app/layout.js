@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import BetaWrapper from "@/components/BetaWrapper";
 
 export const metadata = {
-  title: "ЛегкоСохранить.РФ — Ваше личное семейное облако",
+  title: "ЛегкоСохранить.РФ — Ваше личное семейное хранилище",
   description: "Безопасное хранилище для ваших семейных фото и видеоархивов с сохранением оригинального качества.",
   manifest: "/manifest.json",
   icons: {

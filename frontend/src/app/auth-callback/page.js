@@ -36,7 +36,7 @@ function AuthCallbackContent() {
         Вход в систему...
       </h2>
       <p className="text-xs text-brand-600 font-light max-w-xs leading-relaxed">
-        Пожалуйста, подождите. Мы настраиваем ваше личное семейное облако.
+        Пожалуйста, подождите. Мы настраиваем ваше личное семейное хранилище.
       </p>
     </div>
   );

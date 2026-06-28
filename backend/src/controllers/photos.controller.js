@@ -42,7 +42,7 @@ export async function getUploadUrl(req, res, next) {
         .catch(err => console.error('[Storage Alert Upload-Url Error]', err));
 
       return res.status(400).json({ 
-        error: 'Ой, на вашем облаке не хватает памяти для этой фотографии. Вы можете удалить старые фото или перейти на расширенное хранилище.' 
+        error: 'Ой, в вашем хранилище воспоминаний не хватает памяти для этой фотографии. Вы можете удалить старые фото или перейти на расширенное хранилище.' 
       });
     }
 
@@ -377,7 +377,7 @@ export async function bulkDeletePermanent(req, res, next) {
       [photoIds, userId]
     );
 
-    res.json({ success: true, message: 'Выбранные фотографии навсегда удалены из облака.' });
+    res.json({ success: true, message: 'Выбранные фотографии навсегда удалены из хранилища.' });
   } catch (error) {
     next(error);
   }

@@ -540,7 +540,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
           <div className="text-center mb-10">
             <span className="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-100/60 px-3 py-1 rounded-full">Интуитивный интерфейс</span>
             <h2 className="font-serif text-3xl md:text-4xl text-brand-900 mt-3 font-semibold">
-              Как выглядит ваше личное облако
+              Как выглядит ваше семейное хранилище
             </h2>
             <p className="text-sm text-brand-600 mt-2 max-w-lg mx-auto font-light">
               Мы убрали все лишнее, чтобы вы могли сосредоточиться на главном — ваших воспоминаниях.
@@ -701,7 +701,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
                 <tr className="border-b border-brand-200/40 bg-brand-100/50">
                   <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider">Возможности</th>
                   <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider bg-brand-100/80">ЛегкоСохранить.рф</th>
-                  <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider">Зарубежные облака</th>
+                  <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider">Зарубежные хранилища</th>
                   <th className="p-4 text-xs font-bold text-brand-900 uppercase tracking-wider">Обычные диски</th>
                 </tr>
               </thead>

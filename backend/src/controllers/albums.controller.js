@@ -274,7 +274,7 @@ export async function removePhotoFromAlbum(req, res, next) {
 
     const albumName = albumResult.rows[0].name;
     if (albumName === 'Общий') {
-      return res.status(400).json({ error: 'Нельзя удалить фотографию из основного альбома "Общий" без её удаления из облака.' });
+      return res.status(400).json({ error: 'Нельзя удалить фотографию из основного альбома "Общий" без её удаления из хранилища.' });
     }
 
     await query('DELETE FROM album_photos WHERE album_id = $1 AND photo_id = $2', [albumId, photoId]);

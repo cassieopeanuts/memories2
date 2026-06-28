@@ -3,11 +3,26 @@ import {
   X, Eye, Image as ImageIcon, ChevronLeft, ChevronRight, 
   ArrowLeft, RefreshCw, AlertCircle, Play
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SharedAlbum({ shareToken, onBackToApp }) {
   const [albumData, setAlbumData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  const router = useRouter();
+  const { token } = useAuth();
+
+  const handleBackToApp = () => {
+    if (onBackToApp) {
+      onBackToApp();
+    } else if (token) {
+      router.push('/dashboard');
+    } else {
+      router.push('/');
+    }
+  };
   
   // Lightbox
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -127,16 +142,23 @@ export default function SharedAlbum({ shareToken, onBackToApp }) {
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src="/logo.png" className="w-9 h-9 object-contain" alt="Логотип" />
-            <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-900">
+            <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-900 hidden sm:inline">
               ЛегкоСохранить.РФ
             </span>
           </div>
 
           <button
-            onClick={onBackToApp}
+            onClick={handleBackToApp}
             className="flex items-center gap-1.5 text-xs text-brand-700 hover:text-brand-955 transition-colors font-semibold border border-brand-200 hover:bg-brand-100/30 px-4 py-2 rounded-2xl cursor-pointer"
           >
-            Войти в облако
+            {token ? (
+              <>
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Назад в архив</span>
+              </>
+            ) : (
+              <span>Войти в хранилище</span>
+            )}
           </button>
         </div>
       </header>
