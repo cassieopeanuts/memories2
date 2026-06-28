@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UploadCloud, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function UploadZone({ token, onUploadComplete }) {
@@ -209,6 +209,30 @@ export default function UploadZone({ token, onUploadComplete }) {
   };
 
   const activeUploads = Object.values(uploads);
+  const totalFiles = activeUploads.length;
+  const completedFiles = activeUploads.filter(u => u.status === 'success').length;
+  const failedFiles = activeUploads.filter(u => u.status === 'error');
+  const totalFailedCount = failedFiles.length;
+  const isUploading = activeUploads.some(u => u.status === 'uploading' || u.status === 'preparing');
+  const isAllFinished = totalFiles > 0 && (completedFiles + totalFailedCount === totalFiles);
+
+  // Calculate overall progress percentage
+  const totalProgress = activeUploads.reduce((acc, u) => {
+    if (u.status === 'success') return acc + 100;
+    if (u.status === 'error') return acc + 100; // Count errors as finished to not block progress bar
+    return acc + (u.progress || 0);
+  }, 0);
+  const overallProgress = totalFiles > 0 ? Math.round(totalProgress / totalFiles) : 0;
+
+  // Auto-clear uploads lists after successful completion
+  useEffect(() => {
+    if (isAllFinished && totalFailedCount === 0) {
+      const timer = setTimeout(() => {
+        setUploads({});
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAllFinished, totalFailedCount]);
 
   return (
     <div className="w-full mb-6">
@@ -259,53 +283,69 @@ export default function UploadZone({ token, onUploadComplete }) {
         </div>
       </div>
 
-      {/* Upload Status List */}
-      {activeUploads.length > 0 && (
-        <div className="mt-4 space-y-2 max-w-md mx-auto">
-          {activeUploads.map((upload, idx) => (
+      {/* Universal Upload Progress Bar */}
+      {totalFiles > 0 && (
+        <div className="mt-4 p-4 bg-white border border-brand-200/50 rounded-2xl shadow-sm max-w-md mx-auto animate-photo-entry">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {isUploading ? (
+                <RefreshCw className="w-4 h-4 text-brand-500 animate-spin" />
+              ) : totalFailedCount > 0 ? (
+                <AlertCircle className="w-4 h-4 text-red-500" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              )}
+              <span className="text-xs font-semibold text-brand-900">
+                {isUploading 
+                  ? `Сохранение воспоминаний: ${completedFiles} из ${totalFiles}...` 
+                  : totalFailedCount > 0 
+                    ? `Загрузка завершена с ошибками` 
+                    : 'Все файлы бережно сохранены!'
+                }
+              </span>
+            </div>
+            
+            {isUploading && (
+              <span className="text-[10px] text-brand-600 font-bold uppercase tracking-wider">
+                {overallProgress}%
+              </span>
+            )}
+
+            {isAllFinished && (
+              <button 
+                onClick={() => setUploads({})}
+                className="text-brand-400 hover:text-brand-600 text-xs font-semibold px-2 py-0.5 rounded-lg hover:bg-brand-100/30 cursor-pointer"
+              >
+                Очистить
+              </button>
+            )}
+          </div>
+
+          <div className="w-full bg-brand-100 h-2 rounded-full overflow-hidden mb-2">
             <div 
-              key={idx} 
-              className="p-3 bg-white border border-brand-200/50 rounded-2xl flex items-center justify-between gap-4 shadow-sm"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-brand-900 truncate">
-                  {upload.name}
-                </p>
-                
-                {/* Upload Status Message */}
-                <div className="mt-1 flex items-center gap-2">
-                  {upload.status === 'preparing' && (
-                    <span className="text-[10px] text-brand-500 flex items-center gap-1">
-                      <RefreshCw className="w-3 h-3 animate-spin" /> Подготовка памяти...
-                    </span>
-                  )}
-                  {upload.status === 'uploading' && (
-                    <div className="w-full flex items-center gap-2">
-                      <div className="flex-1 bg-brand-100 h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-brand-500 h-full rounded-full transition-all duration-300"
-                          style={{ width: `${upload.progress}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-[10px] text-brand-600 font-medium">
-                        Сохранено {upload.progress}%
-                      </span>
-                    </div>
-                  )}
-                  {upload.status === 'success' && (
-                    <span className="text-[10px] text-green-600 font-medium flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Бережно сохранено
-                    </span>
-                  )}
-                  {upload.status === 'error' && (
-                    <span className="text-[10px] text-red-500 font-semibold flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5 text-red-500" /> {upload.errorMsg}
-                    </span>
-                  )}
-                </div>
+              className={`h-full rounded-full transition-all duration-300 ${
+                totalFailedCount > 0 && overallProgress === 100 
+                  ? 'bg-red-400' 
+                  : 'bg-gradient-to-r from-brand-500 to-brand-600'
+              }`}
+              style={{ width: `${overallProgress}%` }}
+            ></div>
+          </div>
+
+          {totalFailedCount > 0 && (
+            <div className="mt-3 pt-2 border-t border-brand-100/60 space-y-1">
+              <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider block">
+                Не удалось сохранить ({totalFailedCount}):
+              </span>
+              <div className="max-h-20 overflow-y-auto space-y-1">
+                {failedFiles.map((upload, fIdx) => (
+                  <p key={fIdx} className="text-[10px] text-red-500/80 truncate">
+                    • {upload.name}: {upload.errorMsg || 'Ошибка сети'}
+                  </p>
+                ))}
               </div>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
