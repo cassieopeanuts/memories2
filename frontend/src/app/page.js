@@ -38,6 +38,7 @@ export default function Home() {
         onDemoLogin={handleDemoLogin}
         errorMsg={errorMsg}
         setErrorMsg={setErrorMsg}
+        onViewOffer={() => router.push('/offer')}
       />
       <ThemeSwitcher 
         currentTheme={theme} 
