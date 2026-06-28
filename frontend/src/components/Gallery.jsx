@@ -197,9 +197,9 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   }, [token]);
 
   // Fetch photos whenever active album changes
-  const fetchAlbumPhotos = async (albumId) => {
+  const fetchAlbumPhotos = async (albumId, silent = false) => {
     if (!albumId) return;
-    setLoadingPhotos(true);
+    if (!silent) setLoadingPhotos(true);
     try {
       let response;
       if (albumId === 'trash') {
@@ -218,7 +218,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       console.error(err);
       setErrorMsg('Не удалось загрузить фотографии альбома.');
     } finally {
-      setLoadingPhotos(false);
+      if (!silent) setLoadingPhotos(false);
     }
   };
 
@@ -371,7 +371,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       // If we are currently inside "Избранное" album, or removing from favorite,
       // refresh the photos in the active album.
       if (activeAlbum) {
-        fetchAlbumPhotos(activeAlbum.id);
+        fetchAlbumPhotos(activeAlbum.id, true);
       }
     } catch (err) {
       showToast(err.message, 'error');
@@ -401,7 +401,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       const nextIndex = getNextIndexAfterDelete(selectedIndex, photos);
       setSelectedIndex(nextIndex);
       setShowOptionsDropdown(false);
-      fetchAlbumPhotos(activeAlbum.id);
+      fetchAlbumPhotos(activeAlbum.id, true);
       showToast('Фотография убрана из альбома.');
     } catch (err) {
       showToast(err.message, 'error');
@@ -425,7 +425,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           setSelectedIndex(nextIndex);
           setShowOptionsDropdown(false);
           if (activeAlbum) {
-            fetchAlbumPhotos(activeAlbum.id);
+            fetchAlbumPhotos(activeAlbum.id, true);
           }
           if (onUploadComplete) {
             onUploadComplete();
@@ -451,7 +451,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       const nextIndex = getNextIndexAfterDelete(selectedIndex, photos);
       setSelectedIndex(nextIndex);
       if (activeAlbum) {
-        fetchAlbumPhotos(activeAlbum.id);
+        fetchAlbumPhotos(activeAlbum.id, true);
       }
       fetchAlbums(); // update count
       showToast('Фотография восстановлена.');
@@ -480,7 +480,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           const nextIndex = getNextIndexAfterDelete(selectedIndex, photos);
           setSelectedIndex(nextIndex);
           if (activeAlbum) {
-            fetchAlbumPhotos(activeAlbum.id);
+            fetchAlbumPhotos(activeAlbum.id, true);
           }
           if (onUploadComplete) {
             onUploadComplete();
@@ -511,7 +511,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
       setIsSelectMode(false);
       setSelectedPhotoIds([]);
       if (activeAlbum) {
-        fetchAlbumPhotos(activeAlbum.id);
+        fetchAlbumPhotos(activeAlbum.id, true);
       }
       fetchAlbums();
       showToast('Выбранные фотографии восстановлены.');
@@ -541,7 +541,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           setIsSelectMode(false);
           setSelectedPhotoIds([]);
           if (activeAlbum) {
-            fetchAlbumPhotos(activeAlbum.id);
+            fetchAlbumPhotos(activeAlbum.id, true);
           }
           if (onUploadComplete) {
             onUploadComplete();
@@ -569,7 +569,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           if (!response.ok) throw new Error('Не удалось очистить корзину');
           
           if (activeAlbum) {
-            fetchAlbumPhotos(activeAlbum.id);
+            fetchAlbumPhotos(activeAlbum.id, true);
           }
           if (onUploadComplete) {
             onUploadComplete();
@@ -923,7 +923,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           token={token} 
           albumId={activeAlbum.id}
           onUploadComplete={() => {
-            fetchAlbumPhotos(activeAlbum.id);
+            fetchAlbumPhotos(activeAlbum.id, true);
             fetchAlbums(false);
             onUploadComplete();
           }} 
@@ -964,7 +964,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                   key={album.id}
                   onClick={() => {
                     if (activeAlbum && activeAlbum.id === album.id) {
-                      fetchAlbumPhotos(album.id);
+                      fetchAlbumPhotos(album.id, true);
                     } else {
                       setActiveAlbum(album);
                     }
