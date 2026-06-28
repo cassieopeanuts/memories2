@@ -915,6 +915,15 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           <div className="text-center py-6 text-brand-500 text-xs font-semibold">Загрузка альбомов...</div>
         ) : (
           <div className="albums-carousel overflow-y-visible">
+            {/* Create Album Card at the first position */}
+            <div
+              onClick={() => setShowCreateAlbum(true)}
+              className="album-card border border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-2xl p-4 cursor-pointer flex flex-col items-center justify-center gap-2 text-brand-600 hover:text-brand-900 transition-all font-semibold text-xs h-32"
+            >
+              <FolderPlus className="w-5 h-5 text-brand-500" />
+              <span>Создать альбом</span>
+            </div>
+
             {albums.map((album, index) => {
               const isActive = activeAlbum && activeAlbum.id === album.id;
               const photoCount = album.photoCount || 0;
