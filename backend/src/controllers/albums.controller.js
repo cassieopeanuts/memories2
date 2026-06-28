@@ -183,6 +183,14 @@ export async function addPhotosToAlbum(req, res, next) {
     }
 
     for (const photoId of photoIds) {
+      const existCheck = await query(
+        'SELECT 1 FROM album_photos WHERE album_id = $1 AND photo_id = $2',
+        [albumId, photoId]
+      );
+      if (existCheck.rows.length > 0) {
+        continue;
+      }
+
       const posResult = await query('SELECT COALESCE(MAX(position)+1, 0) as next_pos FROM album_photos WHERE album_id = $1', [albumId]);
       const nextPos = posResult.rows[0].next_pos || 0;
 
