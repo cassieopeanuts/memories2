@@ -163,8 +163,7 @@ export default function UploadZone({ token, onUploadComplete }) {
               [uploadId]: { ...prev[uploadId], status: 'success', progress: 100 }
             }));
             
-            // Refresh gallery
-            onUploadComplete();
+            // Refresh gallery (handled in bulk completion hook below)
             
             // Clear successful upload after 3 seconds
             setTimeout(() => {
@@ -224,15 +223,20 @@ export default function UploadZone({ token, onUploadComplete }) {
   }, 0);
   const overallProgress = totalFiles > 0 ? Math.round(totalProgress / totalFiles) : 0;
 
-  // Auto-clear uploads lists after successful completion
+  // Refresh gallery and auto-clear uploads state only when all files have finished uploading
   useEffect(() => {
-    if (isAllFinished && totalFailedCount === 0) {
-      const timer = setTimeout(() => {
-        setUploads({});
-      }, 4000);
-      return () => clearTimeout(timer);
+    if (isAllFinished) {
+      // Trigger bulk refresh once at the end of the batch upload
+      onUploadComplete();
+
+      if (totalFailedCount === 0) {
+        const timer = setTimeout(() => {
+          setUploads({});
+        }, 4000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [isAllFinished, totalFailedCount]);
+  }, [isAllFinished, totalFailedCount, onUploadComplete]);
 
   return (
     <div className="w-full mb-6">
