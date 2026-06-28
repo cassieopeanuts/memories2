@@ -1188,7 +1188,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                 <div className="mb-6 p-4 bg-brand-50 border border-brand-200/40 rounded-2xl flex items-start gap-3 shadow-inner">
                   <span className="text-lg">💡</span>
                   <div className="text-xs text-brand-800 font-light leading-relaxed">
-                    <b>Очистка файлов:</b> Файлы из корзины автоматически удаляются на 31-й день после перемещения. Вы также можете удалить их навсегда вручную или восстановить в любой момент.
+                    <b>Очистка корзины:</b> Фото и видео автоматически удаляются на 31-й день после перемещения. Вы также можете удалить их навсегда вручную или восстановить в любой момент.
                   </div>
                 </div>
               )}
