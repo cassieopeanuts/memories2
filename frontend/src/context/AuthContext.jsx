@@ -4,6 +4,21 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [betaUnlocked, setBetaUnlocked] = useState(false);
@@ -120,9 +135,91 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const registerPushNotifications = async (activeToken) => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.log('Web Push notifications are not supported in this browser.');
+      return;
+    }
+
+    console.log('[Push SDK] Checking service worker and push manager...');
+
+    try {
+      // 1. Fetch VAPID public key
+      const res = await fetch(`${backendUrl}/api/auth/vapid-public-key`);
+      const { publicKey } = await res.json();
+      console.log('[Push SDK] Public Key loaded:', publicKey);
+      if (!publicKey) return;
+
+      // 2. Request permission
+      console.log('[Push SDK] Requesting notification permission...');
+      const permission = await Notification.requestPermission();
+      console.log('[Push SDK] Notification permission status:', permission);
+      if (permission !== 'granted') {
+        console.log('Push notification permission denied.');
+        return;
+      }
+
+      // 3. Subscribe
+      console.log('[Push SDK] Subscribing via Service Worker...');
+      const registration = await navigator.serviceWorker.ready;
+      console.log('[Push SDK] Service Worker registration ready:', registration);
+      
+      let subscription = await registration.pushManager.getSubscription();
+      
+      if (subscription) {
+        // Compare the existing subscription key with the new VAPID public key
+        const currentKey = subscription.options.applicationServerKey;
+        const newKey = urlBase64ToUint8Array(publicKey);
+        let keyMatches = false;
+        
+        if (currentKey) {
+          const currentKeyArray = new Uint8Array(currentKey);
+          if (currentKeyArray.length === newKey.length) {
+            keyMatches = currentKeyArray.every((val, index) => val === newKey[index]);
+          }
+        }
+        
+        if (!keyMatches) {
+          console.log('[Push SDK] VAPID key changed/mismatched. Unsubscribing old subscription...');
+          await subscription.unsubscribe();
+          subscription = null;
+        } else {
+          console.log('[Push SDK] Existing subscription VAPID key matches current server key.');
+        }
+      }
+
+      if (!subscription) {
+        console.log('[Push SDK] Creating new subscription with VAPID key...');
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+      }
+      console.log('[Push SDK] Final subscription:', subscription);
+
+      // 4. Save to backend
+      console.log('[Push SDK] Sending subscription to backend...');
+      const saveRes = await fetch(`${backendUrl}/api/auth/push-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify(subscription)
+      });
+      const saveResult = await saveRes.json();
+      console.log('[Push SDK] Backend registration result:', saveResult);
+
+      console.log('Web Push subscription successfully registered!');
+    } catch (error) {
+      console.error('Error setting up Web Push:', error);
+    }
+  };
+
   useEffect(() => {
     if (mounted && token) {
       checkProfile();
+      registerPushNotifications(token);
     } else if (mounted && !token) {
       setLoading(false);
     }
