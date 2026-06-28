@@ -95,8 +95,16 @@ export async function deleteAlbum(req, res, next) {
       return res.status(404).json({ error: 'Альбом не найден.' });
     }
 
-    if (checkResult.rows[0].name === 'Общий') {
+    const albumName = checkResult.rows[0].name;
+    if (albumName === 'Общий') {
       return res.status(400).json({ error: 'Нельзя удалить основной альбом "Общий".' });
+    }
+
+    if (albumName === 'Избранное') {
+      await query(
+        'UPDATE photos SET is_favorite = false WHERE id IN (SELECT photo_id FROM album_photos WHERE album_id = $1) AND user_id = $2',
+        [albumId, userId]
+      );
     }
 
     await query('DELETE FROM albums WHERE id = $1 AND user_id = $2', [albumId, userId]);
@@ -178,7 +186,8 @@ export async function addPhotosToAlbum(req, res, next) {
       return res.status(404).json({ error: 'Альбом не найден.' });
     }
 
-    if (albumResult.rows[0].name === 'Общий') {
+    const albumName = albumResult.rows[0].name;
+    if (albumName === 'Общий') {
       return res.status(400).json({ error: 'Фотографии уже находятся в альбоме "Общий" по умолчанию.' });
     }
 
@@ -198,6 +207,14 @@ export async function addPhotosToAlbum(req, res, next) {
         'INSERT INTO album_photos (album_id, photo_id, position) VALUES ($1, $2, $3)',
         [albumId, photoId, nextPos]
       );
+
+      // If adding to Favorites album, mark photo as is_favorite = true
+      if (albumName === 'Избранное') {
+        await query(
+          'UPDATE photos SET is_favorite = true WHERE id = $1 AND user_id = $2',
+          [photoId, userId]
+        );
+      }
     }
 
     res.json({ success: true, message: 'Фотографии успешно добавлены в альбом.' });
@@ -255,11 +272,21 @@ export async function removePhotoFromAlbum(req, res, next) {
       return res.status(404).json({ error: 'Альбом не найден.' });
     }
 
-    if (albumResult.rows[0].name === 'Общий') {
+    const albumName = albumResult.rows[0].name;
+    if (albumName === 'Общий') {
       return res.status(400).json({ error: 'Нельзя удалить фотографию из основного альбома "Общий" без её удаления из облака.' });
     }
 
     await query('DELETE FROM album_photos WHERE album_id = $1 AND photo_id = $2', [albumId, photoId]);
+
+    // If removing from Favorites album, mark photo as is_favorite = false
+    if (albumName === 'Избранное') {
+      await query(
+        'UPDATE photos SET is_favorite = false WHERE id = $1 AND user_id = $2',
+        [photoId, userId]
+      );
+    }
+
     res.json({ success: true, message: 'Фотография убрана из альбома.' });
   } catch (error) {
     next(error);
