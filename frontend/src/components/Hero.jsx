@@ -263,47 +263,47 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
         {/* SSO Buttons & Email */}
         <div className="w-full flex flex-col items-center mb-12 max-w-sm">
           <span className="text-xs font-bold text-brand-900 uppercase tracking-widest mb-4">Войти с помощью</span>
-          <div className="w-full flex flex-col gap-3.5 mb-4">
+          <div className="w-full flex flex-col gap-3 mb-4">
             {/* Yandex ID */}
             <button
               onClick={handleYandexLogin}
-              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
               title="Войти с Яндекс ID"
             >
               <YandexIcon />
-              <span className="text-base font-bold text-[#232334]">ID</span>
+              <span className="text-sm font-bold text-[#232334]">ID</span>
             </button>
 
             {/* Sber ID */}
             <button
               onClick={handleSberLogin}
-              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
               title="Войти через Сбер ID"
             >
               <SberIcon />
-              <span className="text-base font-bold text-[#232334]">ID</span>
+              <span className="text-sm font-bold text-[#232334]">ID</span>
             </button>
 
             {/* T-Bank ID */}
             <button
               onClick={handleTBankLogin}
-              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
               title="Войти с Т-Банк ID"
             >
               <TBankIcon />
-              <span className="text-base font-bold text-[#232334]">ID</span>
+              <span className="text-sm font-bold text-[#232334]">ID</span>
             </button>
 
             {/* VK ID */}
             <button
               onClick={handleVkLogin}
-              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
               title="Войти через ВКонтакте ID"
             >
               <VKIcon />
-              <div className="flex items-center gap-1.5">
-                <span className="text-base font-medium text-[#232334]">ВКонтакте</span>
-                <span className="text-base font-bold text-[#232334]">ID</span>
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-medium text-[#232334]">ВКонтакте</span>
+                <span className="text-sm font-bold text-[#232334]">ID</span>
               </div>
             </button>
           </div>
