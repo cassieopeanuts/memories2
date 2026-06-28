@@ -260,7 +260,7 @@ export default function Dashboard() {
         {showInstallBanner && (
           <div className="mb-6 max-w-2xl mx-auto p-5 bg-gradient-to-r from-brand-100/60 to-brand-200/60 border border-brand-300/30 rounded-3xl flex items-center justify-between gap-4 shadow-sm">
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-brand-900 mb-0.5">Установите фотоальбом на главный экран</h4>
+              <h4 className="text-sm font-semibold text-brand-900 mb-0.5">Установите приложение на главный экран</h4>
               <p className="text-xs text-brand-700 font-light leading-relaxed">
                 Сохраняйте дорогие сердцу фотографии в одно нажатие, без открытия браузера.
               </p>
@@ -327,7 +327,7 @@ export default function Dashboard() {
       
       {/* Footer stamp */}
       <footer className="w-full py-8 text-center text-[10px] text-brand-400 font-semibold tracking-wider uppercase bg-brand-100/20 mt-12 border-t border-brand-200/20">
-        © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНАЯ ГАЛЕРЕЯ
+        © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНЫЙ СЕМЕЙНЫЙ АРХИВ
       </footer>
       <ThemeSwitcher currentTheme={theme} onThemeSelect={setTheme} currentFont={font} onFontSelect={setFont} />
       <TesterFeedback token={token} user={user} />

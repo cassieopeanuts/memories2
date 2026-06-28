@@ -464,7 +464,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   const handleDeletePhotoPermanent = (photoId) => {
     setConfirmConfig({
       isOpen: true,
-      message: 'Вы уверены, что хотите удалить эту фотографию навсегда? Данные будут полностью удалены из хранилища воспоминаний Selectel S3, и восстановить их будет невозможно.',
+      message: 'Вы уверены, что хотите удалить эту фотографию навсегда? Данные будут полностью удалены из хранилища воспоминаний, и восстановить их будет невозможно.',
       onConfirm: async () => {
         try {
           const response = await fetch(`${backendUrl}/api/photos/bulk-delete-permanent`, {
@@ -559,7 +559,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   const handleEmptyTrash = () => {
     setConfirmConfig({
       isOpen: true,
-      message: 'Вы уверены, что хотите полностью очистить корзину? Все удаленные фотографии будут безвозвратно удалены из хранилища воспоминаний Selectel S3.',
+      message: 'Вы уверены, что хотите полностью очистить корзину? Все удаленные фотографии будут безвозвратно удалены из хранилища воспоминаний.',
       onConfirm: async () => {
         try {
           const response = await fetch(`${backendUrl}/api/photos/trash/empty`, {
@@ -1402,7 +1402,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
             onSubmit={handleCreateAlbum}
             className="bg-white/90 rounded-[28px] p-6 max-w-sm w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry"
           >
-            <h3 className="font-serif text-lg font-semibold text-brand-900 mb-4">Новый фотоальбом</h3>
+            <h3 className="font-serif text-lg font-semibold text-brand-900 mb-4">Новый альбом</h3>
             <input
               type="text"
               value={newAlbumName}
@@ -1562,7 +1562,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                   <div className="flex gap-2">
                     {/* Telegram */}
                     <a
-                      href={`https://t.me/share/url?url=${encodeURIComponent(getShareUrl(activeAlbum.share_token))}&text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»!`)}`}
+                      href={`https://t.me/share/url?url=${encodeURIComponent(getShareUrl(activeAlbum.share_token))}&text=${encodeURIComponent(`Посмотри мой альбом «${activeAlbum.name}»!`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 py-2.5 bg-[#229ED9] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"
@@ -1571,7 +1571,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     </a>
                     {/* WhatsApp */}
                     <a
-                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Посмотри мой фотоальбом «${activeAlbum.name}»: ${getShareUrl(activeAlbum.share_token)}`)}`}
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Посмотри мой альбом «${activeAlbum.name}»: ${getShareUrl(activeAlbum.share_token)}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 py-2.5 bg-[#25D366] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"
@@ -1580,7 +1580,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
                     </a>
                     {/* VK */}
                     <a
-                      href={`https://vk.com/share.php?url=${encodeURIComponent(getShareUrl(activeAlbum.share_token))}&title=${encodeURIComponent(`Фотоальбом «${activeAlbum.name}»`)}`}
+                      href={`https://vk.com/share.php?url=${encodeURIComponent(getShareUrl(activeAlbum.share_token))}&title=${encodeURIComponent(`Альбом «${activeAlbum.name}»`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 py-2.5 bg-[#0077FF] hover:opacity-90 text-white text-center text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center gap-1.5"

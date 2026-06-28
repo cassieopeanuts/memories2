@@ -207,7 +207,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
           <div>
             <h4 className="text-xs font-bold text-brand-900 mb-0.5">Безопасно и надежно</h4>
             <p className="text-[10px] text-brand-900 font-light">
-              Сервера размещены в дата-центрах Selectel в РФ. Ваши данные защищены по закону ФЗ-152.
+              Хранилище размещено в РФ. Ваши данные защищены в соответствии с ФЗ-152.
             </p>
           </div>
         </div>

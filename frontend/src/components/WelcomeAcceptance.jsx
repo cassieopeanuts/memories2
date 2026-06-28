@@ -136,7 +136,7 @@ export default function WelcomeAcceptance({ user, onAccept, onViewOffer, onLogou
 
       {/* Footer */}
       <footer className="w-full text-center text-[10px] text-brand-400 font-semibold tracking-wider uppercase py-4">
-        © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНАЯ ГАЛЕРЕЯ
+        © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНЫЙ СЕМЕЙНЫЙ АРХИВ
       </footer>
     </div>
   );

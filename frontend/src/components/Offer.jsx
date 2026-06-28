@@ -219,7 +219,7 @@ export default function Offer({ onBack }) {
 
       {/* Footer */}
       <footer className="w-full py-8 text-center text-[10px] text-brand-400 font-semibold tracking-wider uppercase bg-brand-100/20 border-t border-brand-200/20 mt-12">
-        © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНАЯ ГАЛЕРЕЯ
+        © 2026 ЛЕГКОСОХРАНИТЬ.РФ — БЕЗОПАСНЫЙ СЕМЕЙНЫЙ АРХИВ
       </footer>
     </div>
   );

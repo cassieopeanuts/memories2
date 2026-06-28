@@ -120,7 +120,7 @@ export default function PinLock({ token, mode, onSuccess, onLogout, backendUrl }
         <h2 className="font-serif text-xl md:text-2xl text-brand-900 font-semibold mb-2">
           {mode === 'setup' 
             ? (step === 1 ? 'Защитите свои фото' : 'Повторите пин-код')
-            : 'Вход в фотоальбом'
+            : 'Вход в хранилище'
           }
         </h2>
         
@@ -130,7 +130,7 @@ export default function PinLock({ token, mode, onSuccess, onLogout, backendUrl }
                 ? 'Придумайте 4-значный пин-код, чтобы ограничить доступ посторонних к вашим воспоминаниям.' 
                 : 'Введите придуманный пин-код еще раз для подтверждения.'
               )
-            : 'Введите ваш секретный пин-код для авторизации.'
+            : 'Введите пин-код для авторизации.'
           }
         </p>
 

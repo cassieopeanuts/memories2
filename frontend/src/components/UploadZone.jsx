@@ -184,7 +184,7 @@ export default function UploadZone({ token, onUploadComplete }) {
         } else {
           setUploads(prev => ({
             ...prev,
-            [uploadId]: { ...prev[uploadId], status: 'error', errorMsg: 'Ошибка загрузки в хранилище S3.' }
+            [uploadId]: { ...prev[uploadId], status: 'error', errorMsg: 'Ошибка загрузки в хранилище.' }
           }));
         }
       };

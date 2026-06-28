@@ -237,7 +237,7 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
         </div>
         <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-brand-500 uppercase tracking-widest bg-brand-100/50 px-3 py-1.5 rounded-full">
           <ShieldCheck className="w-4 h-4 text-brand-500" />
-          Сервера в РФ • ФЗ-152
+          Хранение в РФ • ФЗ-152
         </div>
       </header>
 
