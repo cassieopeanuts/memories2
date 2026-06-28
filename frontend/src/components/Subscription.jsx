@@ -1,5 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ShieldCheck, Heart, Sparkles, CreditCard, RefreshCw, CheckCircle2, X } from 'lucide-react';
+
+const plans = [
+  {
+    name: 'Бесплатный',
+    sizeText: '1 ГБ',
+    limitBytes: 1 * 1024 * 1024 * 1024,
+    priceText: '0 ₽ в месяц',
+    priceTextSmall: 'Всегда бесплатно',
+    desc: 'Отличный старт для сохранения самых ценных семейных снимков.',
+    badge: null
+  },
+  {
+    name: 'Уютный',
+    sizeText: '5 ГБ',
+    limitBytes: 5 * 1024 * 1024 * 1024,
+    priceText: '99 ₽ в месяц',
+    priceTextSmall: 'Меньше чашки чая',
+    desc: 'Достаточно места для сотен теплых воспоминаний и детских улыбок.',
+    badge: 'Популярный'
+  },
+  {
+    name: 'Семейный',
+    sizeText: '20 ГБ',
+    limitBytes: 20 * 1024 * 1024 * 1024,
+    priceText: '250 ₽ в месяц',
+    priceTextSmall: 'Хватит на долгие годы',
+    desc: 'Идеальный объем для создания уютных цифровых альбомов всей семьи.',
+    badge: 'Выбор заботливых'
+  },
+  {
+    name: 'Бережный',
+    sizeText: '100 ГБ',
+    limitBytes: 100 * 1024 * 1024 * 1024,
+    priceText: '500 ₽ в месяц',
+    priceTextSmall: 'Забудьте о памяти',
+    desc: 'Для тех, кто сохраняет каждый момент и не хочет выбирать, что оставить.',
+    badge: null
+  },
+  {
+    name: 'Архив на век',
+    sizeText: '1000 ГБ',
+    limitBytes: 1000 * 1024 * 1024 * 1024,
+    priceText: '2500 ₽',
+    priceTextSmall: 'Разовый платеж навсегда',
+    desc: 'Гигантский сейф для абсолютно всех ваших воспоминаний без ежемесячных платежей.',
+    badge: 'Лучшее предложение'
+  }
+];
 
 export default function Subscription({ token, storage, onUpgradeSuccess, onRedirectToGallery }) {
   const [selectedPlan, setSelectedPlan] = useState(null); // null or plan object
@@ -7,56 +56,22 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
   const [paymentStep, setPaymentStep] = useState('select_method'); // 'select_method', 'processing', 'success'
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   const backendUrl = typeof window !== 'undefined' ? (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`) : 'http://localhost:5000';
 
-  const plans = [
-    {
-      name: 'Бесплатный',
-      sizeText: '1 ГБ',
-      limitBytes: 1 * 1024 * 1024 * 1024,
-      priceText: '0 ₽ в месяц',
-      priceTextSmall: 'Всегда бесплатно',
-      desc: 'Отличный старт для сохранения самых ценных семейных снимков.',
-      badge: null
-    },
-    {
-      name: 'Уютный',
-      sizeText: '5 ГБ',
-      limitBytes: 5 * 1024 * 1024 * 1024,
-      priceText: '99 ₽ в месяц',
-      priceTextSmall: 'Меньше чашки чая',
-      desc: 'Достаточно места для сотен теплых воспоминаний и детских улыбок.',
-      badge: 'Популярный'
-    },
-    {
-      name: 'Семейный',
-      sizeText: '20 ГБ',
-      limitBytes: 20 * 1024 * 1024 * 1024,
-      priceText: '250 ₽ в месяц',
-      priceTextSmall: 'Хватит на долгие годы',
-      desc: 'Идеальный объем для создания уютных цифровых альбомов всей семьи.',
-      badge: 'Выбор заботливых'
-    },
-    {
-      name: 'Бережный',
-      sizeText: '100 ГБ',
-      limitBytes: 100 * 1024 * 1024 * 1024,
-      priceText: '500 ₽ в месяц',
-      priceTextSmall: 'Забудьте о памяти',
-      desc: 'Для тех, кто сохраняет каждый момент и не хочет выбирать, что оставить.',
-      badge: null
-    },
-    {
-      name: 'Архив на век',
-      sizeText: '1000 ГБ',
-      limitBytes: 1000 * 1024 * 1024 * 1024,
-      priceText: '2500 ₽',
-      priceTextSmall: 'Разовый платеж навсегда',
-      desc: 'Гигантский сейф для абсолютно всех ваших воспоминаний без ежемесячных платежей.',
-      badge: 'Лучшее предложение'
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('payment') === 'success') {
+        setPaymentStep('success');
+        const currentLimit = storage.limit;
+        const matchingPlan = plans.find(p => p.limitBytes === currentLimit) || plans[1];
+        setSelectedPlan(matchingPlan);
+      }
     }
-  ];
+  }, [storage.limit]);
 
   const handlePlanClick = (plan) => {
     // Prevent clicking current plan (or lower plan just for simulation sake, but let them change to whatever they want)
@@ -87,7 +102,8 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
         body: JSON.stringify({ 
           limitBytes: selectedPlan.limitBytes,
           planName: selectedPlan.name,
-          price: price
+          price: price,
+          method: method
         })
       });
       const data = await response.json();
@@ -210,7 +226,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
       </div>
 
       {/* Payment Overlay Modal */}
-      {selectedPlan && (
+      {selectedPlan && mounted && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 backdrop-blur-md">
           <div className="bg-white/90 rounded-[28px] p-6 max-w-sm w-full border border-brand-200/40 shadow-2xl backdrop-blur-lg animate-photo-entry">
             
@@ -299,7 +315,7 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                 </div>
                 <h4 className="font-serif text-lg font-semibold text-brand-900 mb-2">Оплата прошла успешно!</h4>
                 <p className="text-xs text-brand-900 font-light max-w-xs leading-relaxed mb-6">
-                  Мы бережно расширили ваше облако воспоминаний до **{selectedPlan.sizeText}**. Приятного использования!
+                  Мы бережно расширили ваше облако воспоминаний до **{selectedPlan ? selectedPlan.sizeText : ''}**. Приятного использования!
                 </p>
                 <button
                   onClick={() => {
@@ -314,7 +330,8 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
             )}
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

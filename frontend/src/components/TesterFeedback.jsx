@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { MessageSquare, X, Send, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { MessageSquare, X, Send, CheckCircle2, AlertCircle, RefreshCw, ImagePlus } from 'lucide-react';
 
 export default function TesterFeedback({ token, user }) {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [screenshot, setScreenshot] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState({ type: null, message: '' });
 
@@ -27,22 +28,24 @@ export default function TesterFeedback({ token, user }) {
     };
 
     try {
-      const headers = {
-        'Content-Type': 'application/json'
-      };
+      const headers = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const formData = new FormData();
+      if (user && user.name) formData.append('name', user.name);
+      if (user && user.email) formData.append('email', user.email);
+      formData.append('message', message.trim());
+      formData.append('metadata', JSON.stringify(metadata));
+      if (screenshot) {
+        formData.append('screenshot', screenshot);
       }
 
       const response = await fetch(`${backendUrl}/api/feedback`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          name: user ? user.name : '',
-          email: user ? user.email : '',
-          message: message.trim(),
-          metadata
-        })
+        body: formData
       });
 
       const data = await response.json();
@@ -55,6 +58,7 @@ export default function TesterFeedback({ token, user }) {
         message: 'Спасибо! Ваша обратная связь успешно отправлена и сохранена.'
       });
       setMessage('');
+      setScreenshot(null);
       
       // Close modal after a short delay
       setTimeout(() => {
@@ -106,6 +110,7 @@ export default function TesterFeedback({ token, user }) {
                   if (!isSending) {
                     setIsOpen(false);
                     setStatus({ type: null, message: '' });
+                    setScreenshot(null);
                   }
                 }}
                 className="w-8 h-8 rounded-full hover:bg-brand-50 text-brand-400 hover:text-brand-700 flex items-center justify-center transition-colors cursor-pointer"
@@ -147,6 +152,48 @@ export default function TesterFeedback({ token, user }) {
                     placeholder="Например: Кнопка 'Создать альбом' не нажимается на экране выбора..."
                     className="w-full px-3 py-2.5 bg-brand-50 border border-brand-200/60 rounded-xl text-xs text-brand-900 focus:outline-none focus:border-brand-500 font-medium resize-none leading-relaxed"
                   />
+                </div>
+
+                {/* Screenshot Upload */}
+                <div>
+                  <input 
+                    type="file" 
+                    id="feedback-screenshot" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setScreenshot(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  {!screenshot ? (
+                    <label 
+                      htmlFor="feedback-screenshot"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-600 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+                    >
+                      <ImagePlus className="w-4 h-4" />
+                      <span>Прикрепить скриншот</span>
+                    </label>
+                  ) : (
+                    <div className="flex items-center gap-3 bg-brand-50/80 border border-brand-200 p-2 rounded-xl shadow-sm">
+                      <div className="w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center shrink-0 overflow-hidden border border-brand-200/50">
+                        <img src={URL.createObjectURL(screenshot)} alt="Скриншот" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-brand-800 font-semibold truncate">{screenshot.name}</p>
+                        <p className="text-[10px] text-brand-400">{(screenshot.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setScreenshot(null)}
+                        className="p-1.5 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0 mr-1"
+                        title="Удалить скриншот"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100">

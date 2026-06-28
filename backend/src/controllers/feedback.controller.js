@@ -9,7 +9,14 @@ const JWT_SECRET = env.JWT_SECRET;
  * Collect tester feedback, save it to СУБД, and send email notification
  */
 export async function submitFeedback(req, res, next) {
-  const { name, email, message, metadata } = req.body;
+  const { name, email, message } = req.body;
+  let metadata = {};
+  
+  try {
+    metadata = req.body.metadata ? JSON.parse(req.body.metadata) : {};
+  } catch (e) {
+    console.error('Failed to parse metadata:', e);
+  }
   
   if (!message || message.trim() === '') {
     return res.status(400).json({ error: 'Пожалуйста, введите описание проблемы.' });
@@ -40,6 +47,15 @@ export async function submitFeedback(req, res, next) {
         JSON.stringify(metadata || {})
       ]
     );
+
+    // Prepare attachments
+    const attachments = [];
+    if (req.file) {
+      attachments.push({
+        filename: req.file.originalname,
+        content: req.file.buffer
+      });
+    }
 
     // Send email notification
     const feedbackReceiver = env.FEEDBACK_RECEIVER || env.SMTP_USER || 'admin@xn--80affoidsgaujr8a0h.xn--p1ai';
@@ -81,6 +97,8 @@ ${JSON.stringify(metadata || {}, null, 2)}
           </tr>
         </table>
 
+        ${req.file ? `<p style="margin-top: 15px; font-weight: bold; color: #a45a44;">📎 К письму прикреплен скриншот!</p>` : ''}
+
         <h3 style="color: #333; margin-top: 25px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Метаданные окружения</h3>
         <pre style="background: #f4f4f4; padding: 10px; border-radius: 8px; font-size: 11px; color: #666; overflow-x: auto;">${JSON.stringify(metadata || {}, null, 2)}</pre>
         
@@ -92,7 +110,8 @@ ${JSON.stringify(metadata || {}, null, 2)}
       to: feedbackReceiver,
       subject: emailSubject,
       text: emailBodyText,
-      html: emailBodyHtml
+      html: emailBodyHtml,
+      attachments
     });
 
     res.json({ success: true, message: 'Отзыв успешно сохранен и отправлен разработчикам. Спасибо!' });

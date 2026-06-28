@@ -127,6 +127,17 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
   }, [toast.message]);
 
   useEffect(() => {
+    if (isSelectMode) {
+      document.body.classList.add('selection-mode-active');
+    } else {
+      document.body.classList.remove('selection-mode-active');
+    }
+    return () => {
+      document.body.classList.remove('selection-mode-active');
+    };
+  }, [isSelectMode]);
+
+  useEffect(() => {
     // Check if the device has no fine pointer (mouse/trackpad) i.e. it is a touch-only mobile device (phone/tablet)
     const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
     setIsTouchOnly(!hasFinePointer);
@@ -1021,7 +1032,7 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
           {targetAlbumForSelect && (
             <div className="mb-6 p-4 bg-brand-100/70 border border-brand-300/40 rounded-2xl flex items-center justify-between shadow-inner animate-photo-entry">
               <div className="flex items-center gap-2.5">
-                <span className="text-base shrink-0">📁</span>
+                <Folder className="w-5 h-5 text-brand-500 shrink-0" />
                 <div className="text-xs text-brand-900 font-semibold leading-snug">
                   Выберите фотографии для добавления в альбом «{targetAlbumForSelect.name}».
                 </div>
@@ -1219,61 +1230,62 @@ export default function Gallery({ token, storage, onUploadComplete, activeTab })
 
       {/* Sticky Bottom Actions Bar for Selection Mode */}
       {isSelectMode && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-md px-3.5 py-3 sm:px-6 sm:py-4 rounded-[24px] sm:rounded-3xl border border-brand-200/50 shadow-2xl flex items-center gap-2 sm:gap-4 w-[calc(100vw-1.5rem)] sm:w-auto max-w-lg justify-between sm:justify-start animate-photo-entry">
-          <span className="text-[11px] sm:text-xs font-semibold text-brand-800 shrink-0">
+        <div className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 bg-white/90 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-3.5 rounded-[24px] sm:rounded-3xl border border-brand-200/50 shadow-2xl flex items-center justify-between gap-3 sm:gap-6 max-w-md mx-auto animate-photo-entry">
+          <span className="text-xs font-semibold text-brand-800 shrink-0">
             Выбрано: {selectedPhotoIds.length}
           </span>
-          <button 
-            onClick={() => {
-              setIsSelectMode(false);
-              setSelectedPhotoIds([]);
-            }}
-            className="text-[11px] sm:text-xs font-medium text-brand-600 hover:text-brand-950 px-2.5 py-2 sm:px-3.5 sm:py-2 border border-brand-200 rounded-2xl cursor-pointer transition-colors active:scale-95 shrink-0"
-          >
-            Отмена
-          </button>
           
-          {activeAlbum && activeAlbum.id === 'trash' ? (
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <button 
-                onClick={handleBulkRestore}
-                disabled={selectedPhotoIds.length === 0}
-                className="text-[11px] sm:text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
-              >
-                Восстановить
-              </button>
-              <button 
-                onClick={handleBulkDeletePermanent}
-                disabled={selectedPhotoIds.length === 0}
-                className="text-[11px] sm:text-xs font-semibold bg-red-500 hover:bg-red-650 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
-              >
-                <span className="hidden sm:inline">Удалить навсегда</span>
-                <span className="sm:hidden">Удалить</span>
-              </button>
-            </div>
-          ) : targetAlbumForSelect ? (
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button 
-              onClick={async () => {
-                await handleAddSelectedToAlbum(targetAlbumForSelect.id);
-                setActiveAlbum(targetAlbumForSelect);
+              onClick={() => {
+                setIsSelectMode(false);
+                setSelectedPhotoIds([]);
                 setTargetAlbumForSelect(null);
               }}
-              disabled={selectedPhotoIds.length === 0}
-              className="text-[11px] sm:text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
+              className="text-xs font-medium text-brand-600 hover:text-brand-950 px-3 py-2 border border-brand-200 rounded-2xl cursor-pointer transition-colors active:scale-95 shrink-0"
             >
-              <span className="hidden sm:inline">Добавить в «{targetAlbumForSelect.name}»</span>
-              <span className="sm:hidden">Добавить</span>
+              Отмена
             </button>
-          ) : (
-            <button 
-              onClick={() => setShowAddToAlbum(true)}
-              disabled={selectedPhotoIds.length === 0}
-              className="text-[11px] sm:text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
-            >
-              <span className="hidden sm:inline">Добавить в альбом</span>
-              <span className="sm:hidden">В альбом</span>
-            </button>
-          )}
+            
+            {activeAlbum && activeAlbum.id === 'trash' ? (
+              <>
+                <button 
+                  onClick={handleBulkRestore}
+                  disabled={selectedPhotoIds.length === 0}
+                  className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3.5 py-2 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
+                >
+                  Восстановить
+                </button>
+                <button 
+                  onClick={handleBulkDeletePermanent}
+                  disabled={selectedPhotoIds.length === 0}
+                  className="text-xs font-semibold bg-red-500 hover:bg-red-650 text-white px-3.5 py-2 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
+                >
+                  Удалить
+                </button>
+              </>
+            ) : targetAlbumForSelect ? (
+              <button 
+                onClick={async () => {
+                  await handleAddSelectedToAlbum(targetAlbumForSelect.id);
+                  setActiveAlbum(targetAlbumForSelect);
+                  setTargetAlbumForSelect(null);
+                }}
+                disabled={selectedPhotoIds.length === 0}
+                className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3.5 py-2 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
+              >
+                Добавить
+              </button>
+            ) : (
+              <button 
+                onClick={() => setShowAddToAlbum(true)}
+                disabled={selectedPhotoIds.length === 0}
+                className="text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white px-3.5 py-2 rounded-2xl cursor-pointer disabled:opacity-50 transition-all active:scale-95 shadow-sm shrink-0"
+              >
+                В альбом
+              </button>
+            )}
+          </div>
         </div>
       )}
 

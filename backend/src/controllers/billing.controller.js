@@ -7,7 +7,7 @@ import env from '../config/env.js';
  * Returns a payment URL for the client to redirect to
  */
 export async function createPaymentSession(req, res, next) {
-  const { limitBytes, planName, price } = req.body;
+  const { limitBytes, planName, price, method } = req.body;
   const userId = req.user.id;
 
   if (!limitBytes || typeof limitBytes !== 'number') {
@@ -32,27 +32,10 @@ export async function createPaymentSession(req, res, next) {
       });
     }
 
-    // In a real production setup with YooKassa:
-    // const yooKassaResponse = await fetch('https://api.yookassa.ru/v3/payments', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': 'Basic ' + Buffer.from(env.YOOKASSA_SHOP_ID + ':' + env.YOOKASSA_SECRET_KEY).toString('base64'),
-    //     'Idempotence-Key': orderId,
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     amount: { value: price.toString(), currency: 'RUB' },
-    //     capture: true,
-    //     confirmation: { type: 'redirect', return_url: `${env.FRONTEND_URL}/subscription?status=success` },
-    //     description: `Оплата тарифа "${planName}" на ЛегкоСохранить.рф`,
-    //     metadata: { userId, limitBytes, orderId }
-    //   })
-    // });
-    // const paymentData = await yooKassaResponse.json();
-    // return res.json({ confirmationUrl: paymentData.confirmation.confirmation_url });
-
     // Simulated Secure Payment gateway redirect URL
-    const mockConfirmationUrl = `http://localhost:5000/api/billing/mock-gateway?orderId=${orderId}&userId=${userId}&limitBytes=${limitBytes}&price=${price || 99}`;
+    const host = req.headers.host;
+    const protocol = req.secure ? 'https' : 'http';
+    const mockConfirmationUrl = `${protocol}://${host}/api/billing/mock-gateway?orderId=${orderId}&userId=${userId}&limitBytes=${limitBytes}&price=${price || 99}&method=${method || 'card'}`;
 
     res.json({
       success: true,
@@ -192,30 +175,113 @@ export async function cancelSubscription(req, res, next) {
  * Mock payment gateway checkout page
  */
 export async function mockGateway(req, res, next) {
-  const { orderId, userId, limitBytes, price } = req.query;
+  const { orderId, userId, limitBytes, price, method } = req.query;
   
+  let headerText = 'Оплата картой';
+  let innerHtml = '';
+  let themeColor = '#22c55e';
+  
+  if (method === 'sbp') {
+    headerText = 'Оплата через СБП';
+    themeColor = '#0052FF';
+    innerHtml = `
+      <div style="margin: 20px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+        <div style="font-weight: 900; color: #0052FF; font-size: 24px; font-family: serif; letter-spacing: -1px; text-transform: uppercase;">СБП</div>
+        <p style="font-size: 13px; color: #666; margin: 0 0 10px 0; line-height: 1.4;">Отсканируйте QR-код в мобильном приложении вашего банка для подтверждения оплаты</p>
+        <svg width="180" height="180" viewBox="0 0 100 100" style="border: 4px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-radius: 8px; background: #fff;">
+          <rect x="0" y="0" width="25" height="25" fill="#000"/>
+          <rect x="5" y="5" width="15" height="15" fill="#fff"/>
+          <rect x="75" y="0" width="25" height="25" fill="#000"/>
+          <rect x="80" y="5" width="15" height="15" fill="#fff"/>
+          <rect x="0" y="75" width="25" height="25" fill="#000"/>
+          <rect x="5" y="80" width="15" height="15" fill="#fff"/>
+          <rect x="35" y="10" width="10" height="20" fill="#000"/>
+          <rect x="50" y="5" width="15" height="10" fill="#000"/>
+          <rect x="30" y="45" width="20" height="20" fill="#000"/>
+          <rect x="65" y="35" width="15" height="15" fill="#000"/>
+          <rect x="10" y="35" width="15" height="10" fill="#000"/>
+          <rect x="40" y="75" width="20" height="15" fill="#000"/>
+          <rect x="70" y="65" width="25" height="20" fill="#000"/>
+        </svg>
+      </div>
+    `;
+  } else if (method === 'yandex') {
+    headerText = 'Яндекс Пэй';
+    themeColor = '#FC3F1D';
+    innerHtml = `
+      <div style="margin: 25px 0;">
+        <div style="width: 70px; height: 70px; background: #FC3F1D; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 38px; font-family: sans-serif; margin-bottom: 15px;">Я</div>
+        <p style="font-size: 13px; color: #666; margin: 0; line-height: 1.4;">Быстрая и безопасная оплата с вашей учетной записью Яндекс ID</p>
+      </div>
+    `;
+  } else if (method === 'sber') {
+    headerText = 'Сбербанк Онлайн';
+    themeColor = '#21A038';
+    innerHtml = `
+      <div style="margin: 25px 0;">
+        <div style="width: 70px; height: 70px; background: #21A038; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 32px; font-family: sans-serif; margin-bottom: 15px;">✔</div>
+        <p style="font-size: 13px; color: #666; margin: 0; line-height: 1.4;">Будет совершена безопасная оплата через шлюз СберБанк Онлайн</p>
+      </div>
+    `;
+  } else if (method === 'tbank') {
+    headerText = 'Т-Банк';
+    themeColor = '#FFDD2D';
+    innerHtml = `
+      <div style="margin: 25px 0;">
+        <div style="width: 70px; height: 70px; background: black; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; color: #FFDD2D; font-weight: bold; font-size: 38px; font-family: sans-serif; margin-bottom: 15px;">Т</div>
+        <p style="font-size: 13px; color: #666; margin: 0; line-height: 1.4;">Оплата в мобильном приложении Т-Банка или на официальном сайте</p>
+      </div>
+    `;
+  } else {
+    innerHtml = `
+      <div style="margin: 20px 0; text-align: left;">
+        <label style="display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px;">Номер карты</label>
+        <input type="text" value="4242 4242 4242 4242" disabled style="width: 90%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; font-weight: bold; letter-spacing: 1px; background: #fdfdfd; margin-bottom: 15px;" />
+        <div style="display: flex; gap: 15px;">
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px;">Срок действия</label>
+            <input type="text" value="12/30" disabled style="width: 80%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; font-weight: bold; background: #fdfdfd;" />
+          </div>
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px;">CVC / CVV</label>
+            <input type="text" value="***" disabled style="width: 80%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; font-weight: bold; background: #fdfdfd;" />
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   res.send(`
     <!DOCTYPE html>
     <html lang="ru">
     <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Симуляция Платежного Шлюза</title>
       <style>
-        body { font-family: sans-serif; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; max-width: 400px; }
-        .btn { display: inline-block; padding: 12px 30px; background: #22c55e; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; margin-top: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #FAF9F8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .box { background: white; padding: 30px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02); text-align: center; max-width: 380px; width: 100%; border: 1px solid rgba(0,0,0,0.03); box-sizing: border-box; }
+        .btn { display: block; width: 100%; padding: 14px 20px; background: ${themeColor}; color: ${themeColor === '#FFDD2D' ? 'black' : 'white'}; text-decoration: none; border-radius: 16px; font-weight: bold; font-size: 14px; margin-top: 25px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px ${themeColor}33; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px ${themeColor}44; }
+        .btn:active { transform: translateY(1px); }
+        .price { font-size: 28px; font-weight: bold; color: #111; margin: 10px 0 20px 0; }
+        .logo { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #888; margin-bottom: 25px; }
       </style>
     </head>
     <body>
       <div class="box">
-        <h2>Оплата тарифа</h2>
-        <p>Сумма к оплате: <strong>${price} ₽</strong></p>
-        <p>Вы перенаправлены на защищенную платежную страницу.</p>
+        <div class="logo">Безопасный платеж</div>
+        <h2 style="font-size: 18px; font-weight: bold; color: #222; margin: 0;">${headerText}</h2>
+        <div class="price">${price} ₽</div>
+        
+        ${innerHtml}
+        
         <form action="/api/billing/mock-gateway-submit" method="POST">
           <input type="hidden" name="orderId" value="${orderId}">
           <input type="hidden" name="userId" value="${userId}">
           <input type="hidden" name="limitBytes" value="${limitBytes}">
           <input type="hidden" name="price" value="${price}">
+          <input type="hidden" name="method" value="${method || 'card'}">
           <button type="submit" class="btn">Имитировать успешную оплату</button>
         </form>
       </div>
@@ -228,9 +294,13 @@ export async function mockGateway(req, res, next) {
  * Processes mock checkout submit and triggers the webhook asynchronously
  */
 export async function mockGatewaySubmit(req, res, next) {
-  const { orderId, userId, limitBytes, price } = req.body;
+  const { orderId, userId, limitBytes, price, method } = req.body;
 
   try {
+    let paymentType = 'bank_card';
+    if (method === 'sbp') paymentType = 'sbp';
+    else if (method === 'yandex') paymentType = 'yandex_pay';
+
     // Fire webhook payload directly to ourselves (simulating YooKassa server call)
     const webhookPayload = {
       event: 'payment.succeeded',
@@ -239,16 +309,16 @@ export async function mockGatewaySubmit(req, res, next) {
         status: 'succeeded',
         amount: { value: price, currency: 'RUB' },
         payment_method: {
-          type: 'bank_card',
+          type: paymentType,
           id: orderId,
           saved: true,
-          card: {
+          card: paymentType === 'bank_card' ? {
             first6: '424242',
             last4: Math.floor(1000 + Math.random() * 9000).toString(),
             expiry_month: '12',
             expiry_year: '30',
             card_type: 'MIR'
-          }
+          } : null
         },
         metadata: { userId, limitBytes, orderId }
       }
@@ -265,7 +335,7 @@ export async function mockGatewaySubmit(req, res, next) {
     res.send(`
       <script>
         alert("Оплата прошла успешно! Перенаправляем в личный кабинет.");
-        window.location.href = "${env.FRONTEND_URL}/subscription?status=success";
+        window.location.href = "${env.FRONTEND_URL}/dashboard?tab=subscription&payment=success";
       </script>
     `);
   } catch (error) {

@@ -43,7 +43,7 @@ function getTransporter() {
 /**
  * Generic function to send email (with offline simulation console logging if SMTP is not configured)
  */
-export async function sendEmail({ to, subject, text, html }) {
+export async function sendEmail({ to, subject, text, html, attachments }) {
   if (!to) {
     console.warn('[Email] Cannot send email: recipient address is empty.');
     return { success: false, error: 'Recipient address is empty' };
@@ -64,6 +64,7 @@ export async function sendEmail({ to, subject, text, html }) {
 To:      ${to}
 From:    "ЛегкоСохранить.РФ" <${fromEmail}>
 Subject: ${subject}
+Attachments: ${attachments ? attachments.length : 0}
 ------------------------------------------------------------
 TEXT BODY:
 ${text}
@@ -76,13 +77,19 @@ ${html}
   }
 
   try {
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: `"ЛегкоСохранить.РФ" <${fromEmail}>`,
       to,
       subject,
       text,
       html
-    });
+    };
+
+    if (attachments && attachments.length > 0) {
+      mailOptions.attachments = attachments;
+    }
+
+    const info = await transporter.sendMail(mailOptions);
     console.log(`[Email] Sent successfully to ${to}. Message ID: ${info.messageId}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {

@@ -52,6 +52,17 @@ export default function Dashboard() {
     }
   }, [token, loading, router]);
 
+  // Parse URL search parameters to sync activeTab
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'subscription' || tab === 'gallery' || tab === 'palettes') {
+        setActiveTab(tab);
+      }
+    }
+  }, []);
+
   // Detect PWA installation capability and device
   useEffect(() => {
     if (typeof window === 'undefined') return;

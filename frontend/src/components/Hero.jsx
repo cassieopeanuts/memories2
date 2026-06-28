@@ -35,104 +35,6 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
 
   const [yandexAccounts, setYandexAccounts] = useState([]);
   const [showYandexAccountsModal, setShowYandexAccountsModal] = useState(false);
-  const [vkSdkActive, setVkSdkActive] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hostname === 'xn--80affoidsgaujr8a0h.xn--p1ai') {
-      setVkSdkActive(true);
-    }
-  }, []);
-
-  const handleVkSdkSuccess = useCallback(async (data, widgetInstance = null) => {
-    if (widgetInstance && typeof widgetInstance.close === 'function') {
-      widgetInstance.close();
-    }
-
-    if (!data || !data.access_token) {
-      console.error('No access token in VK exchange data:', data);
-      return;
-    }
-
-    setIsLoading(true);
-    setErrorMsg('');
-
-    try {
-      const response = await fetch(`${backendUrl}/api/auth/vk/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: data.access_token })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to authenticate session with VK ID token');
-      }
-
-      const resData = await response.json();
-      if (resData.token) {
-        onEmailLoginSuccess(resData.token);
-      }
-    } catch (err) {
-      console.error('VK token authentication error:', err);
-      setErrorMsg(err.message || 'Ошибка авторизации через VK ID.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [backendUrl, onEmailLoginSuccess]);
-
-  const handleVkSdkLoad = () => {
-    if (typeof window !== 'undefined' && window.VKIDSDK) {
-      const VKID = window.VKIDSDK;
-
-      VKID.Config.init({
-        app: 54655785,
-        redirectUrl: 'https://xn--80affoidsgaujr8a0h.xn--p1ai/api/auth/vk/callback',
-        responseMode: VKID.ConfigResponseMode.Callback,
-        source: VKID.ConfigSource.LOWCODE,
-        scope: 'email',
-      });
-
-      // 1. Initialize Floating OneTap widget
-      const floatingOneTap = new VKID.FloatingOneTap();
-      floatingOneTap.render({
-        appName: 'ЛегкоСохранить.РФ',
-        showAlternativeLogin: true
-      })
-      .on(VKID.WidgetEvents.ERROR, (err) => console.error('VK OneTap Widget Error:', err))
-      .on(VKID.FloatingOneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
-        const code = payload.code;
-        const deviceId = payload.device_id;
-
-        VKID.Auth.exchangeCode(code, deviceId)
-          .then((data) => handleVkSdkSuccess(data, floatingOneTap))
-          .catch((err) => console.error('VK exchangeCode error:', err));
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (vkSdkActive && typeof window !== 'undefined' && window.VKIDSDK) {
-      const VKID = window.VKIDSDK;
-
-      const oauthContainer = document.getElementById('vk-oauth-container');
-      if (oauthContainer && !oauthContainer.hasChildNodes()) {
-        const oAuth = new VKID.OAuthList();
-        oAuth.render({
-          container: oauthContainer,
-          oauthList: ['vkid']
-        })
-        .on(VKID.WidgetEvents.ERROR, (err) => console.error('VK OAuthList Error:', err))
-        .on(VKID.OAuthListInternalEvents.LOGIN_SUCCESS, function (payload) {
-          const code = payload.code;
-          const deviceId = payload.device_id;
-
-          VKID.Auth.exchangeCode(code, deviceId)
-            .then(handleVkSdkSuccess)
-            .catch((err) => console.error('VK exchangeCode error:', err));
-        });
-      }
-    }
-  }, [vkSdkActive, handleVkSdkSuccess]);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   const toggleFaq = (index) => {
@@ -393,18 +295,17 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
             </button>
 
             {/* VK ID */}
-            {vkSdkActive ? (
-              <div id="vk-oauth-container" className="w-full"></div>
-            ) : (
-              <button
-                onClick={handleVkLogin}
-                className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
-                title="Войти через VK ID"
-              >
-                <VKIcon />
+            <button
+              onClick={handleVkLogin}
+              className="w-full h-14 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+              title="Войти через ВКонтакте ID"
+            >
+              <VKIcon />
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-medium text-[#232334]">ВКонтакте</span>
                 <span className="text-base font-bold text-[#232334]">ID</span>
-              </button>
-            )}
+              </div>
+            </button>
           </div>
 
           {/* Email collapsible trigger */}
@@ -996,14 +897,6 @@ export default function Hero({ onDemoLogin, onEmailLoginSuccess, onViewOffer }) 
         </div>
       )}
 
-      {/* Load VK ID SDK in production */}
-      {vkSdkActive && (
-        <Script
-          src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"
-          onLoad={handleVkSdkLoad}
-          strategy="afterInteractive"
-        />
-      )}
     </div>
   );
 }
