@@ -336,7 +336,7 @@ export default function ProfileModal({ user, setUser, token, storage, onClose })
           {/* Public Offer Accept Info */}
           {user.acceptedOfferAt && (
             <div className="text-center text-[10px] text-brand-400 border-t border-brand-100/60 pt-4">
-              Условия сервиса приняты: {new Date(user.acceptedOfferAt).toLocaleString('ru-RU')} ({user.acceptedOfferVersion})
+              Условия сервиса приняты: {new Date(user.acceptedOfferAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })} (по МСК) ({user.acceptedOfferVersion})
             </div>
           )}
 
