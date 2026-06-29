@@ -258,41 +258,45 @@ export default function Subscription({ token, storage, onUpgradeSuccess, onRedir
                   Выберите удобный способ безопасной оплаты:
                 </p>
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {/* T-Bank Payment */}
                   <button
                     onClick={() => handlePay('tbank')}
-                    className="w-full h-12 bg-[#FFDD2D] hover:bg-[#F5D11D] text-black font-semibold rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-98 shadow-sm"
+                    className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+                    title="Оплатить через Т-Банк"
                   >
-                    <div className="w-6 h-6 bg-black rounded-md flex items-center justify-center text-[#FFDD2D] font-bold text-sm">Т</div>
-                    <span>Оплатить через Т-Банк</span>
+                    <img src="/tbank.svg" className="h-5 w-auto object-contain shrink-0" alt="Т-Банк" />
+                    <span className="text-sm font-bold text-[#232334]">Оплатить через Т-Банк</span>
                   </button>
 
                   {/* Sber Payment */}
                   <button
                     onClick={() => handlePay('sber')}
-                    className="w-full h-12 bg-gradient-to-r from-[#21A038] to-[#128024] hover:opacity-95 text-white font-semibold rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-98 shadow-sm"
+                    className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+                    title="Оплатить через Сбербанк"
                   >
-                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-[#21A038] font-bold text-xs">✔</div>
-                    <span>Оплатить через Сбербанк</span>
+                    <img src="/sber.svg" className="h-5 w-auto object-contain shrink-0" alt="Сбербанк" />
+                    <span className="text-sm font-bold text-[#232334]">Оплатить через Сбербанк</span>
                   </button>
 
                   {/* Yandex Payment */}
                   <button
                     onClick={() => handlePay('yandex')}
-                    className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 font-semibold rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-98 shadow-sm"
+                    className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+                    title="Оплатить через Яндекс Пэй"
                   >
-                    <div className="w-6 h-6 bg-[#FC3F1D] rounded-md flex items-center justify-center text-white font-bold text-sm font-sans">Я</div>
-                    <span>Оплатить с Яндекс Пэй</span>
+                    <img src="/yandex.svg" className="h-5 w-auto object-contain shrink-0" alt="Яндекс Пэй" />
+                    <span className="text-sm font-bold text-[#232334]">Оплатить через Яндекс Пэй</span>
                   </button>
 
                   {/* SBP Payment */}
                   <button
                     onClick={() => handlePay('sbp')}
-                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white font-semibold rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-98 shadow-sm"
+                    className="w-full h-12 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] shadow-sm cursor-pointer"
+                    title="Оплатить через СБП"
                   >
-                    <div className="w-6 h-6 bg-white rounded-md flex items-center justify-center text-blue-600 font-serif font-black text-xs">СБП</div>
-                    <span>Оплатить через СБП</span>
+                    <div className="h-5 w-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-md flex items-center justify-center text-white font-serif font-black text-[9px] tracking-tighter shrink-0 select-none">СБП</div>
+                    <span className="text-sm font-bold text-[#232334]">Оплатить через СБП</span>
                   </button>
                 </div>
               </>
