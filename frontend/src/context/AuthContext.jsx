@@ -89,7 +89,8 @@ export function AuthProvider({ children }) {
         acceptedOfferAt: data.acceptedOfferAt,
         acceptedOfferVersion: data.acceptedOfferVersion,
         cardMask: data.cardMask,
-        cardBrand: data.cardBrand
+        cardBrand: data.cardBrand,
+        avatarUrl: data.avatarUrl
       });
 
       if (data.yandexId) {

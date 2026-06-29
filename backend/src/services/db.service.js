@@ -119,6 +119,7 @@ export async function mockQuery(text, params = []) {
       vk_id: u.vk_id,
       pin_code: u.pin_code,
       storage_limit: u.storage_limit,
+      avatar_url: u.avatar_url || null,
       push_subscriptions: u.push_subscriptions || [],
       accepted_offer: u.accepted_offer || false,
       accepted_offer_at: u.accepted_offer_at || null,
@@ -142,6 +143,7 @@ export async function mockQuery(text, params = []) {
       id: crypto.randomUUID(),
       yandex_id: null,
       sber_id: null,
+      avatar_url: null,
       tbank_id: null,
       vk_id: null,
       name: 'Пользователь',
@@ -302,6 +304,18 @@ export async function mockQuery(text, params = []) {
     const idx = db.users.findIndex(u => u.id === id);
     if (idx !== -1) {
       db.users[idx].warning_sent_at = warningAt;
+      writeMockDb(db);
+      return { rows: [db.users[idx]] };
+    }
+    return { rows: [] };
+  }
+
+  // UPDATE users SET avatar_url = ...
+  if (queryText.includes('UPDATE users SET avatar_url =')) {
+    const [avatarUrl, id] = params;
+    const idx = db.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      db.users[idx].avatar_url = avatarUrl;
       writeMockDb(db);
       return { rows: [db.users[idx]] };
     }

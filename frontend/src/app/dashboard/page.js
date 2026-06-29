@@ -225,8 +225,16 @@ export default function Dashboard() {
                 className="flex items-center gap-2 bg-brand-100/60 hover:bg-brand-200/60 px-3 py-1.5 rounded-full border border-brand-200/20 transition-all cursor-pointer group"
                 title="Личный кабинет"
               >
-                <div className="w-6 h-6 rounded-full bg-brand-300 group-hover:bg-brand-400 flex items-center justify-center text-brand-800 shrink-0 transition-colors">
-                  <User className="w-3.5 h-3.5" />
+                <div className="w-6 h-6 rounded-full bg-brand-300 group-hover:bg-brand-400 flex items-center justify-center text-brand-800 shrink-0 transition-colors overflow-hidden">
+                  {user.avatarUrl ? (
+                    <img 
+                      src={user.avatarUrl.startsWith('/') ? `${backendUrl}${user.avatarUrl}` : user.avatarUrl} 
+                      alt={user.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-3.5 h-3.5" />
+                  )}
                 </div>
                 <span className="text-xs font-semibold text-brand-800 hidden xs:inline max-w-[120px] truncate">
                   {user.name}

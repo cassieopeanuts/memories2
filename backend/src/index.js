@@ -46,6 +46,7 @@ async function runMigrations() {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS warning_sent_at TIMESTAMP WITH TIME ZONE', []);
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_id VARCHAR(255) UNIQUE', []);
     await query('CREATE INDEX IF NOT EXISTS idx_users_vk_id ON users(vk_id)', []);
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(1024)', []);
     
     await query('ALTER TABLE photos ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE', []);
     await query('ALTER TABLE photos ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE', []);

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import https from 'https';
+import sharp from 'sharp';
 import env from '../config/env.js';
 import { query } from '../services/db.service.js';
 import { 
@@ -10,6 +11,7 @@ import {
 } from '../services/auth.service.js';
 import { sendVerificationCode } from '../services/mail.service.js';
 import { sendPushNotification, vapidPublicKey } from '../services/push.service.js';
+import { uploadBufferToStorage } from '../services/s3.service.js';
 
 // In-memory store for verification codes (OTP)
 // email -> { code, name, expiresAt, attempts }
@@ -261,11 +263,16 @@ export async function yandexCallback(req, res, next) {
     
     const infoData = await infoResponse.json();
     
+    const avatarUrl = infoData.default_avatar_id
+      ? `https://avatars.yandex.net/get-yapic/${infoData.default_avatar_id}/islands-200`
+      : null;
+    
     // Create/Auth user
     const user = await findOrCreateUser({
       yandexId: infoData.id,
       name: infoData.real_name || infoData.display_name || 'Пользователь Яндекс',
-      email: infoData.default_email
+      email: infoData.default_email,
+      avatarUrl: avatarUrl
     });
     
     const token = generateToken(user);
@@ -607,7 +614,7 @@ export async function vkCallback(req, res, next) {
     const email = tokenData.email || '';
 
     // Fetch user profile info via users.get
-    const profileResponse = await fetch(`https://api.vk.com/method/users.get?user_ids=${userId}&fields=photo_50&access_token=${tokenData.access_token}&v=5.131`);
+    const profileResponse = await fetch(`https://api.vk.com/method/users.get?user_ids=${userId}&fields=photo_200,photo_100,photo_50&access_token=${tokenData.access_token}&v=5.131`);
     const profileData = await profileResponse.json();
 
     if (profileData.error) {
@@ -620,11 +627,13 @@ export async function vkCallback(req, res, next) {
     }
 
     const name = `${vkUser.first_name || ''} ${vkUser.last_name || ''}`.trim() || 'Пользователь VK';
+    const avatarUrl = vkUser.photo_200 || vkUser.photo_100 || vkUser.photo_50 || null;
 
     const user = await findOrCreateUser({
       vkId: String(userId),
       name: name,
-      email: email
+      email: email,
+      avatarUrl: avatarUrl
     });
 
     const token = generateToken(user);
@@ -700,7 +709,8 @@ export async function mockLoginConfirm(req, res, next) {
       tbankId: provider === 'tbank' ? mockProfile.id : null,
       vkId: provider === 'vk' ? mockProfile.id : null,
       name: mockProfile.name,
-      email: mockProfile.email
+      email: mockProfile.email,
+      avatarUrl: mockProfile.avatarUrl
     });
     
     const token = generateToken(user);
@@ -727,7 +737,8 @@ export async function demoLogin(req, res, next) {
       tbankId: provider === 'tbank' ? mockProfile.id : null,
       vkId: provider === 'vk' ? mockProfile.id : null,
       name: mockProfile.name,
-      email: mockProfile.email
+      email: mockProfile.email,
+      avatarUrl: mockProfile.avatarUrl
     });
     
     const token = generateToken(user);
@@ -921,7 +932,7 @@ export async function verifyPin(req, res, next) {
 // 10. Get Profile Details
 export async function getProfile(req, res, next) {
   try {
-    const result = await query('SELECT id, name, email, yandex_id, vk_id, pin_code, storage_limit, accepted_offer, accepted_offer_at, accepted_offer_version, card_mask, card_brand FROM users WHERE id = $1', [req.user.id]);
+    const result = await query('SELECT id, name, email, yandex_id, vk_id, pin_code, storage_limit, accepted_offer, accepted_offer_at, accepted_offer_version, card_mask, card_brand, avatar_url FROM users WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Пользователь не найден.' });
     }
@@ -938,7 +949,8 @@ export async function getProfile(req, res, next) {
       acceptedOfferAt: user.accepted_offer_at,
       acceptedOfferVersion: user.accepted_offer_version,
       cardMask: user.card_mask,
-      cardBrand: user.card_brand
+      cardBrand: user.card_brand,
+      avatarUrl: user.avatar_url
     });
   } catch (error) {
     next(error);
@@ -1009,5 +1021,53 @@ export async function savePushSubscription(req, res, next) {
     res.json({ success: true });
   } catch (error) {
     next(error);
+  }
+}
+
+// 12. Update User Profile Avatar
+export async function updateAvatar(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Пожалуйста, выберите файл изображения для аватара.' });
+    }
+
+    const userId = req.user.id;
+    const fileBuffer = req.file.buffer;
+    const mimeType = req.file.mimetype;
+
+    if (!mimeType.startsWith('image/')) {
+      return res.status(400).json({ error: 'Файл должен быть изображением.' });
+    }
+
+    // Process image with Sharp
+    const processedBuffer = await sharp(fileBuffer)
+      .resize(200, 200, { fit: 'cover' })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+
+    const key = `avatars/${userId}-${Date.now()}.jpg`;
+    
+    // Upload processed avatar to storage
+    const avatarUrl = await uploadBufferToStorage(key, processedBuffer, 'image/jpeg');
+
+    // Update in database
+    await query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, userId]);
+
+    res.json({ success: true, avatarUrl });
+  } catch (error) {
+    console.error('Error updating avatar:', error);
+    res.status(500).json({ error: 'Не удалось обновить аватар профиля.' });
+  }
+}
+
+// 13. Delete User Profile Avatar
+export async function deleteAvatar(req, res, next) {
+  try {
+    const userId = req.user.id;
+    await query('UPDATE users SET avatar_url = NULL WHERE id = $1', [userId]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting avatar:', error);
+    res.status(500).json({ error: 'Не удалось удалить аватар профиля.' });
   }
 }

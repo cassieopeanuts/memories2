@@ -1,12 +1,78 @@
 import React, { useState } from 'react';
-import { User, Mail, CreditCard, Shield, X, HardDrive, RefreshCw } from 'lucide-react';
+import { User, Mail, CreditCard, Shield, X, HardDrive, RefreshCw, Camera, Loader2 } from 'lucide-react';
 
 export default function ProfileModal({ user, setUser, token, storage, onClose }) {
   const [deletingCard, setDeletingCard] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Не удалось обновить аватар');
+
+      setUser(prev => ({
+        ...prev,
+        avatarUrl: data.avatarUrl
+      }));
+      setSuccessMsg('Фото профиля успешно обновлено.');
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    setUploadingAvatar(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/avatar`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Не удалось удалить аватар');
+
+      setUser(prev => ({
+        ...prev,
+        avatarUrl: null
+      }));
+      setSuccessMsg('Фото профиля удалено.');
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return '0 Б';
@@ -115,13 +181,54 @@ export default function ProfileModal({ user, setUser, token, storage, onClose })
               Данные аккаунта
             </h4>
             <div className="bg-brand-50/20 border border-brand-100/30 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center text-brand-600">
-                  <User className="w-4 h-4" />
+              <div className="flex items-center gap-4">
+                {/* Avatar with upload input */}
+                <div className="relative group cursor-pointer w-12 h-12 rounded-full overflow-hidden border border-brand-200/80 bg-brand-100 flex items-center justify-center shrink-0">
+                  {user.avatarUrl ? (
+                    <img 
+                      src={user.avatarUrl.startsWith('/') ? `${backendUrl}${user.avatarUrl}` : user.avatarUrl} 
+                      alt={user.name} 
+                      className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
+                    />
+                  ) : (
+                    <User className="w-5 h-5 text-brand-600 group-hover:opacity-75 transition-opacity" />
+                  )}
+                  
+                  {/* Upload Overlay */}
+                  <label className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                    <Camera className="w-4 h-4 text-white" />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleAvatarChange} 
+                      className="hidden" 
+                      disabled={uploadingAvatar}
+                    />
+                  </label>
+
+                  {/* Loading Spinner */}
+                  {uploadingAvatar && (
+                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                      <Loader2 className="w-4 h-4 text-brand-600 animate-spin" />
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-brand-900">{user.name}</p>
-                  <p className="text-[10px] text-brand-500 font-light">ФИО пользователя</p>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-brand-900 truncate">{user.name}</p>
+                    {user.avatarUrl && (
+                      <button 
+                        onClick={handleAvatarDelete}
+                        disabled={uploadingAvatar}
+                        className="text-[10px] text-red-500 hover:text-red-700 font-semibold cursor-pointer transition-colors bg-transparent border-none p-0"
+                        title="Удалить фото"
+                      >
+                        Удалить фото
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-brand-500 font-light mt-0.5">ФИО пользователя</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

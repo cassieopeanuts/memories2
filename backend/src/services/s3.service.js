@@ -349,3 +349,35 @@ export async function sanitizeImageMetadata(key, mimeType) {
     return null;
   }
 }
+
+/**
+ * Uploads a buffer directly to storage (S3 or local mock directory)
+ */
+export async function uploadBufferToStorage(key, buffer, mimeType) {
+  if (isMock) {
+    const filePath = path.resolve(MOCK_UPLOAD_DIR, key);
+    const dirName = path.dirname(filePath);
+    if (!fs.existsSync(dirName)) {
+      fs.mkdirSync(dirName, { recursive: true });
+    }
+    fs.writeFileSync(filePath, buffer);
+    console.log(`Mock S3: Saved buffer locally at ${filePath}`);
+    return `/api/mock-s3/${key}`;
+  }
+
+  const bucketName = env.S3_BUCKET_NAME;
+  const command = new PutObjectCommand({
+    Bucket: bucketName,
+    Key: key,
+    Body: buffer,
+    ContentType: mimeType,
+  });
+
+  await s3Client.send(command);
+  console.log(`Selectel S3: Uploaded buffer to key ${key}`);
+  
+  if (env.S3_CDN_URL) {
+    return `${env.S3_CDN_URL}/${key}`;
+  }
+  return `https://${bucketName}.s3.${env.S3_REGION}.storage.selcloud.ru/${key}`;
+}

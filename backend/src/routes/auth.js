@@ -1,5 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
+import multer from 'multer';
 import { 
   yandexAuth, 
   yandexCallback, 
@@ -20,11 +21,18 @@ import {
   getProfile, 
   acceptOffer, 
   getVapidPublicKey, 
-  savePushSubscription 
+  savePushSubscription,
+  updateAvatar,
+  deleteAvatar
 } from '../controllers/auth.controller.js';
 import { authenticateJWT } from '../middlewares/auth.middleware.js';
 import { otpLimiter, pinLimiter, authLimiter } from '../middlewares/rateLimit.middleware.js';
 import { validate } from '../middlewares/validation.middleware.js';
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit for avatars
+});
 
 const router = express.Router();
 
@@ -80,6 +88,8 @@ router.get('/me', authenticateJWT, getProfile);
 router.post('/set-pin', authenticateJWT, validate(pinCodeSchema), setPin);
 router.post('/verify-pin', authenticateJWT, pinLimiter, validate(pinCodeSchema), verifyPin);
 router.post('/accept-offer', authenticateJWT, validate(acceptOfferSchema), acceptOffer);
+router.post('/avatar', authenticateJWT, upload.single('avatar'), updateAvatar);
+router.delete('/avatar', authenticateJWT, deleteAvatar);
 
 // Push Notifications
 router.get('/vapid-public-key', getVapidPublicKey);

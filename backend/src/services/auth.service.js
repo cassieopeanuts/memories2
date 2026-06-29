@@ -7,7 +7,7 @@ export const JWT_SECRET = env.JWT_SECRET;
 /**
  * Find or create user in PostgreSQL
  */
-export async function findOrCreateUser({ yandexId, sberId, tbankId, vkId, name, email }) {
+export async function findOrCreateUser({ yandexId, sberId, tbankId, vkId, name, email, avatarUrl }) {
   try {
     let result;
     // 1. First, try searching by the specific SSO ID provided
@@ -22,7 +22,12 @@ export async function findOrCreateUser({ yandexId, sberId, tbankId, vkId, name, 
     }
 
     if (result && result.rows.length > 0) {
-      return result.rows[0];
+      const user = result.rows[0];
+      if (avatarUrl && user.avatar_url !== avatarUrl) {
+        await query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, user.id]);
+        user.avatar_url = avatarUrl;
+      }
+      return user;
     }
 
     // 2. If not found by SSO ID, but we have an email, check if a user with this email already exists
@@ -31,6 +36,11 @@ export async function findOrCreateUser({ yandexId, sberId, tbankId, vkId, name, 
       if (emailResult.rows.length > 0) {
         const existingUser = emailResult.rows[0];
         
+        if (avatarUrl && existingUser.avatar_url !== avatarUrl) {
+          await query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, existingUser.id]);
+          existingUser.avatar_url = avatarUrl;
+        }
+
         // Link the new SSO ID to this existing account so they don't lose their data
         if (yandexId) {
           await query('UPDATE users SET yandex_id = $1 WHERE id = $2', [yandexId, existingUser.id]);
@@ -55,7 +65,12 @@ export async function findOrCreateUser({ yandexId, sberId, tbankId, vkId, name, 
     if (!yandexId && !sberId && !tbankId && !vkId && email) {
       result = await query('SELECT * FROM users WHERE email = $1', [email]);
       if (result.rows.length > 0) {
-        return result.rows[0];
+        const user = result.rows[0];
+        if (avatarUrl && user.avatar_url !== avatarUrl) {
+          await query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, user.id]);
+          user.avatar_url = avatarUrl;
+        }
+        return user;
       }
     }
 
@@ -65,10 +80,10 @@ export async function findOrCreateUser({ yandexId, sberId, tbankId, vkId, name, 
 
     // Create new user if not found anywhere
     const insertResult = await query(
-      `INSERT INTO users (yandex_id, sber_id, tbank_id, vk_id, name, email) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
+      `INSERT INTO users (yandex_id, sber_id, tbank_id, vk_id, name, email, avatar_url) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
        RETURNING *`,
-      [yandexId || null, sberId || null, tbankId || null, vkId || null, name, email || '']
+      [yandexId || null, sberId || null, tbankId || null, vkId || null, name, email || '', avatarUrl || null]
     );
     
     const user = insertResult.rows[0];
@@ -110,25 +125,29 @@ export function getMockProfile(provider, mockId = '12345') {
     return {
       id: `yd-${mockId}`,
       name: 'Екатерина Яндексова',
-      email: 'kate.yandex@example.ru'
+      email: 'kate.yandex@example.ru',
+      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
     };
   } else if (provider === 'sber') {
     return {
       id: `sb-${mockId}`,
       name: 'Мария Сберова',
-      email: 'mariya.sber@example.ru'
+      email: 'mariya.sber@example.ru',
+      avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'
     };
   } else if (provider === 'tbank') {
     return {
       id: `tb-${mockId}`,
       name: 'Татьяна Т-Банкова',
-      email: 'tanya.tbank@example.ru'
+      email: 'tanya.tbank@example.ru',
+      avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150'
     };
   } else if (provider === 'vk') {
     return {
       id: `vk-${mockId}`,
       name: 'Владимир Вконтактев',
-      email: 'vova.vk@example.ru'
+      email: 'vova.vk@example.ru',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
     };
   }
   return null;
