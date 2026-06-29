@@ -195,60 +195,204 @@ html[data-theme="black-peony"] {
   --color-brand-900: #FAF5F6;
 }
 
-/* Dark mode overrides for Black Peony theme */
-html[data-theme="black-peony"] .bg-white {
+html[data-theme="peony2"] {
+  --color-brand-50: #FCF8F9;
+  --color-brand-100: #F5DFE4;
+  --color-brand-200: #c27a92;
+  --color-brand-300: #ab5e75;
+  --color-brand-400: #6e6064;
+  --color-brand-500: #8a2b40;
+  --color-brand-600: #752033;
+  --color-brand-700: #611727;
+  --color-brand-800: #3b2c30;
+  --color-brand-900: #1c1214;
+}
+
+html[data-theme="marshmallow"] {
+  --color-brand-50: #FAF6F8;
+  --color-brand-100: #eed1e2;
+  --color-brand-200: #ae84a0;
+  --color-brand-300: #b2b3b2;
+  --color-brand-400: #8f6480;
+  --color-brand-500: #7f2852;
+  --color-brand-600: #6e2045;
+  --color-brand-700: #5b1838;
+  --color-brand-800: #2A2A38;
+  --color-brand-900: #0a0a18;
+}
+
+/* Dark versions of all themes */
+html[data-theme="dark-classic"] {
+  --color-brand-50: #120d08;
+  --color-brand-100: #1d1610;
+  --color-brand-200: #33251c;
+  --color-brand-300: #4a3528;
+  --color-brand-400: #705342;
+  --color-brand-500: #ca727f;
+  --color-brand-600: #b8626e;
+  --color-brand-700: #a3535f;
+  --color-brand-800: #f7e5db;
+  --color-brand-900: #fff6eb;
+}
+
+html[data-theme="dark-lilac"] {
+  --color-brand-50: #0f0b0d;
+  --color-brand-100: #1c1218;
+  --color-brand-200: #33202d;
+  --color-brand-300: #4c2f43;
+  --color-brand-400: #704764;
+  --color-brand-500: #AD7872;
+  --color-brand-600: #9c6660;
+  --color-brand-700: #8a5550;
+  --color-brand-800: #ebd5e1;
+  --color-brand-900: #FAF3F1;
+}
+
+html[data-theme="dark-sakura"] {
+  --color-brand-50: #100b0c;
+  --color-brand-100: #1d1215;
+  --color-brand-200: #331e24;
+  --color-brand-300: #4d2d36;
+  --color-brand-400: #70434f;
+  --color-brand-500: #A2747B;
+  --color-brand-600: #8c5f66;
+  --color-brand-700: #774d53;
+  --color-brand-800: #ebd5d9;
+  --color-brand-900: #F8F5F6;
+}
+
+html[data-theme="dark-mint"] {
+  --color-brand-50: #0b0f0c;
+  --color-brand-100: #121c16;
+  --color-brand-200: #1e3328;
+  --color-brand-300: #2d4d3c;
+  --color-brand-400: #437057;
+  --color-brand-500: #7CB488;
+  --color-brand-600: #669e72;
+  --color-brand-700: #52875d;
+  --color-brand-800: #d5ebd9;
+  --color-brand-900: #FAF4F5;
+}
+
+html[data-theme="dark-autumn"] {
+  --color-brand-50: #0f0c0b;
+  --color-brand-100: #1c1512;
+  --color-brand-200: #33241d;
+  --color-brand-300: #4c352a;
+  --color-brand-400: #70503f;
+  --color-brand-500: #8B664F;
+  --color-brand-600: #76543f;
+  --color-brand-700: #614331;
+  --color-brand-800: #ebdcd5;
+  --color-brand-900: #FAF3F0;
+}
+
+html[data-theme="dark-peony"] {
+  --color-brand-50: #110b0d;
+  --color-brand-100: #1c1215;
+  --color-brand-200: #382025;
+  --color-brand-300: #572f37;
+  --color-brand-400: #7b4c56;
+  --color-brand-500: #d95c7b;
+  --color-brand-600: #be4661;
+  --color-brand-700: #a3344c;
+  --color-brand-800: #f5d5dd;
+  --color-brand-900: #FAF5F6;
+}
+
+html[data-theme="dark-peony2"] {
+  --color-brand-50: #12090b;
+  --color-brand-100: #1e1013;
+  --color-brand-200: #3a1c22;
+  --color-brand-300: #5a2833;
+  --color-brand-400: #803847;
+  --color-brand-500: #a83950;
+  --color-brand-600: #8f2d41;
+  --color-brand-700: #752132;
+  --color-brand-800: #ebd5d9;
+  --color-brand-900: #FCF8F9;
+}
+
+html[data-theme="dark-flamingo"] {
+  --color-brand-50: #0c0708;
+  --color-brand-100: #1a1012;
+  --color-brand-200: #331a20;
+  --color-brand-300: #4c252f;
+  --color-brand-400: #703846;
+  --color-brand-500: #c685b2;
+  --color-brand-600: #b3719e;
+  --color-brand-700: #a05e8a;
+  --color-brand-800: #ebd5e5;
+  --color-brand-900: #F7F2F1;
+}
+
+html[data-theme="dark-marshmallow"] {
+  --color-brand-50: #0b090a;
+  --color-brand-100: #1a1417;
+  --color-brand-200: #33222b;
+  --color-brand-300: #4c3140;
+  --color-brand-400: #70495f;
+  --color-brand-500: #ae84a0;
+  --color-brand-600: #99708c;
+  --color-brand-700: #855d78;
+  --color-brand-800: #ebd5e4;
+  --color-brand-900: #FAF6F8;
+}
+
+/* Dark mode overrides for all dark/black themes */
+html[data-theme^="dark-"] .bg-white,
+html[data-theme^="black-"] .bg-white,
+html[data-theme^="dark-"] .bg-white\/90,
+html[data-theme^="black-"] .bg-white\/90,
+html[data-theme^="dark-"] .bg-white\/80,
+html[data-theme^="black-"] .bg-white\/80 {
   background-color: var(--color-brand-100) !important;
 }
-html[data-theme="black-peony"] .bg-white\/90 {
-  background-color: rgba(28, 18, 21, 0.92) !important;
-}
-html[data-theme="black-peony"] .bg-white\/80 {
-  background-color: rgba(28, 18, 21, 0.82) !important;
-}
-html[data-theme="black-peony"] .bg-brand-50 {
+html[data-theme^="dark-"] .bg-brand-50,
+html[data-theme^="black-"] .bg-brand-50 {
   background-color: var(--color-brand-50) !important;
 }
-html[data-theme="black-peony"] .hover\:bg-brand-50:hover {
+html[data-theme^="dark-"] .hover\:bg-brand-50:hover,
+html[data-theme^="black-"] .hover\:bg-brand-50:hover {
   background-color: var(--color-brand-200) !important;
 }
-html[data-theme="black-peony"] .text-brand-900 {
+html[data-theme^="dark-"] .text-brand-900,
+html[data-theme^="black-"] .text-brand-900 {
   color: var(--color-brand-900) !important;
 }
-html[data-theme="black-peony"] .text-brand-800 {
+html[data-theme^="dark-"] .text-brand-800,
+html[data-theme^="black-"] .text-brand-800,
+html[data-theme^="dark-"] .text-brand-700,
+html[data-theme^="black-"] .text-brand-700,
+html[data-theme^="dark-"] .text-brand-600,
+html[data-theme^="black-"] .text-brand-600 {
   color: var(--color-brand-800) !important;
 }
-html[data-theme="black-peony"] .text-brand-700 {
-  color: var(--color-brand-800) !important;
-}
-html[data-theme="black-peony"] .text-brand-600 {
-  color: var(--color-brand-800) !important;
-}
-html[data-theme="black-peony"] .text-brand-500 {
+html[data-theme^="dark-"] .text-brand-500,
+html[data-theme^="black-"] .text-brand-500 {
   color: var(--color-brand-500) !important;
 }
-html[data-theme="black-peony"] .border-brand-200\/40 {
-  border-color: rgba(87, 47, 55, 0.4) !important;
-}
-html[data-theme="black-peony"] .border-brand-200\/60 {
-  border-color: rgba(87, 47, 55, 0.6) !important;
-}
-html[data-theme="black-peony"] .border-brand-200 {
+html[data-theme^="dark-"] .border-brand-200\/40,
+html[data-theme^="black-"] .border-brand-200\/40,
+html[data-theme^="dark-"] .border-brand-200\/60,
+html[data-theme^="black-"] .border-brand-200\/60,
+html[data-theme^="dark-"] .border-brand-200,
+html[data-theme^="black-"] .border-brand-200,
+html[data-theme^="dark-"] .border-brand-300,
+html[data-theme^="black-"] .border-brand-300 {
   border-color: var(--color-brand-200) !important;
 }
-html[data-theme="black-peony"] .border-brand-300 {
-  border-color: var(--color-brand-300) !important;
-}
-html[data-theme="black-peony"] input {
+html[data-theme^="dark-"] input,
+html[data-theme^="black-"] input,
+html[data-theme^="dark-"] select,
+html[data-theme^="black-"] select {
   background-color: var(--color-brand-200) !important;
   color: var(--color-brand-900) !important;
   border-color: var(--color-brand-300) !important;
 }
-html[data-theme="black-peony"] input::placeholder {
+html[data-theme^="dark-"] input::placeholder,
+html[data-theme^="black-"] input::placeholder {
   color: var(--color-brand-400) !important;
-}
-html[data-theme="black-peony"] select {
-  background-color: var(--color-brand-200) !important;
-  color: var(--color-brand-900) !important;
 }
 
 html,

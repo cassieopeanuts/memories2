@@ -10,6 +10,17 @@ const themes = [
   { id: 'peony', name: 'Пион 🪷', colors: ['#FAF5F6', '#f8afc9', '#c0708b', '#7e3748', '#54525a'] },
   { id: 'black-peony', name: 'Черный Пион 🖤', colors: ['#110b0d', '#1c1215', '#572f37', '#d95c7b', '#FAF5F6'] },
   { id: 'flamingo', name: 'Фламинго 🦩', colors: ['#F7F2F1', '#c5bbba', '#c685b2', '#733651', '#000000'] },
+  { id: 'peony2', name: 'Пеон 2 🪷', colors: ['#FCF8F9', '#F5DFE4', '#c27a92', '#8a2b40', '#1c1214'] },
+  { id: 'marshmallow', name: 'Зефир ☕', colors: ['#FAF6F8', '#eed1e2', '#ae84a0', '#7f2852', '#0a0a18'] },
+  { id: 'dark-classic', name: 'Темная Классика 🖤', colors: ['#120d08', '#1d1610', '#33251c', '#ca727f', '#fff6eb'] },
+  { id: 'dark-lilac', name: 'Темная Сирень 🖤', colors: ['#0f0b0d', '#1c1218', '#33202d', '#AD7872', '#FAF3F1'] },
+  { id: 'dark-sakura', name: 'Темная Сакура 🖤', colors: ['#100b0c', '#1d1215', '#331e24', '#A2747B', '#F8F5F6'] },
+  { id: 'dark-mint', name: 'Темная Мята 🖤', colors: ['#0b0f0c', '#121c16', '#1e3328', '#7CB488', '#FAF4F5'] },
+  { id: 'dark-autumn', name: 'Темная Осень 🖤', colors: ['#0f0c0b', '#1c1512', '#33241d', '#8B664F', '#FAF3F0'] },
+  { id: 'dark-peony', name: 'Темный Пион 🖤', colors: ['#110b0d', '#1c1215', '#382025', '#d95c7b', '#FAF5F6'] },
+  { id: 'dark-peony2', name: 'Темный Пион 2 🖤', colors: ['#12090b', '#1e1013', '#3a1c22', '#a83950', '#FCF8F9'] },
+  { id: 'dark-flamingo', name: 'Темный Фламинго 🖤', colors: ['#0c0708', '#1a1012', '#331a20', '#c685b2', '#F7F2F1'] },
+  { id: 'dark-marshmallow', name: 'Темный Зефир 🖤', colors: ['#0b090a', '#1a1417', '#33222b', '#ae84a0', '#FAF6F8'] },
 ];
 
 const fonts = [
