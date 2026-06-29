@@ -9,6 +9,7 @@ const themes = [
   { id: 'autumn', name: 'Осень 🍁', colors: ['#FAF3F0', '#E1C3B8', '#D8A39B', '#8B664F', '#332B2A'] },
   { id: 'peony', name: 'Пион 🪷', colors: ['#FAF5F6', '#f8afc9', '#c0708b', '#7e3748', '#54525a'] },
   { id: 'black-peony', name: 'Черный Пион 🖤', colors: ['#110b0d', '#1c1215', '#572f37', '#d95c7b', '#FAF5F6'] },
+  { id: 'flamingo', name: 'Фламинго 🦩', colors: ['#F7F2F1', '#c5bbba', '#c685b2', '#733651', '#000000'] },
 ];
 
 const fonts = [

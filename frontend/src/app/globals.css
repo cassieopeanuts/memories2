@@ -169,6 +169,19 @@ html[data-theme="peony"] {
   --color-brand-900: #2c2b30;
 }
 
+html[data-theme="flamingo"] {
+  --color-brand-50: #F7F2F1;
+  --color-brand-100: #c5bbba;
+  --color-brand-200: #c685b2;
+  --color-brand-300: #a97f75;
+  --color-brand-400: #8f7570;
+  --color-brand-500: #733651;
+  --color-brand-600: #632b43;
+  --color-brand-700: #522135;
+  --color-brand-800: #2A2526;
+  --color-brand-900: #000000;
+}
+
 html[data-theme="black-peony"] {
   --color-brand-50: #110b0d;
   --color-brand-100: #1c1215;
