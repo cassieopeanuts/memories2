@@ -240,7 +240,7 @@ export async function sendInactivityWarning(email, name, daysInactive = 150) {
       </div>
       
       <p style="color: #d32f2f; font-size: 13px; font-weight: bold; line-height: 1.6;">
-        Внимание: если вы не авторизуетесь на сайте, через 30 дней (по истечении 180 дней неактивности) все ваши альбомы, фотографии и видео файлы будут безвозвратно удалены из хранилища Selectel S3.
+        Внимание: если вы не авторизуетесь на сайте, через 30 дней (по истечении 180 дней неактивности) все ваши альбомы, фотографии и видео файлы будут безвозвратно удалены из хранилища.
       </p>
       
       <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">
